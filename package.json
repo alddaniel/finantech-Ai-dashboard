@@ -1,0 +1,14 @@
+
+{
+  "name": "finantech-ai-dashboard",
+  "version": "1.0.0",
+  "description": "FinanTech AI Dashboard local execution package. This allows running the application on any machine with Node.js.",
+  "private": true,
+  "scripts": {
+    "start": "http-server -o -p 8080",
+    "install": "npm install"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
