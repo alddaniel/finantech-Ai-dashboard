@@ -1,8 +1,10 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import type { InvoiceItem, InvoiceData, Contact, Transaction } from '../types';
 import { MOCK_BANKS, MOCK_COST_CENTERS, MOCK_BANK_ACCOUNTS } from '../constants';
 import { BoletoPreviewModal } from './BoletoPreviewModal';
+import { DanfePreviewModal } from './DanfePreviewModal';
 import { downloadPdfFromElement } from '../services/pdfService';
 
 const formatCurrency = (value: number) => {
@@ -49,6 +51,7 @@ export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onCl
     const [applyFine, setApplyFine] = useState(false);
     const [fineRate, setFineRate] = useState('');
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     
     useEffect(() => {
         if (initialData) {
@@ -117,119 +120,128 @@ export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onCl
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
-        let contactId: string | undefined = undefined;
-        const existingContact = contacts.find(c => c.name.toLowerCase() === customer.toLowerCase() && c.company === selectedCompany);
+        // Simulate API call to TecnoSpeed
+        setTimeout(() => {
+            let contactId: string | undefined = undefined;
+            const existingContact = contacts.find(c => c.name.toLowerCase() === customer.toLowerCase() && c.company === selectedCompany);
 
-        if (existingContact) {
-            contactId = existingContact.id;
-        } else if (customer) {
-            const newContact: Contact = {
-                id: `contact${Date.now()}`,
-                name: customer,
-                type: 'Cliente',
-                document: '',
-                email: '',
-                phone: '',
-                company: selectedCompany,
-            };
-            setContacts(prev => [...prev, newContact]);
-            contactId = newContact.id;
-        }
+            if (existingContact) {
+                contactId = existingContact.id;
+            } else if (customer) {
+                const newContact: Contact = {
+                    id: `contact${Date.now()}`,
+                    name: customer,
+                    type: 'Cliente',
+                    document: '',
+                    email: '',
+                    phone: '',
+                    company: selectedCompany,
+                };
+                setContacts(prev => [...prev, newContact]);
+                contactId = newContact.id;
+            }
 
-        const interestRateValue = applyInterest ? parseFloat(interestConfig.rate.replace(',', '.')) || undefined : undefined;
-        const fineRateValue = applyFine ? parseFloat(fineRate.replace(',', '.')) || undefined : undefined;
+            const interestRateValue = applyInterest ? parseFloat(interestConfig.rate.replace(',', '.')) || undefined : undefined;
+            const fineRateValue = applyFine ? parseFloat(fineRate.replace(',', '.')) || undefined : undefined;
 
-        const baseInvoiceData: InvoiceData = {
-            customer,
-            dueDate,
-            items,
-            total,
-            bank,
-            invoiceType,
-            issuerProvider,
-            interestRate: interestRateValue,
-            interestType: interestRateValue ? interestConfig.type : undefined,
-            fineRate: fineRateValue,
-        };
+            const tecnoSpeedId = `ts_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-        if (editingId) {
-            const updatedReceivable: Transaction = {
-                id: editingId,
-                description: `Cobrança para ${customer}`,
-                category: 'Venda de Serviço/Produto',
-                amount: total,
-                dueDate: new Date(dueDate + 'T00:00:00').toLocaleDateString('pt-BR'),
-                status: 'Pendente',
-                type: 'receita',
-                company: selectedCompany,
-                costCenter: MOCK_COST_CENTERS[1],
-                bankAccount: MOCK_BANK_ACCOUNTS.find(b => b.company === selectedCompany)?.id || MOCK_BANK_ACCOUNTS[0].id,
-                invoiceDetails: baseInvoiceData,
-                contactId: contactId,
+            const baseInvoiceData: InvoiceData = {
+                customer,
+                dueDate,
+                items,
+                total,
+                bank,
+                invoiceType,
+                issuerProvider,
                 interestRate: interestRateValue,
                 interestType: interestRateValue ? interestConfig.type : undefined,
                 fineRate: fineRateValue,
+                issuerProviderTransactionId: tecnoSpeedId,
+                issuerProviderStatus: 'issued',
             };
-            setReceivables(receivables.map(r => r.id === editingId ? updatedReceivable : r));
-        } else if (applyInstallments && installmentData.count > 1) {
-            const newReceivables: Transaction[] = [];
-            const installmentAmount = total / installmentData.count;
-            const initialDueDate = new Date(dueDate + 'T00:00:00');
 
-            for (let i = 0; i < installmentData.count; i++) {
-                const currentDueDate = new Date(initialDueDate);
-                if (installmentData.frequency === 'monthly') {
-                    currentDueDate.setMonth(currentDueDate.getMonth() + i);
-                } else if (installmentData.frequency === 'bi-weekly') {
-                    currentDueDate.setDate(currentDueDate.getDate() + (i * 14));
-                } else if (installmentData.frequency === 'weekly') {
-                    currentDueDate.setDate(currentDueDate.getDate() + (i * 7));
-                }
-
-                const installmentReceivable: Transaction = {
-                    id: `r${Date.now() + i}`,
-                    description: `Cobrança para ${customer} (Parcela ${i + 1}/${installmentData.count})`,
+            if (editingId) {
+                const updatedReceivable: Transaction = {
+                    id: editingId,
+                    description: `Cobrança para ${customer}`,
                     category: 'Venda de Serviço/Produto',
-                    amount: installmentAmount,
-                    dueDate: currentDueDate.toLocaleDateString('pt-BR'),
+                    amount: total,
+                    dueDate: new Date(dueDate + 'T00:00:00').toLocaleDateString('pt-BR'),
                     status: 'Pendente',
                     type: 'receita',
                     company: selectedCompany,
                     costCenter: MOCK_COST_CENTERS[1],
                     bankAccount: MOCK_BANK_ACCOUNTS.find(b => b.company === selectedCompany)?.id || MOCK_BANK_ACCOUNTS[0].id,
-                    invoiceDetails: { ...baseInvoiceData, total: installmentAmount },
+                    invoiceDetails: baseInvoiceData,
                     contactId: contactId,
                     interestRate: interestRateValue,
                     interestType: interestRateValue ? interestConfig.type : undefined,
                     fineRate: fineRateValue,
                 };
-                newReceivables.push(installmentReceivable);
-            }
-            setReceivables(prev => [...prev, ...newReceivables]);
+                setReceivables(receivables.map(r => r.id === editingId ? updatedReceivable : r));
+            } else if (applyInstallments && installmentData.count > 1) {
+                const newReceivables: Transaction[] = [];
+                const installmentAmount = total / installmentData.count;
+                const initialDueDate = new Date(dueDate + 'T00:00:00');
 
-        } else {
-            const newReceivable: Transaction = {
-                id: `r${Date.now()}`,
-                description: `Cobrança para ${customer}`,
-                category: 'Venda de Serviço/Produto',
-                amount: total,
-                dueDate: new Date(dueDate + 'T00:00:00').toLocaleDateString('pt-BR'),
-                status: 'Pendente',
-                type: 'receita',
-                company: selectedCompany,
-                costCenter: MOCK_COST_CENTERS[1],
-                bankAccount: MOCK_BANK_ACCOUNTS.find(b => b.company === selectedCompany)?.id || MOCK_BANK_ACCOUNTS[0].id,
-                invoiceDetails: baseInvoiceData,
-                contactId: contactId,
-                interestRate: interestRateValue,
-                interestType: interestRateValue ? interestConfig.type : undefined,
-                fineRate: fineRateValue,
-            };
-            setReceivables(prev => [...prev, newReceivable]);
-        }
-        
-        setSubmission({ data: baseInvoiceData, installments: applyInstallments ? installmentData.count : undefined });
+                for (let i = 0; i < installmentData.count; i++) {
+                    const currentDueDate = new Date(initialDueDate);
+                    if (installmentData.frequency === 'monthly') {
+                        currentDueDate.setMonth(currentDueDate.getMonth() + i);
+                    } else if (installmentData.frequency === 'bi-weekly') {
+                        currentDueDate.setDate(currentDueDate.getDate() + (i * 14));
+                    } else if (installmentData.frequency === 'weekly') {
+                        currentDueDate.setDate(currentDueDate.getDate() + (i * 7));
+                    }
+
+                    const installmentReceivable: Transaction = {
+                        id: `r${Date.now() + i}`,
+                        description: `Cobrança para ${customer} (Parcela ${i + 1}/${installmentData.count})`,
+                        category: 'Venda de Serviço/Produto',
+                        amount: installmentAmount,
+                        dueDate: currentDueDate.toLocaleDateString('pt-BR'),
+                        status: 'Pendente',
+                        type: 'receita',
+                        company: selectedCompany,
+                        costCenter: MOCK_COST_CENTERS[1],
+                        bankAccount: MOCK_BANK_ACCOUNTS.find(b => b.company === selectedCompany)?.id || MOCK_BANK_ACCOUNTS[0].id,
+                        invoiceDetails: { ...baseInvoiceData, total: installmentAmount },
+                        contactId: contactId,
+                        interestRate: interestRateValue,
+                        interestType: interestRateValue ? interestConfig.type : undefined,
+                        fineRate: fineRateValue,
+                    };
+                    newReceivables.push(installmentReceivable);
+                }
+                setReceivables(prev => [...prev, ...newReceivables]);
+
+            } else {
+                const newReceivable: Transaction = {
+                    id: `r${Date.now()}`,
+                    description: `Cobrança para ${customer}`,
+                    category: 'Venda de Serviço/Produto',
+                    amount: total,
+                    dueDate: new Date(dueDate + 'T00:00:00').toLocaleDateString('pt-BR'),
+                    status: 'Pendente',
+                    type: 'receita',
+                    company: selectedCompany,
+                    costCenter: MOCK_COST_CENTERS[1],
+                    bankAccount: MOCK_BANK_ACCOUNTS.find(b => b.company === selectedCompany)?.id || MOCK_BANK_ACCOUNTS[0].id,
+                    invoiceDetails: baseInvoiceData,
+                    contactId: contactId,
+                    interestRate: interestRateValue,
+                    interestType: interestRateValue ? interestConfig.type : undefined,
+                    fineRate: fineRateValue,
+                };
+                setReceivables(prev => [...prev, newReceivable]);
+            }
+            
+            setSubmission({ data: baseInvoiceData, installments: applyInstallments ? installmentData.count : undefined });
+            setIsSubmitting(false);
+        }, 1500); // 1.5 second delay
     };
 
     const handleNewInvoice = () => {
@@ -255,14 +267,14 @@ export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onCl
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose} role="dialog">
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/60 ring-1 ring-slate-900/5 dark:ring-white/10 w-full max-w-4xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                <form onSubmit={handleSubmit}>
-                     <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+                     <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center flex-shrink-0">
                         <h1 className="text-xl font-bold text-slate-900 dark:text-white">{editingId ? "Editar Cobrança" : "Gerar Cobrança e Nota Fiscal"}</h1>
                         <button type="button" onClick={onClose} className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700">
                              <CloseIcon />
                         </button>
                     </div>
-                    <div className="p-6 space-y-6 overflow-y-auto">
+                    <div className="p-6 space-y-6 overflow-y-auto flex-1">
                         {/* Form content from original component goes here */}
                         <fieldset>
                              <legend className="text-lg font-medium text-gray-900 dark:text-white mb-4">Informações do Cliente e Vencimento</legend>
@@ -417,7 +429,7 @@ export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onCl
                             </div>
                         </fieldset>
                     </div>
-                    <div className="px-6 py-4 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-800">
+                    <div className="px-6 py-4 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-800 flex-shrink-0">
                          <button
                             type="button"
                             onClick={onClose}
@@ -425,8 +437,8 @@ export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onCl
                          >
                              Cancelar
                          </button>
-                         <button type="submit" disabled={total <= 0 || !dueDate} className="bg-indigo-600 text-white font-semibold px-6 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed">
-                             {editingId ? "Salvar Alterações" : "Gerar Cobrança"}
+                         <button type="submit" disabled={total <= 0 || !dueDate || isSubmitting} className="bg-indigo-600 text-white font-semibold px-6 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed">
+                             {isSubmitting ? 'Emitindo via TecnoSpeed...' : (editingId ? "Salvar Alterações" : "Gerar Cobrança")}
                          </button>
                     </div>
                 </form>
@@ -437,21 +449,96 @@ export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onCl
 
 const SuccessView: React.FC<{submission: InvoiceData, onNewInvoice: () => void, onClose: () => void}> = ({ submission, onNewInvoice, onClose }) => {
     const [showBoletoModal, setShowBoletoModal] = useState(false);
+    const [showDanfeModal, setShowDanfeModal] = useState(false);
+
+    const formatDate = (dateString: string | undefined): string => {
+        if (!dateString) return '-';
+        const date = new Date(dateString + 'T00:00:00'); // Assume local timezone
+        if (isNaN(date.getTime())) return dateString;
+        return date.toLocaleDateString('pt-BR');
+    };
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose} role="dialog">
-             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/60 ring-1 ring-slate-900/5 dark:ring-white/10 w-full max-w-3xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/60 ring-1 ring-slate-900/5 dark:ring-white/10 w-full max-w-3xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                {/* Printable Area for the simple invoice, positioned off-screen */}
+                <div style={{ position: 'absolute', left: '-9999px', top: 'auto', zIndex: -1 }}>
+                    <div id="invoice-success-printable-area" className="printable-area bg-white p-8 font-sans text-black" style={{ width: '794px' }}>
+                        <div className="flex justify-between items-start mb-8">
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-800">FinanTech AI</h1>
+                                <p className="text-gray-600">Rua da Tecnologia, 123 - Centro</p>
+                            </div>
+                            <div className="text-right">
+                                <h2 className="text-2xl font-bold uppercase text-gray-600">Fatura</h2>
+                                <p className="text-gray-500">#{`INV${Date.now().toString().slice(-6)}`}</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 my-8">
+                            <div>
+                                <h4 className="text-sm text-gray-500 font-semibold">COBRANÇA PARA</h4>
+                                <p className="font-bold text-gray-800">{submission.customer}</p>
+                            </div>
+                            <div className="text-right">
+                                <h4 className="text-sm text-gray-500 font-semibold">VENCIMENTO</h4>
+                                <p className="font-bold text-gray-800">{formatDate(submission.dueDate)}</p>
+                            </div>
+                        </div>
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-100">
+                                <tr>
+                                    <th className="p-2 font-semibold">Descrição</th>
+                                    <th className="p-2 font-semibold text-center">Qtde.</th>
+                                    <th className="p-2 font-semibold text-right">V. Unitário</th>
+                                    <th className="p-2 font-semibold text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {submission.items.map(item => (
+                                    <tr key={item.id} className="border-b">
+                                        <td className="p-2">{item.description}</td>
+                                        <td className="p-2 text-center">{item.quantity}</td>
+                                        <td className="p-2 text-right">{formatCurrency(parseFloat(item.price.replace(',', '.')) || 0)}</td>
+                                        <td className="p-2 text-right font-medium">{formatCurrency((parseFloat(item.price.replace(',', '.')) || 0) * item.quantity)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colSpan={3} className="p-2 text-right font-bold text-lg">TOTAL</td>
+                                    <td className="p-2 text-right font-bold text-xl">{formatCurrency(submission.total)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div className="mt-8 text-center text-gray-500 text-sm">
+                            <p>Obrigado por sua preferência!</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Visible Success View Content */}
                 <div className="p-6 text-center">
                     <div className="bg-green-100 dark:bg-green-900/50 rounded-full h-24 w-24 flex items-center justify-center mx-auto">
                         <CheckIcon className="text-green-600 dark:text-green-400 h-16 w-16" />
                     </div>
-                    <h1 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">Cobrança Gerada!</h1>
-                    <p className="mt-2 text-gray-600 dark:text-gray-400">A cobrança foi adicionada à sua lista de Contas a Receber.</p>
+                    <h1 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">Cobrança e NF-e Emitida com Sucesso!</h1>
+                    <p className="mt-2 text-gray-600 dark:text-gray-400">
+                        A cobrança foi registrada no sistema e a nota fiscal foi enviada para emissão através da <strong>{submission.issuerProvider}</strong>.
+                    </p>
+                    {submission.issuerProviderTransactionId && (
+                        <div className="mt-4 bg-slate-100 dark:bg-slate-800 rounded-lg px-4 py-2 text-center max-w-sm mx-auto">
+                            <p className="text-sm text-slate-500 dark:text-slate-400">ID de Transação {submission.issuerProvider}:</p>
+                            <p className="font-mono text-slate-700 dark:text-slate-200 text-sm break-all">{submission.issuerProviderTransactionId}</p>
+                        </div>
+                    )}
                 </div>
                 
                 <div className="p-6 pt-0 space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:justify-center sm:gap-3">
                      <ActionButton icon={<BoletoIcon />} isSecondary onClick={() => setShowBoletoModal(true)}>
                         Visualizar Boleto
+                    </ActionButton>
+                     <ActionButton icon={<DanfeIcon />} isSecondary onClick={() => setShowDanfeModal(true)}>
+                        Prever DANFE
                     </ActionButton>
                      <ActionButton icon={<DownloadIcon />} isSecondary onClick={() => downloadPdfFromElement('invoice-success-printable-area', `fatura_${submission.customer.replace(/\s/g, '_')}.pdf`)}>
                         Salvar Fatura em PDF
@@ -467,6 +554,12 @@ const SuccessView: React.FC<{submission: InvoiceData, onNewInvoice: () => void, 
                 <BoletoPreviewModal
                     submission={submission}
                     onClose={() => setShowBoletoModal(false)}
+                />
+            )}
+             {showDanfeModal && (
+                <DanfePreviewModal
+                    submission={submission}
+                    onClose={() => setShowDanfeModal(false)}
                 />
             )}
         </div>
@@ -494,3 +587,4 @@ const CheckIcon: React.FC<{className?: string}> = ({className}) => <svg classNam
 const BoletoIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h2m8-5h2M3 6h18v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"></path></svg>;
 const DownloadIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>;
 const CloseIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>;
+const DanfeIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>;

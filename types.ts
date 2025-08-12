@@ -103,6 +103,8 @@ export interface InvoiceData {
     interestRate?: number;
     interestType?: 'daily' | 'monthly';
     fineRate?: number;
+    issuerProviderTransactionId?: string;
+    issuerProviderStatus?: 'pending' | 'issued' | 'error';
 }
 
 export interface DefaultRateData {
