@@ -1,6 +1,5 @@
 import React from 'react';
 
-// --- Professional Photo Avatars for Contacts ---
 export const IconDisplay: React.FC<{ iconName?: string; className?: string; shape?: 'circle' | 'square' }> = ({ iconName, className, shape = 'circle' }) => {
     const isUrl = iconName && (iconName.startsWith('http') || iconName.startsWith('data:image'));
     const shapeClass = shape === 'circle' ? 'rounded-full' : 'rounded-lg';
