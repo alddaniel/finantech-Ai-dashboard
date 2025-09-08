@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sidebar } from '../components/Sidebar';
-<<<<<<< HEAD
 import { Header } from '../components/Header';
-=======
->>>>>>> 701de8fd8b094623e21b33ada7a7e27129e20e19
 import { Dashboard } from '../components/Dashboard';
 import { AccountsPayable } from '../components/AccountsPayable';
 import { Receipts } from '../components/Receipts';
@@ -46,9 +43,9 @@ import { Settings } from '../components/Settings';
 import { Categories } from '../components/Categories';
 import { Indexes } from '../components/Indexes';
 import { QRCodeModal } from '../components/QRCodeModal';
-import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, AIInsightsMap } from '../types';
-import { VIEWS, MOCK_AUDIT_LOGS, MOCK_PROPOSALS } from '../constants';
-import * as apiService from '../services/apiService';
+import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, AIInsightsMap } from './types';
+import { VIEWS, MOCK_AUDIT_LOGS, MOCK_PROPOSALS } from './constants';
+import * as apiService from './services/apiService';
 
 
 export default function App() {

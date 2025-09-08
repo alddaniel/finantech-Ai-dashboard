@@ -1,51 +1,52 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Sidebar } from '../components/Sidebar';
-import { Header } from '../components/Header';
-import { Dashboard } from '../components/Dashboard';
-import { AccountsPayable } from '../components/AccountsPayable';
-import { Receipts } from '../components/Receipts';
-import { CashManagement } from '../components/CashManagement';
-import { Reports } from '../components/Reports';
-import { AIFinancialAdvisor } from '../components/AIFinancialAdvisor';
-import { InvoiceGenerator } from '../components/InvoiceGenerator';
-import { FiscalModule } from '../components/FiscalModule';
-import { FinancialCRM } from '../components/FinancialCRM';
-import { Integrations } from '../components/Integrations';
-import { UserManagement } from '../components/UserManagement';
-import { Contacts } from '../components/Contacts';
-import { Login } from '../components/Login';
-import { Help } from '../components/Help';
-import { GeneratedInvoices } from '../components/GeneratedInvoices';
-import { AccountantPanel } from '../components/AccountantPanel';
-import { BankAccounts } from '../components/BankAccounts';
-import { BankReconciliation } from '../components/BankReconciliation';
-import { Recurrences } from '../components/Recurrences';
-import { PayableRecurrences } from '../components/PayableRecurrences';
-import { PaymentSchedule } from '../components/PaymentSchedule';
-import { ReceivableSchedule } from '../components/ReceivableSchedule';
-import { CashFlowRecords } from '../components/CashFlowRecords';
-import { Properties } from '../components/Properties';
-import { Projects } from '../components/Projects';
-import { Proposals } from '../components/Proposals';
-import { SchemaGenerator } from '../components/SchemaGenerator';
-import { PaymentConfirmationModal } from '../components/PaymentConfirmationModal';
-import { ExpenseModal } from '../components/ExpenseModal';
-import { ProjectModal } from '../components/ProjectModal';
-import { ProposalModal } from '../components/ProposalModal';
-import { AutomatedNotificationManager } from '../components/AutomatedNotificationManager';
-import { ToastContainer } from '../components/ToastContainer';
-import { AdminPanel } from '../components/AdminPanel';
-import { NotificationCenter } from '../components/NotificationCenter';
-import { CostCenters } from '../components/CostCenters';
-import { CompanyProfile } from '../components/CompanyProfile';
-import { PlanSubscription } from '../components/PlanSubscription';
-import { Settings } from '../components/Settings';
-import { Categories } from '../components/Categories';
-import { Indexes } from '../components/Indexes';
-import { QRCodeModal } from '../components/QRCodeModal';
-import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, AIInsightsMap } from '../types';
-import { VIEWS, MOCK_AUDIT_LOGS, MOCK_PROPOSALS } from '../constants';
-import * as apiService from '../services/apiService';
+import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Header';
+import { Dashboard } from './components/Dashboard';
+import { AccountsPayable } from './components/AccountsPayable';
+import { Receipts } from './components/Receipts';
+import { CashManagement } from './components/CashManagement';
+import { Reports } from './components/Reports';
+import { AIFinancialAdvisor } from './components/AIFinancialAdvisor';
+import { InvoiceGenerator } from './components/InvoiceGenerator';
+import { FiscalModule } from './components/FiscalModule';
+import { FinancialCRM } from './components/FinancialCRM';
+import { Integrations } from './components/Integrations';
+import { UserManagement } from './components/UserManagement';
+import { Contacts } from './components/Contacts';
+import { Login } from './components/Login';
+import { Help } from './components/Help';
+import { GeneratedInvoices } from './components/GeneratedInvoices';
+import { AccountantPanel } from './components/AccountantPanel';
+import { BankAccounts } from './components/BankAccounts';
+import { BankReconciliation } from './components/BankReconciliation';
+import { Recurrences } from './components/Recurrences';
+import { PayableRecurrences } from './components/PayableRecurrences';
+import { PaymentSchedule } from './components/PaymentSchedule';
+import { ReceivableSchedule } from './components/ReceivableSchedule';
+import { CashFlowRecords } from './components/CashFlowRecords';
+import { Properties } from './components/Properties';
+import { Projects } from './components/Projects';
+import { Proposals } from './components/Proposals';
+import { SchemaGenerator } from './components/SchemaGenerator';
+import { PaymentConfirmationModal } from './components/PaymentConfirmationModal';
+import { ExpenseModal } from './components/ExpenseModal';
+import { ProjectModal } from './components/ProjectModal';
+import { ProposalModal } from './components/ProposalModal';
+import { AutomatedNotificationManager } from './components/AutomatedNotificationManager';
+import { ToastContainer } from './components/ToastContainer';
+import { AdminPanel } from './components/AdminPanel';
+import { NotificationCenter } from './components/NotificationCenter';
+import { CostCenters } from './components/CostCenters';
+import { CompanyProfile } from './components/CompanyProfile';
+import { PlanSubscription } from './components/PlanSubscription';
+import { Settings } from './components/Settings';
+import { Categories } from './components/Categories';
+import { Indexes } from './components/Indexes';
+import { QRCodeModal } from './components/QRCodeModal';
+import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, AIInsightsMap } from './types';
+import { VIEWS, MOCK_AUDIT_LOGS, MOCK_PROPOSALS } from './constants';
+import * as apiService from './services/apiService';
 
 
 export default function App() {
@@ -121,6 +122,7 @@ export default function App() {
   
   // State to manage pre-login view (regular login or admin panel)
   const [isSuperAdminView, setIsSuperAdminView] = useState<boolean>(false);
+  // FIX: Add state for mobile sidebar visibility
   const [isSidebarMobileOpen, setIsSidebarMobileOpen] = useState(false);
 
   // Systematically persist all key states to our abstracted service layer.
@@ -675,6 +677,7 @@ export default function App() {
           isMobileOpen={isSidebarMobileOpen}
           setIsMobileOpen={setIsSidebarMobileOpen}
         />
+        {/* FIX: Add wrapper div and Header for responsive layout */}
         <div className="flex flex-1 flex-col overflow-hidden">
             <Header 
                 activeView={activeView}
