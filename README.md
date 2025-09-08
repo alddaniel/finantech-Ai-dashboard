@@ -1,43 +1,61 @@
+# FinanTech AI - Pacote de Deploy para Vercel
 
-# FinanTech AI - Pacote de Execução Local
-
-Este pacote permite que você execute a aplicação FinanTech AI em sua máquina local de forma simples e rápida, sem a necessidade de configurações complexas.
+Este pacote foi reestruturado para ser uma aplicação web moderna e pronta para produção, utilizando um sistema de build com Vite e um backend seguro para a chave de API, ideal para deploy na Vercel (incluindo o Plano Hobby).
 
 ## Pré-requisitos
 
-Antes de começar, você precisa ter o **Node.js** instalado em seu computador. O Node.js inclui o `npm` (Node Package Manager), que é necessário para executar a aplicação.
+- **Node.js:** Essencial para instalar as dependências e rodar o build. [Baixe aqui](https://nodejs.org/).
+- **Conta na Vercel:** [Crie uma conta gratuita](https://vercel.com/signup).
+- **Conta no GitHub (ou similar):** A forma mais fácil de fazer o deploy na Vercel é através de um repositório Git.
 
-- **Para baixar e instalar o Node.js:** [https://nodejs.org/](https://nodejs.org/)
-  *(Recomendamos a versão LTS, que é mais estável).*
+## Como Fazer o Deploy na Vercel
 
-Para verificar se você já tem o Node.js instalado, abra o terminal e digite `node -v`. Se um número de versão aparecer, você está pronto.
+### Passo 1: Preparar o Ambiente
 
-## Como "Instalar" e Executar
+1.  **Instale as dependências:** Abra o terminal na pasta do projeto e execute:
+    ```bash
+    npm install
+    ```
+2.  **Suba para um Repositório Git:** Crie um novo repositório no GitHub (ou GitLab/Bitbucket) e envie o código do projeto para ele.
 
-Siga os passos abaixo no diretório onde você extraiu este arquivo `.zip`.
+### Passo 2: Configurar o Projeto na Vercel
 
-### Passo 1: Instalar as dependências
+1.  **Novo Projeto:** No seu dashboard da Vercel, clique em "Add New..." -> "Project".
+2.  **Importar Repositório:** Importe o repositório Git que você criou no passo anterior.
+3.  **Configurar o Projeto:** A Vercel deve detectar automaticamente que é um projeto Vite e preencher as configurações de build corretamente.
+    - **Framework Preset:** `Vite`
+    - **Build Command:** `npm run build` ou `vite build`
+    - **Output Directory:** `dist`
+4.  **Adicionar a Chave da API (MUITO IMPORTANTE):**
+    - Vá para a seção **Environment Variables**.
+    - Crie uma nova variável de ambiente com o nome `API_KEY`.
+    - No campo de valor (`value`), cole a sua chave da API do Google Gemini.
+    - **Certifique-se de que a variável não está marcada como "Exposed to the browser"**. Ela deve ser acessível apenas no backend (Serverless Functions).
+5.  **Deploy:** Clique no botão "Deploy".
 
-Este passo só precisa ser executado **uma única vez**. Ele irá baixar e instalar um pequeno servidor web local necessário para rodar a aplicação.
+A Vercel irá clonar seu repositório, instalar as dependências, executar o build e fazer o deploy da sua aplicação. Ao final, você receberá uma URL pública para acessar seu sistema.
 
-Abra o seu terminal (Prompt de Comando no Windows, ou Terminal no macOS/Linux) na pasta do projeto e execute o seguinte comando:
+### Rodando Localmente para Desenvolvimento
 
-```bash
-npm install
-```
+Para testar antes de enviar para o repositório, você pode rodar um servidor de desenvolvimento local. Ele recarrega automaticamente quando você faz alterações nos arquivos.
 
-Aguarde a finalização do processo. Você verá uma pasta chamada `node_modules` ser criada.
+1.  **Instale a CLI da Vercel:**
+    ```bash
+    npm install -g vercel
+    ```
+2.  **Inicie o servidor de desenvolvimento da Vercel:**
+    ```bash
+    vercel dev
+    ```
+3.  **Vincule o projeto e adicione a chave:**
+    - Na primeira vez, a CLI perguntará sobre vincular o projeto. Siga as instruções.
+    - Para adicionar a chave de API localmente, execute:
+      ```bash
+      vercel env add API_KEY
+      ```
+    - Cole sua chave quando solicitado. Depois, para baixar as variáveis de ambiente para o seu ambiente local, execute:
+      ```bash
+      vercel env pull .env.development.local
+      ```
+4.  **Rode `vercel dev` novamente.** O servidor local (geralmente em `http://localhost:3000`) agora terá acesso à sua chave de API de forma segura, simulando o ambiente da Vercel.
 
-### Passo 2: Iniciar a Aplicação
-
-Sempre que quiser usar o sistema, execute o comando abaixo no terminal, na mesma pasta do projeto:
-
-```bash
-npm start
-```
-
-Este comando irá iniciar o servidor local e, automaticamente, abrirá a aplicação FinanTech AI no seu navegador padrão. O endereço será algo como `http://127.0.0.1:8080`.
-
----
-
-É isso! A aplicação estará rodando localmente na sua máquina. Quando terminar de usar, você pode simplesmente fechar a aba do navegador e fechar a janela do terminal (pressionando `Ctrl + C` no terminal e depois confirmando, se necessário).

@@ -78,8 +78,8 @@ export const MonthDetailModal: React.FC<MonthDetailModalProps> = ({ monthKey, mo
     }, [monthKey, payables, receivables, selectedCompany]);
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose} role="dialog">
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/60 ring-1 ring-slate-900/5 dark:ring-white/10 w-full max-w-4xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={onClose} role="dialog">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/60 ring-1 ring-slate-900/5 dark:ring-white/10 w-full max-w-4xl my-8" onClick={e => e.stopPropagation()}>
                 <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white capitalize">
                         Detalhes para {monthLabel}
@@ -88,7 +88,7 @@ export const MonthDetailModal: React.FC<MonthDetailModalProps> = ({ monthKey, mo
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
-                <div className="p-6 overflow-y-auto">
+                <div className="p-6">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
                             <thead className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">

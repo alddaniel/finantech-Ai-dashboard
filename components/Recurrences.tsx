@@ -1,9 +1,9 @@
-
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent } from './ui/Card';
 import { Badge } from './ui/Badge';
-import type { Transaction, View, Contact } from '../types';
+import type { Transaction, View, Contact, ToastMessage } from '../types';
 import { VIEWS } from '../constants';
+import { ConfirmationModal } from './ConfirmationModal';
 
 const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -23,11 +23,12 @@ const formatDate = (dateString: string | undefined): string => {
     return dateString;
 };
 
-const getStatusColor = (status: Transaction['status']): 'green' | 'yellow' | 'red' => {
+const getStatusColor = (status: Transaction['status']): 'green' | 'yellow' | 'red' | 'blue' => {
     switch (status) {
         case 'Pago': return 'green';
         case 'Pendente': return 'yellow';
         case 'Vencido': return 'red';
+        case 'Agendado': return 'blue';
     }
 };
 
@@ -35,9 +36,12 @@ interface RecurrencesProps {
     receivables: Transaction[];
     selectedCompany: string;
     setReceivables: React.Dispatch<React.SetStateAction<Transaction[]>>;
+    addToast: (toast: Omit<ToastMessage, 'id'>) => void;
 }
 
-export const Recurrences: React.FC<RecurrencesProps> = ({ receivables, selectedCompany, setReceivables }) => {
+export const Recurrences: React.FC<RecurrencesProps> = ({ receivables, selectedCompany, setReceivables, addToast }) => {
+    const [itemToDelete, setItemToDelete] = useState<Transaction | null>(null);
+
     const recurringTransactions = useMemo(() => {
         return receivables.filter(r => r.recurrence && r.company === selectedCompany);
     }, [receivables, selectedCompany]);
@@ -47,10 +51,14 @@ export const Recurrences: React.FC<RecurrencesProps> = ({ receivables, selectedC
         console.log("Edit for recurrence ID:", id);
     };
 
-    const handleDelete = (id: string) => {
-        if (window.confirm('Tem certeza de que deseja excluir esta receita recorrente? Esta ação não pode ser desfeita.')) {
-            setReceivables(prev => prev.filter(r => r.id !== id));
-        }
+    const handleConfirmDelete = () => {
+        if (!itemToDelete) return;
+        setReceivables(prev => prev.filter(r => r.id !== itemToDelete.id));
+        addToast({
+            type: 'success',
+            title: 'Recorrência Excluída!',
+            description: `A receita recorrente "${itemToDelete.description}" foi removida.`
+        });
     };
 
     return (
@@ -85,7 +93,7 @@ export const Recurrences: React.FC<RecurrencesProps> = ({ receivables, selectedC
                                             <button onClick={() => handleEdit(transaction.id)} className="font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300">
                                                 Editar
                                             </button>
-                                            <button onClick={() => handleDelete(transaction.id)} className="font-semibold text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                            <button onClick={() => setItemToDelete(transaction)} className="font-semibold text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
                                                 Excluir
                                             </button>
                                         </td>
@@ -99,6 +107,14 @@ export const Recurrences: React.FC<RecurrencesProps> = ({ receivables, selectedC
                     </div>
                 </CardContent>
             </Card>
+             <ConfirmationModal
+                isOpen={!!itemToDelete}
+                onClose={() => setItemToDelete(null)}
+                onConfirm={handleConfirmDelete}
+                title="Confirmar Exclusão de Recorrência"
+            >
+                Tem certeza que deseja excluir a recorrência <strong className="text-slate-800 dark:text-slate-100">"{itemToDelete?.description}"</strong>? Esta ação não pode ser desfeita.
+            </ConfirmationModal>
         </div>
     );
 };

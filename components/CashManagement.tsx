@@ -1,9 +1,9 @@
 
+
 import React, { useMemo, useState } from 'react';
 import { Card, CardHeader, CardContent } from './ui/Card';
 import { CashFlowChart } from './CashFlowChart';
-import { MOCK_CASH_FLOW_DATA } from '../constants';
-import type { Transaction } from '../types';
+import type { Transaction, CashFlowData } from '../types';
 import { MonthDetailModal } from './MonthDetailModal';
 
 const formatCurrency = (value: number) => {
@@ -79,6 +79,53 @@ export const CashManagement: React.FC<CashManagementProps> = ({ selectedCompany,
     const sortedMonthKeys = useMemo(() => {
         return Object.keys(transactionsByMonth).sort().reverse();
     }, [transactionsByMonth]);
+    
+    const cashFlowData = useMemo((): CashFlowData[] => {
+        const last6Months: { year: number; month: number; label: string }[] = [];
+        const today = new Date();
+        today.setDate(1); // Start from the beginning of the current month
+
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            last6Months.push({
+                year: date.getFullYear(),
+                month: date.getMonth(),
+                label: date.toLocaleString('pt-BR', { month: 'short' }).replace('.', '').toLocaleUpperCase(),
+            });
+        }
+        
+        let runningBalance = 0;
+
+        const data = last6Months.map(monthInfo => {
+            const monthlyReceitas = companyTransactions
+                .filter(t => {
+                    const paymentDate = parseDate(t.paymentDate!);
+                    return t.type === 'receita' && paymentDate.getFullYear() === monthInfo.year && paymentDate.getMonth() === monthInfo.month;
+                })
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const monthlyDespesas = companyTransactions
+                .filter(t => {
+                    const paymentDate = parseDate(t.paymentDate!);
+                    return t.type === 'despesa' && paymentDate.getFullYear() === monthInfo.year && paymentDate.getMonth() === monthInfo.month;
+                })
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            runningBalance += monthlyReceitas - monthlyDespesas;
+
+            return {
+                month: monthInfo.label,
+                receitas: monthlyReceitas,
+                despesas: monthlyDespesas,
+                saldo: runningBalance,
+            };
+        });
+
+        const hasActivity = data.some(d => d.receitas > 0 || d.despesas > 0);
+        return hasActivity ? data : [];
+
+    }, [companyTransactions]);
+
 
     const kpiData = useMemo(() => {
         if (sortedMonthKeys.length === 0) {
@@ -121,11 +168,21 @@ export const CashManagement: React.FC<CashManagementProps> = ({ selectedCompany,
                 </div>
                 
                 <Card>
-                    <CardHeader><h2 className="text-xl font-semibold text-gray-900 dark:text-white">Fluxo de Caixa Realizado (Exemplo)</h2></CardHeader>
+                    <CardHeader><h2 className="text-xl font-semibold text-gray-900 dark:text-white">Fluxo de Caixa Realizado (Últimos 6 Meses)</h2></CardHeader>
                     <CardContent>
-                        <div className="h-96 pt-4">
-                            <CashFlowChart data={MOCK_CASH_FLOW_DATA} />
-                        </div>
+                        {cashFlowData.length > 0 ? (
+                             <div className="h-96 pt-4">
+                                <CashFlowChart data={cashFlowData} />
+                            </div>
+                        ) : (
+                             <div className="h-96 flex flex-col items-center justify-center text-center">
+                                <div className="bg-gray-100 dark:bg-gray-800/50 rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4">
+                                    <ChartIcon />
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Nenhum dado de fluxo de caixa</h3>
+                                <p className="text-gray-500 dark:text-gray-400 mt-1">Quando você registrar pagamentos de receitas e despesas, o gráfico aparecerá aqui.</p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -181,3 +238,5 @@ export const CashManagement: React.FC<CashManagementProps> = ({ selectedCompany,
         </>
     );
 };
+
+const ChartIcon = () => <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4v17h17"></path></svg>;

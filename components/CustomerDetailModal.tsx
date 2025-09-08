@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent } from './ui/Card';
 import type { DebtorCustomer, CommunicationHistory } from '../types';
@@ -76,14 +77,14 @@ export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ debtor
 
     return (
         <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto"
             onClick={onClose}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
         >
             <div
-                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/60 ring-1 ring-slate-900/5 dark:ring-white/10 w-full max-w-4xl max-h-[90vh] flex flex-col"
+                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/60 ring-1 ring-slate-900/5 dark:ring-white/10 w-full max-w-4xl my-8"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
@@ -92,7 +93,7 @@ export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ debtor
                         <CloseIcon />
                     </button>
                 </div>
-                <div className="overflow-y-auto p-6 space-y-6">
+                <div className="p-6 space-y-6">
                     <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
                         <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">Resumo do Cliente</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -165,7 +166,9 @@ export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ debtor
                     </button>
                      <button
                         onClick={handleGenerateClick}
-                        className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                        disabled={debtor.hasOpenInvoice}
+                        title={debtor.hasOpenInvoice ? "Este cliente já possui uma cobrança pendente. Baixe a cobrança existente em 'Contas a Receber'." : "Gerar nova cobrança consolidada"}
+                        className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                         <InvoiceIcon />
                         Gerar Cobrança

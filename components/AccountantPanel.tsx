@@ -30,6 +30,24 @@ interface AccountantPanelProps {
     currentUser: User;
 }
 
+const FilterButton: React.FC<{
+    label: string;
+    isActive: boolean;
+    onClick: () => void;
+}> = ({ label, isActive, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${
+            isActive
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+        }`}
+    >
+        {label}
+    </button>
+);
+
+
 export const AccountantPanel: React.FC<AccountantPanelProps> = ({ users, companies, accountantRequests, setAccountantRequests, currentUser }) => {
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [formData, setFormData] = useState({
@@ -37,8 +55,10 @@ export const AccountantPanel: React.FC<AccountantPanelProps> = ({ users, compani
         assignedToId: '',
         requestType: 'documento' as AccountantRequest['requestType'],
         subject: '',
-        details: ''
+        details: '',
+        priority: 'Medium' as 'High' | 'Medium' | 'Low'
     });
+    const [priorityFilter, setPriorityFilter] = useState<'all' | 'High' | 'Medium' | 'Low'>('all');
 
     const accessibleCompanies = useMemo(() => {
         return companies.filter(c => currentUser.accessibleCompanies.includes(c.name));
@@ -66,10 +86,11 @@ export const AccountantPanel: React.FC<AccountantPanelProps> = ({ users, compani
             subject: formData.subject,
             details: formData.details,
             status: 'Pendente',
-            createdAt: new Date().toISOString().split('T')[0]
+            createdAt: new Date().toISOString().split('T')[0],
+            priority: formData.priority,
         };
         setAccountantRequests(prev => [newRequest, ...prev]);
-        setFormData({ company: '', assignedToId: '', requestType: 'documento', subject: '', details: '' });
+        setFormData({ company: '', assignedToId: '', requestType: 'documento', subject: '', details: '', priority: 'Medium' });
         setIsFormVisible(false);
     };
     
@@ -77,7 +98,22 @@ export const AccountantPanel: React.FC<AccountantPanelProps> = ({ users, compani
         setAccountantRequests(prev => prev.map(req => req.id === id ? {...req, status: newStatus, resolvedAt: newStatus === 'Resolvido' ? new Date().toISOString().split('T')[0] : undefined} : req));
     }
 
-    const myRequests = accountantRequests.filter(req => req.requesterId === currentUser.id);
+    const myRequests = useMemo(() => {
+        return accountantRequests.filter(req => {
+            const isMyRequest = req.requesterId === currentUser.id;
+            const matchesPriority = priorityFilter === 'all' || (req.priority || 'Medium') === priorityFilter;
+            return isMyRequest && matchesPriority;
+        });
+    }, [accountantRequests, currentUser.id, priorityFilter]);
+
+    const getPriorityBadgeColor = (priority: 'High' | 'Medium' | 'Low' | undefined): 'red' | 'yellow' | 'blue' => {
+        switch (priority) {
+            case 'High': return 'red';
+            case 'Medium': return 'yellow';
+            case 'Low': return 'blue';
+            default: return 'yellow';
+        }
+    };
 
     return (
         <div className="space-y-8">
@@ -109,12 +145,22 @@ export const AccountantPanel: React.FC<AccountantPanelProps> = ({ users, compani
                                     {assignableUsers.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
                                 </SelectField>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Tipo de Solicitação</label>
-                                <div className="flex gap-4">
-                                    <RadioInput label="Documento" name="requestType" value="documento" checked={formData.requestType === 'documento'} onChange={handleChange} />
-                                    <RadioInput label="Esclarecimento" name="requestType" value="esclarecimento" checked={formData.requestType === 'esclarecimento'} onChange={handleChange} />
-                                    <RadioInput label="Lançamento" name="requestType" value="lançamento" checked={formData.requestType === 'lançamento'} onChange={handleChange} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Tipo de Solicitação</label>
+                                    <div className="flex gap-4">
+                                        <RadioInput label="Documento" name="requestType" value="documento" checked={formData.requestType === 'documento'} onChange={handleChange} />
+                                        <RadioInput label="Esclarecimento" name="requestType" value="esclarecimento" checked={formData.requestType === 'esclarecimento'} onChange={handleChange} />
+                                        <RadioInput label="Lançamento" name="requestType" value="lançamento" checked={formData.requestType === 'lançamento'} onChange={handleChange} />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label htmlFor="priority" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Prioridade</label>
+                                    <select id="priority" name="priority" value={formData.priority} onChange={handleChange} className={selectStyle}>
+                                        <option value="High">Alta</option>
+                                        <option value="Medium">Média</option>
+                                        <option value="Low">Baixa</option>
+                                    </select>
                                 </div>
                             </div>
                             <div>
@@ -136,7 +182,16 @@ export const AccountantPanel: React.FC<AccountantPanelProps> = ({ users, compani
             )}
 
             <Card className="!p-0">
-                <CardHeader className="p-6"><h2 className="text-xl font-semibold">Minhas Solicitações</h2></CardHeader>
+                <CardHeader className="p-6">
+                    <h2 className="text-xl font-semibold">Minhas Solicitações</h2>
+                    <div className="flex items-center gap-2 mt-4">
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Filtrar por prioridade:</span>
+                        <FilterButton label="Todas" isActive={priorityFilter === 'all'} onClick={() => setPriorityFilter('all')} />
+                        <FilterButton label="Alta" isActive={priorityFilter === 'High'} onClick={() => setPriorityFilter('High')} />
+                        <FilterButton label="Média" isActive={priorityFilter === 'Medium'} onClick={() => setPriorityFilter('Medium')} />
+                        <FilterButton label="Baixa" isActive={priorityFilter === 'Low'} onClick={() => setPriorityFilter('Low')} />
+                    </div>
+                </CardHeader>
                 <CardContent>
                      <div className="overflow-x-auto">
                         <table className="min-w-full">
@@ -146,6 +201,7 @@ export const AccountantPanel: React.FC<AccountantPanelProps> = ({ users, compani
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Data</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Tipo</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Prioridade</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Ações</th>
                                 </tr>
                             </thead>
@@ -156,6 +212,11 @@ export const AccountantPanel: React.FC<AccountantPanelProps> = ({ users, compani
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{formatDate(req.createdAt)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 capitalize">{req.requestType}</td>
                                         <td className="px-6 py-4 whitespace-nowrap"><Badge color={req.status === 'Pendente' ? 'yellow' : req.status === 'Resolvido' ? 'green' : 'red'}>{req.status}</Badge></td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <Badge color={getPriorityBadgeColor(req.priority)}>
+                                                {req.priority || 'Medium'}
+                                            </Badge>
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                             {req.status === 'Pendente' && <>
                                                 <button onClick={() => handleStatusChange(req.id, 'Resolvido')} className="font-semibold text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">Resolver</button>
@@ -164,7 +225,7 @@ export const AccountantPanel: React.FC<AccountantPanelProps> = ({ users, compani
                                         </td>
                                     </tr>
                                 ))}
-                                {myRequests.length === 0 && <tr><td colSpan={5} className="text-center py-8 text-gray-500 dark:text-gray-400">Nenhuma solicitação criada.</td></tr>}
+                                {myRequests.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-gray-500 dark:text-gray-400">Nenhuma solicitação encontrada.</td></tr>}
                             </tbody>
                         </table>
                     </div>

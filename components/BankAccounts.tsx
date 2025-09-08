@@ -1,10 +1,10 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from './ui/Card';
 import { BankAccountModal } from './BankAccountModal';
 import { BankTransactionDetailModal } from './BankTransactionDetailModal';
-import type { View, BankAccount, BankTransaction } from '../types';
+import type { View, BankAccount, BankTransaction, ToastMessage } from '../types';
 import { VIEWS } from '../constants';
+import { ConfirmationModal } from './ConfirmationModal';
 
 const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -113,12 +113,15 @@ interface BankAccountsProps {
     setBankAccounts: React.Dispatch<React.SetStateAction<BankAccount[]>>;
     selectedCompany: string;
     bankTransactions: BankTransaction[];
+    setActiveView: (view: View) => void;
+    addToast: (toast: Omit<ToastMessage, 'id'>) => void;
 }
 
-export const BankAccounts: React.FC<BankAccountsProps> = ({ bankAccounts, setBankAccounts, selectedCompany, bankTransactions }) => {
+export const BankAccounts: React.FC<BankAccountsProps> = ({ bankAccounts, setBankAccounts, selectedCompany, bankTransactions, setActiveView, addToast }) => {
     const [isModalOpen, setModalOpen] = useState(false);
     const [accountToEdit, setAccountToEdit] = useState<BankAccount | null>(null);
     const [viewingTx, setViewingTx] = useState<{ transaction: BankTransaction; account: BankAccount } | null>(null);
+    const [accountToDelete, setAccountToDelete] = useState<BankAccount | null>(null);
 
     const filteredAccounts = useMemo(() => {
         return bankAccounts.filter(acc => acc.company === selectedCompany);
@@ -137,26 +140,39 @@ export const BankAccounts: React.FC<BankAccountsProps> = ({ bankAccounts, setBan
         }
     };
 
-    const handleDeleteAccount = (id: string) => {
-        if (window.confirm('Tem certeza que deseja excluir esta conta bancária? Esta ação não pode ser desfeita.')) {
-            setBankAccounts(bankAccounts.filter(acc => acc.id !== id));
-        }
+    const handleConfirmDelete = () => {
+        if (!accountToDelete) return;
+        setBankAccounts(prev => prev.filter(acc => acc.id !== accountToDelete.id));
+        addToast({
+            type: 'success',
+            title: 'Conta Excluída!',
+            description: `A conta bancária "${accountToDelete.name}" foi removida.`
+        });
     };
 
     return (
         <div className="space-y-8">
-            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Contas Bancárias</h1>
-                    <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
-                        Visualize suas contas e os últimos movimentos em cada uma.
-                    </p>
-                </div>
-                <button 
-                    onClick={() => handleOpenModal()} 
-                    className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2 text-sm self-start md:self-center">
-                    <PlusIcon /> Adicionar Conta
+            <div>
+                 <button
+                    onClick={() => setActiveView(VIEWS.SETTINGS)}
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white mb-2"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Voltar para Configurações
                 </button>
+                <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                     <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Contas Bancárias</h1>
+                        <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
+                            Visualize suas contas e os últimos movimentos em cada uma.
+                        </p>
+                    </div>
+                    <button 
+                        onClick={() => handleOpenModal()} 
+                        className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2 text-sm self-start md:self-center">
+                        <PlusIcon /> Adicionar Conta
+                    </button>
+                </div>
             </div>
 
             {filteredAccounts.length > 0 ? (
@@ -172,7 +188,7 @@ export const BankAccounts: React.FC<BankAccountsProps> = ({ bankAccounts, setBan
                                 account={account}
                                 transactions={accountTransactions}
                                 onEdit={() => handleOpenModal(account)}
-                                onDelete={() => handleDeleteAccount(account.id)}
+                                onDelete={() => setAccountToDelete(account)}
                                 onTransactionClick={(transaction) => setViewingTx({ transaction, account })}
                             />
                         )
@@ -208,6 +224,15 @@ export const BankAccounts: React.FC<BankAccountsProps> = ({ bankAccounts, setBan
                     onClose={() => setViewingTx(null)}
                 />
             )}
+            
+            <ConfirmationModal
+                isOpen={!!accountToDelete}
+                onClose={() => setAccountToDelete(null)}
+                onConfirm={handleConfirmDelete}
+                title="Confirmar Exclusão de Conta"
+            >
+                Tem certeza que deseja excluir a conta <strong className="text-slate-800 dark:text-slate-100">"{accountToDelete?.name} - {accountToDelete?.account}"</strong>? Esta ação não pode ser desfeita.
+            </ConfirmationModal>
         </div>
     );
 };

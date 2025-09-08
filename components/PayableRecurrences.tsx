@@ -1,9 +1,9 @@
-
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent } from './ui/Card';
 import { Badge } from './ui/Badge';
-import type { Transaction, View, Contact } from '../types';
+import type { Transaction, View, Contact, ToastMessage } from '../types';
 import { VIEWS } from '../constants';
+import { ConfirmationModal } from './ConfirmationModal';
 
 const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -36,9 +36,12 @@ interface PayableRecurrencesProps {
     payables: Transaction[];
     selectedCompany: string;
     setPayables: React.Dispatch<React.SetStateAction<Transaction[]>>;
+    addToast: (toast: Omit<ToastMessage, 'id'>) => void;
 }
 
-export const PayableRecurrences: React.FC<PayableRecurrencesProps> = ({ payables, selectedCompany, setPayables }) => {
+export const PayableRecurrences: React.FC<PayableRecurrencesProps> = ({ payables, selectedCompany, setPayables, addToast }) => {
+    const [itemToDelete, setItemToDelete] = useState<Transaction | null>(null);
+
     const recurringTransactions = useMemo(() => {
         return payables.filter(p => p.recurrence && p.company === selectedCompany);
     }, [payables, selectedCompany]);
@@ -48,10 +51,14 @@ export const PayableRecurrences: React.FC<PayableRecurrencesProps> = ({ payables
         console.log("Edit for recurrence ID:", id);
     };
 
-    const handleDelete = (id: string) => {
-        if (window.confirm('Tem certeza de que deseja excluir esta despesa recorrente? Esta ação não pode ser desfeita.')) {
-            setPayables(prev => prev.filter(p => p.id !== id));
-        }
+    const handleConfirmDelete = () => {
+        if (!itemToDelete) return;
+        setPayables(prev => prev.filter(p => p.id !== itemToDelete.id));
+        addToast({
+            type: 'success',
+            title: 'Recorrência Excluída!',
+            description: `A despesa recorrente "${itemToDelete.description}" foi removida.`
+        });
     };
 
     return (
@@ -86,7 +93,7 @@ export const PayableRecurrences: React.FC<PayableRecurrencesProps> = ({ payables
                                             <button onClick={() => handleEdit(transaction.id)} className="font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300">
                                                 Editar
                                             </button>
-                                            <button onClick={() => handleDelete(transaction.id)} className="font-semibold text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                            <button onClick={() => setItemToDelete(transaction)} className="font-semibold text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
                                                 Excluir
                                             </button>
                                         </td>
@@ -100,6 +107,14 @@ export const PayableRecurrences: React.FC<PayableRecurrencesProps> = ({ payables
                     </div>
                 </CardContent>
             </Card>
+            <ConfirmationModal
+                isOpen={!!itemToDelete}
+                onClose={() => setItemToDelete(null)}
+                onConfirm={handleConfirmDelete}
+                title="Confirmar Exclusão de Recorrência"
+            >
+                Tem certeza que deseja excluir a recorrência <strong className="text-slate-800 dark:text-slate-100">"{itemToDelete?.description}"</strong>? Esta ação não pode ser desfeita.
+            </ConfirmationModal>
         </div>
     );
 };

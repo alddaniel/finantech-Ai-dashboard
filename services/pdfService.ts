@@ -15,37 +15,39 @@ export const generatePdfFromElement = async (elementId: string): Promise<Blob> =
     // Add a temporary class to the body to activate PDF-specific styles
     document.body.classList.add('pdf-export');
 
-    const canvas = await html2canvas(element, {
-        scale: 2, // Increased scale for better resolution and legibility
-        useCORS: true,
-        backgroundColor: '#ffffff',
-    });
+    try {
+        const canvas = await html2canvas(element, {
+            scale: 2, // Increased scale for better resolution and legibility
+            useCORS: true,
+            backgroundColor: '#ffffff',
+        });
 
-    // Remove the temporary class after canvas generation
-    document.body.classList.remove('pdf-export');
-    
-    // Use JPEG with quality compression for a smaller file size than PNG
-    const imgData = canvas.toDataURL('image/jpeg', 0.8);
+        // Use JPEG with quality compression for a smaller file size than PNG
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
 
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 297; // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
 
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    let position = 0;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        let position = 0;
 
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
         pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
-    }
 
-    return pdf.output('blob');
+        while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+
+        return pdf.output('blob');
+    } finally {
+        // This is crucial: ensure the class is removed even if an error occurs.
+        document.body.classList.remove('pdf-export');
+    }
 };
 
 /**

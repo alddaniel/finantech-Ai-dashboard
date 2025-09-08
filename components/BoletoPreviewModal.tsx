@@ -54,9 +54,20 @@ const BoletoField: React.FC<{ label: string; children: React.ReactNode; classNam
     </div>
 );
 
+const BANK_INFO: { [key: string]: { code: string; logoSlug: string } } = {
+    'Banco do Brasil': { code: '001-9', logoSlug: 'bb.com.br' },
+    'Itaú Unibanco': { code: '341-7', logoSlug: 'itau.com.br' },
+    'Bradesco': { code: '237-2', logoSlug: 'bradesco.com.br' },
+    'Caixa Econômica': { code: '104-0', logoSlug: 'caixa.gov.br' },
+    'Santander': { code: '033-7', logoSlug: 'santander.com.br' },
+};
+
 export const BoletoPreviewModal: React.FC<BoletoPreviewModalProps> = ({ submission, onClose }) => {
     const [copySuccess, setCopySuccess] = useState('');
     const [isSharing, setIsSharing] = useState(false);
+
+    const bankInfo = BANK_INFO[submission.bank] || BANK_INFO['Bradesco'];
+    const bankLogoUrl = `https://logo.clearbit.com/${bankInfo.logoSlug}`;
 
     const handleDownload = () => {
         downloadPdfFromElement('boleto-content', `boleto_${submission.customer.replace(/\s/g, '_')}.pdf`);
@@ -126,8 +137,8 @@ export const BoletoPreviewModal: React.FC<BoletoPreviewModalProps> = ({ submissi
     instructions.push(...submission.items.map(item => `- ${item.description} (x${item.quantity})`));
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose} role="dialog" aria-modal="true">
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/60 ring-1 ring-slate-900/5 dark:ring-white/10 w-full max-w-4xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={onClose} role="dialog" aria-modal="true">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/60 ring-1 ring-slate-900/5 dark:ring-white/10 w-full max-w-4xl my-8" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-800 print-hide">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">Visualização do Boleto</h2>
                     <button onClick={onClose} className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors">
@@ -135,14 +146,14 @@ export const BoletoPreviewModal: React.FC<BoletoPreviewModalProps> = ({ submissi
                     </button>
                 </div>
 
-                <div className="overflow-y-auto p-6">
+                <div className="p-6">
                     <div id="boleto-content" className="printable-area bg-white p-2 font-['Arial'] text-xs mx-auto" style={{width: '660px'}}>
                         {/* --- Recibo do Sacado --- */}
                         <div className="border-b border-dashed border-gray-600 pb-2 mb-2">
                              <div className="flex items-center border-b border-gray-600 pb-1 mb-1">
-                                <img src="https://logo.clearbit.com/bradesco.com.br" alt="Logo Banco" className="h-5 mr-4" />
+                                <img src={bankLogoUrl} alt="Logo Banco" className="h-5 mr-4" />
                                 <div className="border-l border-r border-gray-600 px-2 text-center">
-                                    <span className="text-base font-bold">237-2</span>
+                                    <span className="text-base font-bold">{bankInfo.code}</span>
                                 </div>
                                 <div className="ml-auto text-base font-mono font-bold tracking-wider">{linhaDigitavel.split(' ')[0]}</div>
                             </div>
@@ -161,9 +172,9 @@ export const BoletoPreviewModal: React.FC<BoletoPreviewModalProps> = ({ submissi
                         {/* --- Ficha de Compensação --- */}
                         <div>
                             <div className="flex items-center border-b-2 border-black pb-1 mb-1">
-                                <img src="https://logo.clearbit.com/bradesco.com.br" alt="Logo Banco" className="h-6 mr-4" />
+                                <img src={bankLogoUrl} alt="Logo Banco" className="h-6 mr-4" />
                                 <div className="border-l-2 border-r-2 border-black px-4 text-center">
-                                    <span className="text-xl font-bold">237-2</span>
+                                    <span className="text-xl font-bold">{bankInfo.code}</span>
                                 </div>
                                 <div className="ml-auto text-lg font-mono font-bold tracking-wider relative flex items-center">
                                     <span>{linhaDigitavel}</span>
@@ -195,20 +206,16 @@ export const BoletoPreviewModal: React.FC<BoletoPreviewModalProps> = ({ submissi
                             </div>
                             
                             <div className="grid grid-cols-12 border-t border-l border-r border-gray-600">
-                                <BoletoField label="Uso do Banco" className="col-span-9 border-r border-gray-600 p-1.5">&nbsp;</BoletoField>
-                                <BoletoField label="Carteira" className="col-span-1">SR</BoletoField>
-                                <BoletoField label="Espécie" className="col-span-1">R$</BoletoField>
-                                <BoletoField label="Quantidade" className="col-span-1">&nbsp;</BoletoField>
-                            </div>
-
-                            <div className="grid grid-cols-12 border-t border-l border-r border-gray-600">
-                                <div className="col-span-9 row-span-4 border-r border-gray-600 p-1.5">
+                                <div className="col-span-9 row-span-5 border-r border-gray-600 p-1.5">
                                     <div className="text-[7px] text-gray-700">Instruções (Texto de Responsabilidade do Cedente)</div>
                                     <div className="text-[8px] font-semibold text-black mt-1 space-y-0.5">
                                         {instructions.map((inst, idx) => <Fragment key={idx}>{inst}<br/></Fragment>)}
                                     </div>
                                 </div>
-                                <BoletoField label="(-) Desconto / Abatimento" className="col-span-3 text-right">&nbsp;</BoletoField>
+                                <BoletoField label="Valor do Documento" className="col-span-3 text-right">{formatCurrency(submission.total)}</BoletoField>
+                            </div>
+                            <div className="grid grid-cols-12 border-l border-r border-gray-600">
+                                <BoletoField label="(-) Desconto / Abatimento" className="col-span-3 text-right" borderTop>&nbsp;</BoletoField>
                             </div>
                             <div className="grid grid-cols-12 border-l border-r border-gray-600">
                                 <BoletoField label="(-) Outras Deduções" className="col-span-3 text-right" borderTop>&nbsp;</BoletoField>
@@ -221,7 +228,7 @@ export const BoletoPreviewModal: React.FC<BoletoPreviewModalProps> = ({ submissi
                             </div>
                             <div className="grid grid-cols-12 border-t border-l border-r border-gray-600">
                                 <div className="col-span-9 border-r border-gray-600"></div>
-                                <BoletoField label="(=) Valor Cobrado" className="col-span-3 text-right" borderTop>&nbsp;</BoletoField>
+                                <BoletoField label="(=) Valor Cobrado" className="col-span-3 text-right" borderTop>{formatCurrency(submission.total)}</BoletoField>
                             </div>
                             
                             <div className="grid grid-cols-1 border-t border-l border-r border-b border-gray-600">

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import type { BankAccount } from '../types';
 import { MOCK_BANKS } from '../constants';
@@ -21,24 +20,51 @@ const defaultAccount: Omit<BankAccount, 'id' | 'company' | 'logoUrl'> = {
 const inputStyle = "mt-1 block w-full rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2.5 px-4 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm";
 const selectStyle = "mt-1 block w-full rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2.5 pl-3 pr-10 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm";
 
+// --- Currency Formatting Utilities ---
+const formatCurrencyOnInput = (value: string): string => {
+  if (!value) return '';
+  const digitsOnly = value.replace(/\D/g, '');
+  if (digitsOnly.length === 0) return '';
+  const numberValue = parseFloat(digitsOnly) / 100;
+  return numberValue.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+const parseFormattedCurrency = (value: string): number => {
+    if (typeof value !== 'string' || !value) return 0;
+    const cleanedValue = value.replace(/R\$\s?/, '').replace(/\./g, '');
+    const numericString = cleanedValue.replace(',', '.');
+    return parseFloat(numericString) || 0;
+};
+// --- End Currency Formatting Utilities ---
+
 
 export const BankAccountModal: React.FC<BankAccountModalProps> = ({ isOpen, onClose, onSave, accountToEdit, selectedCompany }) => {
     const [formData, setFormData] = useState<Omit<BankAccount, 'id' | 'company' | 'logoUrl'> & { id?: string }>(defaultAccount);
+    const [balanceString, setBalanceString] = useState('');
 
     useEffect(() => {
         if (accountToEdit) {
             setFormData(accountToEdit);
+            setBalanceString(accountToEdit.balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
         } else {
             setFormData(defaultAccount);
+            setBalanceString('');
         }
     }, [accountToEdit, isOpen]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
+    const handleNonCurrencyChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
         setFormData(prev => ({ 
             ...prev, 
-            [name]: type === 'number' ? parseFloat(value) || 0 : value 
+            [name]: value 
         }));
+    };
+
+    const handleBalanceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setBalanceString(formatCurrencyOnInput(e.target.value));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -49,7 +75,7 @@ export const BankAccountModal: React.FC<BankAccountModalProps> = ({ isOpen, onCl
             name: formData.name,
             agency: formData.agency,
             account: formData.account,
-            balance: formData.balance,
+            balance: parseFormattedCurrency(balanceString),
             logoUrl: `https://logo.clearbit.com/${logoName}.com.br`,
             company: selectedCompany,
         };
@@ -60,18 +86,18 @@ export const BankAccountModal: React.FC<BankAccountModalProps> = ({ isOpen, onCl
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" aria-modal="true" role="dialog">
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/60 ring-1 ring-slate-900/5 dark:ring-white/10 w-full max-w-lg" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto" aria-modal="true" role="dialog">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 dark:shadow-black/60 ring-1 ring-slate-900/5 dark:ring-white/10 w-full max-w-lg my-8" onClick={e => e.stopPropagation()}>
                 <form onSubmit={handleSubmit}>
                     <div className="p-6 border-b border-slate-200 dark:border-slate-800">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                             {accountToEdit ? 'Editar Conta Bancária' : 'Adicionar Nova Conta'}
                         </h2>
                     </div>
-                    <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+                    <div className="p-6 space-y-4">
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Nome do Banco</label>
-                            <select name="name" id="name" value={formData.name} onChange={handleChange} required className={selectStyle}>
+                            <select name="name" id="name" value={formData.name} onChange={handleNonCurrencyChange} required className={selectStyle}>
                                 <option value="">Selecione um banco</option>
                                 {MOCK_BANKS.map(bank => <option key={bank} value={bank}>{bank}</option>)}
                             </select>
@@ -79,16 +105,26 @@ export const BankAccountModal: React.FC<BankAccountModalProps> = ({ isOpen, onCl
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="agency" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Agência</label>
-                                <input type="text" name="agency" id="agency" value={formData.agency} onChange={handleChange} required className={inputStyle} />
+                                <input type="text" name="agency" id="agency" value={formData.agency} onChange={handleNonCurrencyChange} required className={inputStyle} />
                             </div>
                             <div>
                                 <label htmlFor="account" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Número da Conta</label>
-                                <input type="text" name="account" id="account" value={formData.account} onChange={handleChange} required className={inputStyle} />
+                                <input type="text" name="account" id="account" value={formData.account} onChange={handleNonCurrencyChange} required className={inputStyle} />
                             </div>
                         </div>
                          <div>
-                            <label htmlFor="balance" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Saldo Inicial</label>
-                            <input type="number" step="0.01" name="balance" id="balance" value={formData.balance} onChange={handleChange} required className={inputStyle} />
+                            <label htmlFor="balance" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Saldo Inicial (R$)</label>
+                            <input 
+                                type="text" 
+                                inputMode="decimal" 
+                                name="balance" 
+                                id="balance" 
+                                value={balanceString} 
+                                onChange={handleBalanceChange}
+                                required 
+                                className={inputStyle} 
+                                placeholder="0,00"
+                            />
                         </div>
                     </div>
                     <div className="px-6 py-4 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-800">
