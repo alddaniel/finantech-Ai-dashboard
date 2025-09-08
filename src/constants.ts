@@ -44,7 +44,6 @@ export const PROPERTY_AVATARS: string[] = [
     'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=400&auto=format&fit=crop', // Large Estate House
 ];
 
-
 export const VIEWS: { [key: string]: View } = {
   DASHBOARD: 'dashboard',
   PAYABLE: 'payable',
