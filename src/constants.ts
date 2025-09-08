@@ -1,3 +1,4 @@
+
 import type { View, Transaction, CashFlowData, BankTransaction, SystemTransaction, DefaultRateData, NetProfitData, DebtorCustomer, FunnelStage, BankAccount, Role, User, AuditLog, Company, Contact, AccountantRequest, Property, ModuleKey, UserPermissions, Notification, CostCenter, Category, AdjustmentIndex, Project, Proposal } from './types';
 
 // --- Professional Photo Avatars for Contacts ---
@@ -43,6 +44,7 @@ export const PROPERTY_AVATARS: string[] = [
     'https://images.unsplash.com/photo-1542314831-068cd1dbb563?q=80&w=400&auto=format&fit=crop', // Commercial Building/Hotel
     'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=400&auto=format&fit=crop', // Large Estate House
 ];
+
 
 export const VIEWS: { [key: string]: View } = {
   DASHBOARD: 'dashboard',
@@ -480,7 +482,6 @@ export const MOCK_PROJECTS: Project[] = [
             { id: 'b1-3', description: 'Serviço de Terraplanagem', type: 'Terceiros', cost: 35000 },
         ],
         stages: [
-// FIX: Corrected typo from "Concluído" to "Concluido" to match type.
             { id: 's1-1', name: 'Fundação', dueDate: '2024-08-30', status: 'Concluído' },
             { id: 's1-2', name: 'Estrutura', dueDate: '2024-10-15', status: 'Aprovado Cliente' },
             { id: 's1-3', name: 'Acabamento', dueDate: '2025-01-20', status: 'Pendente' },
@@ -502,11 +503,8 @@ export const MOCK_PROJECTS: Project[] = [
             { id: 'b2-2', description: 'Projeto de Iluminação', type: 'Terceiros', cost: 15000 },
         ],
         stages: [
-// FIX: Corrected typo from "Concluído" to "Concluido" to match type.
             { id: 's2-1', name: 'Demolição e Limpeza', dueDate: '2024-06-10', status: 'Concluído' },
-// FIX: Corrected typo from "Concluído" to "Concluido" to match type.
             { id: 's2-2', name: 'Instalações', dueDate: '2024-06-25', status: 'Concluído' },
-// FIX: Corrected typo from "Concluído" to "Concluido" to match type.
             { id: 's2-3', name: 'Finalização', dueDate: '2024-07-05', status: 'Concluído' },
         ],
     },

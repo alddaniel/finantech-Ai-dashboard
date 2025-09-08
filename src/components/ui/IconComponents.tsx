@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const IconDisplay: React.FC<{ iconName?: string; className?: string; shape?: 'circle' | 'square' }> = ({ iconName, className, shape = 'circle' }) => {

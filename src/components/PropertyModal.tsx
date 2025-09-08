@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { Property, Address, Contact, AdjustmentIndex } from '../types';
 import { PROPERTY_AVATARS } from '../constants';
