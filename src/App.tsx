@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sidebar } from '../components/Sidebar';
+<<<<<<< HEAD
 import { Header } from '../components/Header';
+=======
+>>>>>>> 701de8fd8b094623e21b33ada7a7e27129e20e19
 import { Dashboard } from '../components/Dashboard';
 import { AccountsPayable } from '../components/AccountsPayable';
 import { Receipts } from '../components/Receipts';
