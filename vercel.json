@@ -2,7 +2,7 @@
   "framework": "vite",
   "functions": {
     "api/**/*.ts": {
-      "runtime": "edge"
+      "runtime": "nodejs20.x"
     }
   }
 }
