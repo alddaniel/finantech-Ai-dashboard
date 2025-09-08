@@ -11,8 +11,8 @@
   "dependencies": {
     "@google/genai": "^1.12.0",
     "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
-    "qrcode": "^1.5.3",
+    "jspdf": "^3.0.2",
+    "qrcode": "^0.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recharts": "^2.12.7"
@@ -27,6 +27,6 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.5.2",
-    "vite": "^5.3.1"
+    "vite": "^7.1.5"
   }
 }
