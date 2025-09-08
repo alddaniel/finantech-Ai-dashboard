@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import type { View, Company, User, Role, Notification } from '../types';
 import { VIEWS } from '../constants';
@@ -13,13 +12,14 @@ interface SidebarProps {
   company?: Company;
   currentUser: User;
   onLogout: () => void;
-  className?: string;
   isAccountantModuleEnabled: boolean;
   onOpenInvoiceModal: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   notifications: Notification[];
   setIsNotificationsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isMobileOpen: boolean;
+  setIsMobileOpen: (isOpen: boolean) => void;
 }
 
 type SubMenuType = 'main' | 'pagamentos' | 'recebimentos' | 'projetos';
@@ -64,13 +64,31 @@ const NavItem: React.FC<{
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
     activeView, setActiveView, selectedCompany, setSelectedCompany, companies, 
-    company, currentUser, onLogout, className, isAccountantModuleEnabled, 
+    company, currentUser, onLogout, isAccountantModuleEnabled, 
     onOpenInvoiceModal, isFullscreen, onToggleFullscreen,
-    notifications, setIsNotificationsOpen
+    notifications, setIsNotificationsOpen, isMobileOpen, setIsMobileOpen
 }) => {
   const [activeSubMenu, setActiveSubMenu] = useState<SubMenuType>('main');
 
   const unreadNotificationsCount = notifications.filter(n => !n.isRead && n.company === selectedCompany).length;
+
+  const handleItemClick = (view: View) => {
+    setActiveView(view);
+    if (isMobileOpen) {
+        setIsMobileOpen(false);
+    }
+    setActiveSubMenu('main');
+  };
+
+  const handleActionClick = (action?: () => void) => {
+    if (action) {
+        action();
+    }
+    if (isMobileOpen) {
+        setIsMobileOpen(false);
+    }
+  };
+
 
   const recebimentosSubItems: Array<{ label: string; view?: View; action?: () => void; activeChecks: View[]; icon: React.ReactNode; }> = [
       { label: 'Lançar/Baixar Receita', view: VIEWS.RECEIPTS, activeChecks: [VIEWS.RECEIPTS], icon: <MoneyInIcon /> },
@@ -161,8 +179,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               icon={item.icon}
               isActive={item.view ? activeView === item.view : false}
               onClick={() => {
-                  if(item.view) setActiveView(item.view);
-                  if(item.action) item.action();
+                  if(item.view) handleItemClick(item.view);
+                  if(item.action) handleActionClick(item.action);
               }}
             />
           ))}
@@ -172,178 +190,187 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }
 
   return (
-    <aside className={`relative w-72 flex-shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-4 flex flex-col border-r border-slate-900/5 dark:border-white/10 z-20 overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/30 ${className || ''}`}>
-      <div className="flex items-center gap-3 px-2 mb-8">
-        <div className="bg-indigo-600 p-2.5 rounded-lg">
-          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 12h2v6H8v-6zm3-3h2v9h-2V9zm3-4h2v13h-2V5z"/>
-          </svg>
-        </div>
-        <h1 className="text-xl font-bold text-gray-800 dark:text-white tracking-tighter">FinanTech AI</h1>
-      </div>
-      <nav className="flex-1 relative">
-        {/* Main Menu Panel */}
-        <div className={`absolute top-0 left-0 w-full h-full transition-transform duration-300 ease-in-out ${activeSubMenu !== 'main' ? '-translate-x-full' : 'translate-x-0'}`}>
-          <ul className="space-y-1">
-            <NavItem
-              key={VIEWS.DASHBOARD}
-              label="Dashboard"
-              icon={<DashboardIcon />}
-              isActive={activeView === VIEWS.DASHBOARD}
-              onClick={() => setActiveView(VIEWS.DASHBOARD)}
-            />
-             <NavItem
-                key={VIEWS.BANK_RECONCILIATION}
-                label="Conciliação Bancária"
-                icon={<ReconciliationIcon />}
-                isActive={activeView === VIEWS.BANK_RECONCILIATION}
-                onClick={() => setActiveView(VIEWS.BANK_RECONCILIATION)}
-             />
-             <NavItem
-                key={VIEWS.CONTACTS}
-                label="Contatos"
-                icon={<AddressBookIcon />}
-                isActive={activeView === VIEWS.CONTACTS}
-                onClick={() => setActiveView(VIEWS.CONTACTS)}
-             />
-             <div className="px-2.5 py-3">
-                 <div className="border-t border-slate-200 dark:border-slate-800"></div>
-             </div>
-             <NavItem
-              key="projetos"
-              label="Projetos & Comercial"
-              icon={<ProjectsIcon />}
-              isActive={isSubMenuActive('projetos')}
-              onClick={() => setActiveSubMenu('projetos')}
-              hasSubMenu
-            />
-             <NavItem
-              key="pagamentos"
-              label="Pagamentos"
-              icon={<PayableIcon />}
-              isActive={isSubMenuActive('pagamentos')}
-              onClick={() => setActiveSubMenu('pagamentos')}
-              hasSubMenu
-            />
-             <NavItem
-              key="recebimentos"
-              label="Recebimentos"
-              icon={<ReceivableIcon />}
-              isActive={isSubMenuActive('recebimentos')}
-              onClick={() => setActiveSubMenu('recebimentos')}
-              hasSubMenu
-            />
-            <NavItem
-              key={VIEWS.CASH_FLOW_RECORDS}
-              label="Extrato de Caixa"
-              icon={<CashFlowRecordsIcon />}
-              isActive={activeView === VIEWS.CASH_FLOW_RECORDS}
-              onClick={() => setActiveView(VIEWS.CASH_FLOW_RECORDS)}
-            />
-            <div className="px-2.5 py-3">
-                 <div className="border-t border-slate-200 dark:border-slate-800"></div>
-             </div>
-            {menuItems.map(item => {
-              if (item.module === 'accountant' && !isAccountantModuleEnabled) return null;
-              if (item.module === 'properties' && !company?.enabledModules.includes('properties')) return null;
-              if (item.module === 'fiscal' && !company?.enabledModules.includes('fiscal')) return null;
-              if (item.view === VIEWS.INTEGRATIONS && !company?.enabledModules.includes('integrations')) {
-                // Special case for Integrations: always show if the module is enabled,
-                // but for other plans it's accessed via Settings, so we hide it from main menu.
-                // Correction: The user wants it always visible. So we remove the conditional rendering.
-              }
-              if (item.module === 'ai_advisor' && !company?.enabledModules.includes('ai_advisor')) return null;
-              if (item.roles && !item.roles.includes(currentUser.role)) return null;
-              
-              return (
-                <NavItem
-                  key={item.view}
-                  label={item.label}
-                  view={item.view}
-                  icon={item.icon}
-                  isActive={activeView === item.view}
-                  onClick={() => setActiveView(item.view)}
-                />
-              );
-            })}
-
-            {/* Settings Section */}
-            <div className="px-2.5 py-3">
-                <div className="border-t border-slate-200 dark:border-slate-800"></div>
+    <>
+        {isMobileOpen && (
+            <div 
+                className="fixed inset-0 bg-black/50 z-20 md:hidden"
+                onClick={() => setIsMobileOpen(false)}
+                aria-hidden="true"
+            ></div>
+        )}
+        <aside className={`fixed inset-y-0 left-0 w-72 flex-shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-4 flex flex-col border-r border-slate-900/5 dark:border-white/10 z-30 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:shadow-2xl md:shadow-black/10 md:dark:shadow-black/30 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <div className="flex items-center gap-3 px-2 mb-8">
+                <div className="bg-indigo-600 p-2.5 rounded-lg">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 12h2v6H8v-6zm3-3h2v9h-2V9zm3-4h2v13h-2V5z"/>
+                </svg>
+                </div>
+                <h1 className="text-xl font-bold text-gray-800 dark:text-white tracking-tighter">FinanTech AI</h1>
             </div>
-            <NavItem
-                key={VIEWS.SETTINGS}
-                label="Configurações"
-                icon={<SettingsIcon />}
-                isActive={settingsRelatedViews.includes(activeView)}
-                onClick={() => setActiveView(VIEWS.SETTINGS)}
-            />
-            <NavItem
-                key={VIEWS.HELP}
-                label="Ajuda"
-                icon={<HelpIcon />}
-                isActive={activeView === VIEWS.HELP}
-                onClick={() => setActiveView(VIEWS.HELP)}
-            />
-          </ul>
-        </div>
+            <nav className="flex-1 relative overflow-y-auto">
+                {/* Main Menu Panel */}
+                <div className={`absolute top-0 left-0 w-full h-full transition-transform duration-300 ease-in-out ${activeSubMenu !== 'main' ? '-translate-x-full' : 'translate-x-0'}`}>
+                <ul className="space-y-1">
+                    <NavItem
+                    key={VIEWS.DASHBOARD}
+                    label="Dashboard"
+                    icon={<DashboardIcon />}
+                    isActive={activeView === VIEWS.DASHBOARD}
+                    onClick={() => handleItemClick(VIEWS.DASHBOARD)}
+                    />
+                    <NavItem
+                        key={VIEWS.BANK_RECONCILIATION}
+                        label="Conciliação Bancária"
+                        icon={<ReconciliationIcon />}
+                        isActive={activeView === VIEWS.BANK_RECONCILIATION}
+                        onClick={() => handleItemClick(VIEWS.BANK_RECONCILIATION)}
+                    />
+                    <NavItem
+                        key={VIEWS.CONTACTS}
+                        label="Contatos"
+                        icon={<AddressBookIcon />}
+                        isActive={activeView === VIEWS.CONTACTS}
+                        onClick={() => handleItemClick(VIEWS.CONTACTS)}
+                    />
+                    <div className="px-2.5 py-3">
+                        <div className="border-t border-slate-200 dark:border-slate-800"></div>
+                    </div>
+                    <NavItem
+                    key="projetos"
+                    label="Projetos & Comercial"
+                    icon={<ProjectsIcon />}
+                    isActive={isSubMenuActive('projetos')}
+                    onClick={() => setActiveSubMenu('projetos')}
+                    hasSubMenu
+                    />
+                    <NavItem
+                    key="pagamentos"
+                    label="Pagamentos"
+                    icon={<PayableIcon />}
+                    isActive={isSubMenuActive('pagamentos')}
+                    onClick={() => setActiveSubMenu('pagamentos')}
+                    hasSubMenu
+                    />
+                    <NavItem
+                    key="recebimentos"
+                    label="Recebimentos"
+                    icon={<ReceivableIcon />}
+                    isActive={isSubMenuActive('recebimentos')}
+                    onClick={() => setActiveSubMenu('recebimentos')}
+                    hasSubMenu
+                    />
+                    <NavItem
+                    key={VIEWS.CASH_FLOW_RECORDS}
+                    label="Extrato de Caixa"
+                    icon={<CashFlowRecordsIcon />}
+                    isActive={activeView === VIEWS.CASH_FLOW_RECORDS}
+                    onClick={() => handleItemClick(VIEWS.CASH_FLOW_RECORDS)}
+                    />
+                    <div className="px-2.5 py-3">
+                        <div className="border-t border-slate-200 dark:border-slate-800"></div>
+                    </div>
+                    {menuItems.map(item => {
+                    if (item.module === 'accountant' && !isAccountantModuleEnabled) return null;
+                    if (item.module === 'properties' && !company?.enabledModules.includes('properties')) return null;
+                    if (item.module === 'fiscal' && !company?.enabledModules.includes('fiscal')) return null;
+                    if (item.view === VIEWS.INTEGRATIONS && !company?.enabledModules.includes('integrations')) {
+                        // Special case for Integrations: always show if the module is enabled,
+                        // but for other plans it's accessed via Settings, so we hide it from main menu.
+                        // Correction: The user wants it always visible. So we remove the conditional rendering.
+                    }
+                    if (item.module === 'ai_advisor' && !company?.enabledModules.includes('ai_advisor')) return null;
+                    if (item.roles && !item.roles.includes(currentUser.role)) return null;
+                    
+                    return (
+                        <NavItem
+                        key={item.view}
+                        label={item.label}
+                        view={item.view}
+                        icon={item.icon}
+                        isActive={activeView === item.view}
+                        onClick={() => handleItemClick(item.view)}
+                        />
+                    );
+                    })}
 
-        {/* Sub-Menu Panel */}
-        <div className={`absolute top-0 left-0 w-full h-full transition-transform duration-300 ease-in-out bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl ${activeSubMenu !== 'main' ? 'translate-x-0' : 'translate-x-full'}`}>
-          {renderSubMenu()}
-        </div>
-      </nav>
-      <div className="mt-auto pt-4 space-y-4">
-        <div>
-          <label htmlFor="company-select" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 px-1">Empresa Ativa</label>
-            <select
-              id="company-select"
-              value={selectedCompany}
-              onChange={(e) => setSelectedCompany(e.target.value)}
-              className="block w-full rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2.5 pl-3 pr-10 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
-            >
-              {accessibleCompanies.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-            </select>
-        </div>
-        <div className="border-t border-gray-200/50 dark:border-gray-800/50 pt-4 flex items-center justify-between">
-            <div className="flex items-center p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-slate-800/50">
-                <img className="w-10 h-10 rounded-full" src={currentUser.avatar} alt="User" />
-                <div className="ml-3">
-                    <p className="font-semibold text-sm text-gray-800 dark:text-white">{currentUser.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{currentUser.role}</p>
+                    {/* Settings Section */}
+                    <div className="px-2.5 py-3">
+                        <div className="border-t border-slate-200 dark:border-slate-800"></div>
+                    </div>
+                    <NavItem
+                        key={VIEWS.SETTINGS}
+                        label="Configurações"
+                        icon={<SettingsIcon />}
+                        isActive={settingsRelatedViews.includes(activeView)}
+                        onClick={() => handleItemClick(VIEWS.SETTINGS)}
+                    />
+                    <NavItem
+                        key={VIEWS.HELP}
+                        label="Ajuda"
+                        icon={<HelpIcon />}
+                        isActive={activeView === VIEWS.HELP}
+                        onClick={() => handleItemClick(VIEWS.HELP)}
+                    />
+                </ul>
+                </div>
+
+                {/* Sub-Menu Panel */}
+                <div className={`absolute top-0 left-0 w-full h-full transition-transform duration-300 ease-in-out bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl ${activeSubMenu !== 'main' ? 'translate-x-0' : 'translate-x-full'}`}>
+                {renderSubMenu()}
+                </div>
+            </nav>
+            <div className="mt-auto pt-4 space-y-4">
+                <div>
+                <label htmlFor="company-select" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 px-1">Empresa Ativa</label>
+                    <select
+                    id="company-select"
+                    value={selectedCompany}
+                    onChange={(e) => setSelectedCompany(e.target.value)}
+                    className="block w-full rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2.5 pl-3 pr-10 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
+                    >
+                    {accessibleCompanies.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                    </select>
+                </div>
+                <div className="border-t border-gray-200/50 dark:border-gray-800/50 pt-4 flex items-center justify-between">
+                    <div className="flex items-center p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-slate-800/50">
+                        <img className="w-10 h-10 rounded-full" src={currentUser.avatar} alt="User" />
+                        <div className="ml-3">
+                            <p className="font-semibold text-sm text-gray-800 dark:text-white">{currentUser.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{currentUser.role}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={onToggleFullscreen}
+                            title={isFullscreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
+                            className="p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                        >
+                            {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
+                        </button>
+                        <button
+                            onClick={() => setIsNotificationsOpen(prev => !prev)}
+                            title="Notificações"
+                            className="relative p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                        >
+                            <BellIcon />
+                            {unreadNotificationsCount > 0 && (
+                                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                                {unreadNotificationsCount}
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            onClick={onLogout}
+                            title="Sair"
+                            className="p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-red-50/50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                        >
+                            <LogoutIcon />
+                        </button>
+                    </div>
                 </div>
             </div>
-             <div className="flex items-center gap-1">
-                <button
-                    onClick={onToggleFullscreen}
-                    title={isFullscreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
-                    className="p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
-                >
-                    {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
-                </button>
-                 <button
-                    onClick={() => setIsNotificationsOpen(prev => !prev)}
-                    title="Notificações"
-                    className="relative p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
-                >
-                    <BellIcon />
-                    {unreadNotificationsCount > 0 && (
-                        <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                           {unreadNotificationsCount}
-                        </span>
-                    )}
-                </button>
-                <button
-                    onClick={onLogout}
-                    title="Sair"
-                    className="p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-red-50/50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                >
-                    <LogoutIcon />
-                </button>
-            </div>
-        </div>
-      </div>
-    </aside>
+        </aside>
+    </>
   );
 };
 
@@ -386,7 +413,7 @@ const SubMenuRepeatIcon = () => <svg className={iconSize} fill="none" stroke="cu
 const MoneyInIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>;
 const CalendarPlusIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>;
 const BarcodeIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.5v15m16.5-15v15m-12.75-15h3.75m-3.75 15h3.75M9 4.5v15m3.75-15v15m3-15h3.75m-3.75 15h3.75" /></svg>;
-const DocumentStackIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5-.124m7.5 10.375h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>;
+const DocumentStackIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504 1.125 1.125-1.125H6.75a9.06 9.06 0 011.5-.124m7.5 10.375h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>;
 const FunnelIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.572a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" /></svg>;
 const BriefcaseIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>;
 const ProposalIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>;

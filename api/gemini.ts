@@ -1,11 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Transaction, CashFlowData, DebtorCustomer, BankTransaction, SystemTransaction } from '../src/types';
 
-// This configuration tells Vercel to run this function on its Edge Network for faster responses.
-export const config = {
-  runtime: 'edge',
-};
-
 // This is the main handler for the serverless function.
 // It will be accessible at the `/api/gemini` endpoint.
 export default async function handler(request: Request) {

@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Header';
 import { Dashboard } from './components/Dashboard';
 import { AccountsPayable } from './components/AccountsPayable';
 import { Receipts } from './components/Receipts';
@@ -120,6 +122,8 @@ export default function App() {
   
   // State to manage pre-login view (regular login or admin panel)
   const [isSuperAdminView, setIsSuperAdminView] = useState<boolean>(false);
+  // FIX: Add state for mobile sidebar visibility
+  const [isSidebarMobileOpen, setIsSidebarMobileOpen] = useState(false);
 
   // Systematically persist all key states to our abstracted service layer.
   useEffect(() => { apiService.saveCompanies(companies); }, [companies]);
@@ -670,10 +674,19 @@ export default function App() {
           onToggleFullscreen={() => setIsDesiredFullscreen(prev => !prev)}
           notifications={notifications}
           setIsNotificationsOpen={setIsNotificationsOpen}
+          isMobileOpen={isSidebarMobileOpen}
+          setIsMobileOpen={setIsSidebarMobileOpen}
         />
-        <main className="flex-1 overflow-y-auto p-8">
-            {renderActiveView()}
-        </main>
+        {/* FIX: Add wrapper div and Header for responsive layout */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+            <Header 
+                activeView={activeView}
+                onMenuClick={() => setIsSidebarMobileOpen(true)}
+            />
+            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+                {renderActiveView()}
+            </main>
+        </div>
         {isInvoiceModalOpen && <InvoiceGenerator
           isOpen={isInvoiceModalOpen}
           onClose={() => setIsInvoiceModalOpen(false)}

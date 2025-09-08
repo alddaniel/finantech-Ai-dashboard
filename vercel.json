@@ -1,8 +1,3 @@
 {
-  "framework": "vite",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "edge"
-    }
-  }
+  "framework": "vite"
 }
