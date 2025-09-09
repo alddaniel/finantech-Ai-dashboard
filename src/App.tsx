@@ -1,7 +1,5 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
 import { Dashboard } from './components/Dashboard';
 import { AccountsPayable } from './components/AccountsPayable';
 import { Receipts } from './components/Receipts';
@@ -44,8 +42,8 @@ import { Settings } from './components/Settings';
 import { Categories } from './components/Categories';
 import { Indexes } from './components/Indexes';
 import { QRCodeModal } from './components/QRCodeModal';
-import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, AIInsightsMap } from './types';
-import { VIEWS, MOCK_AUDIT_LOGS } from './constants';
+import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal } from './types';
+import { VIEWS, MOCK_AUDIT_LOGS, MOCK_PROPOSALS } from './constants';
 import * as apiService from './services/apiService';
 
 
@@ -64,7 +62,6 @@ export default function App() {
   const [categories, setCategories] = useState<Category[]>(() => apiService.getCategories());
   const [adjustmentIndexes, setAdjustmentIndexes] = useState<AdjustmentIndex[]>(() => apiService.getAdjustmentIndexes());
   const [customAvatars, setCustomAvatars] = useState<string[]>(() => apiService.getCustomAvatars());
-  const [aiInsights, setAiInsights] = useState<AIInsightsMap>(() => apiService.getAIInsights());
 
   // Centralized state for transactions
   const [payables, setPayables] = useState<Transaction[]>(() => apiService.getPayables());
@@ -122,7 +119,6 @@ export default function App() {
   
   // State to manage pre-login view (regular login or admin panel)
   const [isSuperAdminView, setIsSuperAdminView] = useState<boolean>(false);
-  const [isSidebarMobileOpen, setIsSidebarMobileOpen] = useState(false);
 
   // Systematically persist all key states to our abstracted service layer.
   useEffect(() => { apiService.saveCompanies(companies); }, [companies]);
@@ -146,7 +142,6 @@ export default function App() {
   useEffect(() => { apiService.saveBankTransactions(bankTransactions); }, [bankTransactions]);
   useEffect(() => { apiService.saveSystemTransactions(systemTransactions); }, [systemTransactions]);
   useEffect(() => { apiService.saveNotifications(notifications); }, [notifications]);
-  useEffect(() => { apiService.saveAIInsights(aiInsights); }, [aiInsights]);
 
   
   // When user logs in or out, adjust the selected company
@@ -420,8 +415,6 @@ export default function App() {
         onOpenInvoiceModal={handleOpenInvoiceModal}
         onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal}
         onOpenQRCodeModal={handleOpenQRCodeModal}
-        aiInsights={aiInsights}
-        setAiInsights={setAiInsights}
       />;
       case VIEWS.PAYABLE: return <AccountsPayable 
         selectedCompany={selectedCompany} 
@@ -673,18 +666,10 @@ export default function App() {
           onToggleFullscreen={() => setIsDesiredFullscreen(prev => !prev)}
           notifications={notifications}
           setIsNotificationsOpen={setIsNotificationsOpen}
-          isMobileOpen={isSidebarMobileOpen}
-          setIsMobileOpen={setIsSidebarMobileOpen}
         />
-        <div className="flex flex-1 flex-col overflow-hidden">
-            <Header 
-                activeView={activeView}
-                onMenuClick={() => setIsSidebarMobileOpen(true)}
-            />
-            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                {renderActiveView()}
-            </main>
-        </div>
+        <main className="flex-1 overflow-y-auto p-8">
+            {renderActiveView()}
+        </main>
         {isInvoiceModalOpen && <InvoiceGenerator
           isOpen={isInvoiceModalOpen}
           onClose={() => setIsInvoiceModalOpen(false)}

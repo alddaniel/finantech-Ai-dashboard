@@ -4,7 +4,7 @@ import { Badge } from './ui/Badge';
 import { CashFlowChart } from './CashFlowChart';
 import { DashboardSettingsModal } from './DashboardSettingsModal';
 import * as apiService from '../services/apiService';
-import type { View, Transaction, AccountantRequest, User, BankAccount, BankTransaction, DashboardSettings, AIInsightsMap } from '../types';
+import type { View, Transaction, AccountantRequest, User, BankAccount, BankTransaction, DashboardSettings } from '../types';
 import { VIEWS, MOCK_CASH_FLOW_DATA } from '../constants';
 import { getDashboardInsight } from '../services/geminiService';
 
@@ -50,8 +50,6 @@ interface DashboardProps {
   onOpenInvoiceModal: () => void;
   onOpenConfirmPaymentModal: (transaction: Transaction) => void;
   onOpenQRCodeModal: (transaction: Transaction) => void;
-  aiInsights: AIInsightsMap;
-  setAiInsights: React.Dispatch<React.SetStateAction<AIInsightsMap>>;
 }
 
 const SummaryCard: React.FC<{title: string, value: string, change?: string, changeType?: 'positive' | 'negative'}> = ({title, value, change, changeType}) => {
@@ -128,7 +126,7 @@ const EmptyDashboard: React.FC<{ selectedCompany: string; onOpenExpenseModal: ()
 );
 
 
-export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCompany, payables, receivables, accountantRequests, setAccountantRequests, currentUser, isAccountantModuleEnabled, bankAccounts, bankTransactions, onOpenInvoiceModal, onOpenConfirmPaymentModal, onOpenQRCodeModal, aiInsights, setAiInsights }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCompany, payables, receivables, accountantRequests, setAccountantRequests, currentUser, isAccountantModuleEnabled, bankAccounts, bankTransactions, onOpenInvoiceModal, onOpenConfirmPaymentModal, onOpenQRCodeModal }) => {
     
     const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>(() => apiService.getDashboardSettings());
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -141,31 +139,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
     const filteredReceivables = useMemo(() => receivables.filter(t => t.company === selectedCompany), [receivables, selectedCompany]);
     const filteredBankAccounts = useMemo(() => bankAccounts.filter(b => b.company === selectedCompany), [bankAccounts, selectedCompany]);
     
-    const currentInsight = useMemo(() => aiInsights[selectedCompany], [aiInsights, selectedCompany]);
-    const [isInsightLoading, setIsInsightLoading] = useState<boolean>(!currentInsight);
+    const [aiInsight, setAiInsight] = useState<string>('');
+    const [isInsightLoading, setIsInsightLoading] = useState<boolean>(true);
 
     const fetchInsight = useCallback(async () => {
         setIsInsightLoading(true);
         try {
             const insight = await getDashboardInsight(filteredPayables, filteredReceivables);
-            setAiInsights(prev => ({ ...prev, [selectedCompany]: insight }));
+            setAiInsight(insight);
         } catch (error) {
             console.error(error);
-            setAiInsights(prev => ({ ...prev, [selectedCompany]: "💡 Não foi possível carregar o insight no momento." }));
+            setAiInsight("💡 Não foi possível carregar o insight no momento.");
         } finally {
             setIsInsightLoading(false);
         }
-    }, [filteredPayables, filteredReceivables, selectedCompany, setAiInsights]);
+    }, [filteredPayables, filteredReceivables]);
 
     useEffect(() => {
-        // Fetch insight only if it doesn't already exist for the current company.
-        // The refresh button can be used for manual updates.
-        if (currentInsight === undefined) {
-            fetchInsight();
-        } else {
-            setIsInsightLoading(false);
-        }
-    }, [currentInsight, fetchInsight]);
+        fetchInsight();
+    }, [fetchInsight, selectedCompany]);
 
     const totalReceitas = filteredReceivables.filter(t => t.status === 'Pago').reduce((sum, t) => sum + t.amount, 0);
     const totalDespesas = filteredPayables.filter(t => t.status === 'Pago').reduce((sum, t) => sum + t.amount, 0);
@@ -194,7 +186,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
             {dashboardSettings.aiInsight && (
                 <AIInsightCard 
                     isLoading={isInsightLoading}
-                    insightText={currentInsight}
+                    insightText={aiInsight}
                     onRefresh={fetchInsight}
                 />
             )}
@@ -289,9 +281,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
     );
 };
 
-const AIInsightCard: React.FC<{ isLoading: boolean; insightText: string | undefined; onRefresh: () => void; }> = ({ isLoading, insightText, onRefresh }) => {
+const AIInsightCard: React.FC<{ isLoading: boolean; insightText: string; onRefresh: () => void; }> = ({ isLoading, insightText, onRefresh }) => {
     const AIIcon = () => <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>;
-    const RefreshIcon: React.FC<{className?: string}> = ({className}) => <svg className={`w-5 h-5 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h5M20 20v-5h-5m-4.5 10a9 9 0 110-18 9 9 0 010 18z"></path></svg>;
+    const RefreshIcon: React.FC<{className?: string}> = ({className}) => <svg className={`w-5 h-5 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h5M20 20v-5h-5M4 4l16 16"></path></svg>;
 
     return (
         <Card>
@@ -314,7 +306,7 @@ const AIInsightCard: React.FC<{ isLoading: boolean; insightText: string | undefi
                     {isLoading ? (
                         <p className="text-gray-500 dark:text-gray-400 italic">Analisando dados para gerar um insight...</p>
                     ) : (
-                        <p className="text-gray-700 dark:text-gray-300 font-medium">{insightText || "Clique em atualizar para gerar um novo insight."}</p>
+                        <p className="text-gray-700 dark:text-gray-300 font-medium">{insightText}</p>
                     )}
                 </div>
             </CardContent>

@@ -1,4 +1,4 @@
-import type { Company, User, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, InvoiceItem, Property, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, DashboardSettings, AIInsightsMap } from '../types';
+import type { Company, User, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, InvoiceItem, Property, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, DashboardSettings } from '../types';
 import { MOCK_COMPANIES, MOCK_USERS, MOCK_CONTACTS, MOCK_PAYABLES, MOCK_RECEIVABLES, MOCK_ACCOUNTANT_REQUESTS, MOCK_BANK_ACCOUNTS, MOCK_BANK_TRANSACTIONS, MOCK_PROPERTIES, MOCK_NOTIFICATIONS, MOCK_SYSTEM_TRANSACTIONS, MOCK_COST_CENTERS_DATA, MOCK_CATEGORIES_DATA, MOCK_ADJUSTMENT_INDEXES_DATA, MOCK_PROJECTS, MOCK_PROPOSALS } from '../constants';
 
 // ====================================================================================
@@ -141,10 +141,6 @@ const defaultDashboardSettings: DashboardSettings = {
 };
 export const getDashboardSettings = (): DashboardSettings => get('finantech_dashboard_settings', defaultDashboardSettings);
 export const saveDashboardSettings = (settings: DashboardSettings): void => set('finantech_dashboard_settings', settings);
-
-// --- AI Insights ---
-export const getAIInsights = (): AIInsightsMap => get('finantech_ai_insights', {});
-export const saveAIInsights = (insights: AIInsightsMap): void => set('finantech_ai_insights', insights);
 
 
 // ====================================================================================
