@@ -182,19 +182,6 @@ export const Projects: React.FC<ProjectsProps> = ({ projects, setProjects, conta
         }, {} as Record<string, Project[]>);
     }, [companyProjects, groupingType, viewMode]);
 
-    const handleDeleteRequest = (project: Project) => {
-        const linkedTransactions = [...payables, ...receivables].filter(t => t.projectId === project.id).length;
-        if (linkedTransactions > 0) {
-            addToast({
-                type: 'warning',
-                title: 'Exclusão Bloqueada',
-                description: `Este projeto não pode ser excluído pois está vinculado a ${linkedTransactions} transação(ões).`,
-            });
-            return;
-        }
-        setProjectToDelete(project);
-    };
-
     const handleConfirmDelete = () => {
         if (!projectToDelete) return;
         setProjects(prev => prev.filter(p => p.id !== projectToDelete.id));
@@ -203,7 +190,6 @@ export const Projects: React.FC<ProjectsProps> = ({ projects, setProjects, conta
             title: 'Projeto Excluído!',
             description: `O projeto "${projectToDelete.name}" foi removido com sucesso.`
         });
-        setProjectToDelete(null);
     };
 
     const handleExportCsv = () => {
@@ -345,7 +331,7 @@ export const Projects: React.FC<ProjectsProps> = ({ projects, setProjects, conta
                                                 budgetVsActual={budgetVsActual}
                                                 costAllocationResult={costAllocationResult}
                                                 onEdit={() => onOpenProjectModal(proj)}
-                                                onDelete={() => handleDeleteRequest(proj)}
+                                                onDelete={() => setProjectToDelete(proj)}
                                            />
                                         );
                                     })}

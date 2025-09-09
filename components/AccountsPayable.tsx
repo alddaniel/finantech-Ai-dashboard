@@ -153,7 +153,6 @@ export const AccountsPayable: React.FC<AccountsPayableProps> = ({ selectedCompan
             title: 'Despesa Excluída!',
             description: `A despesa "${itemToDelete.description}" foi removida com sucesso.`
         });
-        setItemToDelete(null);
     };
     
     const handleConfirmSchedule = (transactionId: string, scheduledDate: string, email: string, bankAccountId: string) => {
@@ -187,7 +186,7 @@ export const AccountsPayable: React.FC<AccountsPayableProps> = ({ selectedCompan
     const handleViewAttachment = (attachment: NonNullable<Transaction['attachments']>[0]) => {
         const blob = base64ToBlob(attachment.fileContent, attachment.fileType);
         if (!blob) {
-            addToast({type: 'warning', title: 'Erro', description: 'Não foi possível carregar o anexo.'});
+            alert('Não foi possível carregar o anexo. O arquivo pode estar corrompido.');
             return;
         }
 
@@ -203,7 +202,7 @@ export const AccountsPayable: React.FC<AccountsPayableProps> = ({ selectedCompan
     const handleDownloadAttachment = (attachment: NonNullable<Transaction['attachments']>[0]) => {
         const blob = base64ToBlob(attachment.fileContent, attachment.fileType);
         if (!blob) {
-            addToast({type: 'warning', title: 'Erro', description: 'Não foi possível baixar o anexo.'});
+            alert('Não foi possível baixar o anexo. O arquivo pode estar corrompido.');
             return;
         }
         const url = URL.createObjectURL(blob);
@@ -223,7 +222,7 @@ export const AccountsPayable: React.FC<AccountsPayableProps> = ({ selectedCompan
             setIsDanfeModalOpen(true);
         } catch (error) {
             console.error("Error parsing XML for DANFE preview:", error);
-            addToast({type: 'warning', title: 'Erro de XML', description: `Não foi possível gerar a pré-visualização da DANFE.`});
+            alert(`Não foi possível gerar a pré-visualização da DANFE. O XML pode ser inválido ou incompleto. Erro: ${(error as Error).message}`);
         }
     };
     

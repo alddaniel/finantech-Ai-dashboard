@@ -168,13 +168,12 @@ export const Receipts: React.FC<ReceiptsProps> = ({ selectedCompany, receivables
             title: 'Receita Excluída!',
             description: `A receita "${itemToDelete.description}" foi removida com sucesso.`
         });
-        setItemToDelete(null);
     };
     
     const handleViewAttachment = (attachment: NonNullable<Transaction['attachments']>[0]) => {
         const blob = base64ToBlob(attachment.fileContent, attachment.fileType);
         if (!blob) {
-            addToast({type: 'warning', title: 'Erro', description: 'Não foi possível carregar o anexo.'});
+            alert('Não foi possível carregar o anexo. O arquivo pode estar corrompido.');
             return;
         }
 
@@ -190,7 +189,7 @@ export const Receipts: React.FC<ReceiptsProps> = ({ selectedCompany, receivables
     const handleDownloadAttachment = (attachment: NonNullable<Transaction['attachments']>[0]) => {
         const blob = base64ToBlob(attachment.fileContent, attachment.fileType);
         if (!blob) {
-            addToast({type: 'warning', title: 'Erro', description: 'Não foi possível baixar o anexo.'});
+            alert('Não foi possível baixar o anexo. O arquivo pode estar corrompido.');
             return;
         }
         const url = URL.createObjectURL(blob);

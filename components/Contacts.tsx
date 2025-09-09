@@ -68,12 +68,10 @@ export const Contacts: React.FC<ContactsProps> = ({ contacts, setContacts, selec
     };
     
     const handleDeleteRequest = (contact: Contact) => {
-        const linkedPayables = payables.filter(p => p.contactId === contact.id).length;
-        const linkedReceivables = receivables.filter(r => r.contactId === contact.id).length;
-        const totalLinks = linkedPayables + linkedReceivables;
+        const totalLinks = payables.filter(p => p.contactId === contact.id).length + receivables.filter(r => r.contactId === contact.id).length;
 
         if (totalLinks > 0) {
-            const contactType = contact?.type.toLowerCase();
+            const contactType = contact?.type === 'Cliente' ? 'cliente' : 'fornecedor';
             addToast({
                 type: 'warning',
                 title: `Exclusão Bloqueada`,
@@ -92,7 +90,6 @@ export const Contacts: React.FC<ContactsProps> = ({ contacts, setContacts, selec
             title: 'Contato Excluído!',
             description: `O contato "${contactToDelete.name}" foi removido.`
         });
-        setContactToDelete(null);
     };
 
 
@@ -110,10 +107,10 @@ export const Contacts: React.FC<ContactsProps> = ({ contacts, setContacts, selec
         }
         const textToCopy = details.join('\n');
         navigator.clipboard.writeText(textToCopy).then(() => {
-            addToast({type: 'success', title: 'Copiado!', description: 'Dados bancários copiados para a área de transferência.'});
+            alert('Dados bancários copiados para a área de transferência!');
         }, (err) => {
             console.error('Falha ao copiar dados bancários: ', err);
-            addToast({type: 'warning', title: 'Falha ao copiar', description: 'Não foi possível copiar os dados.'});
+            alert('Não foi possível copiar os dados.');
         });
     };
 
