@@ -1,4 +1,3 @@
-
 export type View = 'dashboard' | 'payable' | 'receipts' | 'cash_management' | 'reports' | 'ai_advisor' | 'fiscal_module' | 'crm' | 'integrations' | 'user_management' | 'contacts' | 'help' | 'generated_invoices' | 'accountant_panel' | 'bank_accounts' | 'bank_reconciliation' | 'recurrences' | 'payable_recurrences' | 'payment_schedule' | 'receivable_schedule' | 'cash_flow_records' | 'properties' | 'schema_generator' | 'cost_centers' | 'company_profile' | 'plan_subscription' | 'settings' | 'indexes' | 'categories' | 'projects' | 'proposals';
 
 export type Role = 'Admin' | 'Manager' | 'Analyst' | 'Contador';
