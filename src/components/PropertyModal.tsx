@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import type { Property, Address, Contact, AdjustmentIndex } from '../types';
-import { PROPERTY_AVATARS } from '../constants';
-import { IconDisplay } from './ui/IconComponents';
+import { PROPERTY_AVATARS } from './ui/IconComponents';
 
 interface PropertyModalProps {
     isOpen: boolean;

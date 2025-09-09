@@ -1,4 +1,3 @@
-
 /**
  * A comprehensive XML parser for NFe to generate detailed DANFE data.
  * It uses regular expressions to find specific values and blocks in the XML string.

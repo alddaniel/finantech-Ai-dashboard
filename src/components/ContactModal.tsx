@@ -1,7 +1,9 @@
 
+
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { Contact, Address, ContactBankDetails } from '../types';
-import { CONTACT_AVATARS, COMPANY_AVATARS } from '../constants';
+import { CONTACT_AVATARS, COMPANY_AVATARS } from './ui/IconComponents';
 
 interface ContactModalProps {
     isOpen: boolean;

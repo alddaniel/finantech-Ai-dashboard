@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import type { View, Company, User, Role, Notification } from '../types';
 import { VIEWS } from '../constants';
