@@ -43,7 +43,7 @@ import { Categories } from './components/Categories';
 import { Indexes } from './components/Indexes';
 import { QRCodeModal } from './components/QRCodeModal';
 import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal } from './types';
-import { VIEWS, MOCK_AUDIT_LOGS, MOCK_PROPOSALS } from './constants';
+import { VIEWS, MOCK_AUDIT_LOGS } from './constants';
 import * as apiService from './services/apiService';
 
 
