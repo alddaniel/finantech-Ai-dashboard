@@ -1,4 +1,3 @@
-
 import type { View, Transaction, CashFlowData, BankTransaction, SystemTransaction, DefaultRateData, NetProfitData, DebtorCustomer, FunnelStage, BankAccount, Role, User, AuditLog, Company, Contact, AccountantRequest, Property, ModuleKey, UserPermissions, Notification, CostCenter, Category, AdjustmentIndex, Project, Proposal } from './types';
 import { CONTACT_AVATARS, COMPANY_AVATARS } from './components/ui/IconComponents';
 
