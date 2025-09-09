@@ -1,5 +1,4 @@
 
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Transaction, CashFlowData, DebtorCustomer, BankTransaction, SystemTransaction, Company } from '../types';
 

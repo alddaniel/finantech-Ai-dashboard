@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line } from 'recharts';
 import type { CashFlowData } from '../types';
