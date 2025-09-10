@@ -47,19 +47,9 @@ import { VIEWS, MOCK_AUDIT_LOGS } from './constants';
 import * as apiService from './services/apiService';
 import { Spinner } from './components/ui/Spinner';
 
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
-
-
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => apiService.getIsAuthenticated());
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   
   const [companies, setCompanies] = useState<Company[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -129,30 +119,13 @@ export default function App() {
   
   // State to manage pre-login view (regular login or admin panel)
   const [isSuperAdminView, setIsSuperAdminView] = useState<boolean>(false);
-
-  // PWA Install Prompt State
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-
+  const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  
   useEffect(() => {
-    const handler = (e: Event) => {
-        e.preventDefault();
-        setInstallPrompt(e as BeforeInstallPromptEvent);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    const checkAuth = apiService.getIsAuthenticated();
+    setIsAuthenticated(checkAuth);
   }, []);
 
-  const handleInstallClick = () => {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    installPrompt.userChoice.then((choice) => {
-      if (choice.outcome === 'accepted') {
-        addToast({ type: 'success', title: 'App Instalado!', description: 'O FinanTechAI foi adicionado à sua tela inicial.' });
-      }
-      setInstallPrompt(null);
-    });
-  };
-  
   useEffect(() => {
     const loadInitialData = async () => {
         setIsLoading(true);
@@ -175,7 +148,6 @@ export default function App() {
             setBankTransactions(data.bankTransactions);
             setSystemTransactions(data.systemTransactions);
             setNotifications(data.notifications);
-            // FIX: The properties 'isAccountantModuleEnabled' and 'accountantRequests' were missing from the return type of 'fetchAllInitialData'. They have been added in apiService.ts.
             setIsAccountantModuleEnabled(data.isAccountantModuleEnabled);
             setAccountantRequests(data.accountantRequests);
 
@@ -200,7 +172,7 @@ export default function App() {
   useEffect(() => { if (!isLoading && costCenters.length) apiService.saveCostCenters(costCenters); }, [costCenters, isLoading]);
   useEffect(() => { if (!isLoading && categories.length) apiService.saveCategories(categories); }, [categories, isLoading]);
   useEffect(() => { if (!isLoading && adjustmentIndexes.length) apiService.saveAdjustmentIndexes(adjustmentIndexes); }, [adjustmentIndexes, isLoading]);
-  useEffect(() => { if (!isLoading && customAvatars.length) apiService.saveCustomAvatars(customAvatars); }, [customAvatars, isLoading]);
+  useEffect(() => { if (!isLoading && customAvatars.length > 0) apiService.saveCustomAvatars(customAvatars); }, [customAvatars, isLoading]);
   useEffect(() => { if (!isLoading) apiService.saveIsAuthenticated(isAuthenticated); }, [isAuthenticated, isLoading]);
   useEffect(() => { if (!isLoading && selectedCompany) apiService.saveSelectedCompany(selectedCompany); }, [selectedCompany, isLoading]);
   useEffect(() => { if (!isLoading && payables.length) apiService.savePayables(payables); }, [payables, isLoading]);
@@ -724,6 +696,12 @@ export default function App() {
     }
   }
 
+  const HamburgerIcon = () => (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  );
+
   return (
     <div className="flex h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
         <Sidebar 
@@ -736,16 +714,22 @@ export default function App() {
           currentUser={currentUser!}
           onLogout={handleLogout}
           isAccountantModuleEnabled={isAccountantModuleEnabled}
-          // FIX: Corrected typo from onOpenInvoiceModal to handleOpenInvoiceModal
           onOpenInvoiceModal={handleOpenInvoiceModal}
           isFullscreen={isFullscreen}
           onToggleFullscreen={() => setIsDesiredFullscreen(prev => !prev)}
           notifications={notifications}
           setIsNotificationsOpen={setIsNotificationsOpen}
-          showInstallButton={!!installPrompt}
-          onInstallClick={handleInstallClick}
+          isMobileOpen={isMobileSidebarOpen}
+          setMobileOpen={setMobileSidebarOpen}
         />
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+            <button
+                onClick={() => setMobileSidebarOpen(true)}
+                className="md:hidden p-2 mb-4 -ml-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
+                aria-label="Abrir menu"
+            >
+                <HamburgerIcon />
+            </button>
             {renderActiveView()}
         </main>
         {isInvoiceModalOpen && <InvoiceGenerator
