@@ -73,22 +73,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const unreadNotificationsCount = notifications.filter(n => !n.isRead && n.company === selectedCompany).length;
   
-  // Close sidebar on navigation in mobile view
-  useEffect(() => {
-    if (isMobileOpen) {
-      setMobileOpen(false);
-    }
-     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeView]);
-
-  const handleNavItemClick = (view: View) => {
-    setActiveView(view);
+  const handleNavigation = (logic: () => void) => {
+    logic();
+    setMobileOpen(false); // Always close on navigation
   };
-  
-  const handleActionClick = (action: () => void) => {
-      action();
-      setMobileOpen(false);
-  }
 
   const recebimentosSubItems: Array<{ label: string; view?: View; action?: () => void; activeChecks: View[]; icon: React.ReactNode; }> = [
       { label: 'Lançar/Baixar Receita', view: VIEWS.RECEIPTS, activeChecks: [VIEWS.RECEIPTS], icon: <MoneyInIcon /> },
@@ -178,10 +166,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               label={item.label}
               icon={item.icon}
               isActive={item.view ? activeView === item.view : false}
-              onClick={() => {
-                  if(item.view) handleNavItemClick(item.view);
-                  if(item.action) handleActionClick(item.action);
-              }}
+              onClick={() => handleNavigation(() => {
+                if (item.view) setActiveView(item.view);
+                if (item.action) item.action();
+              })}
             />
           ))}
         </ul>
@@ -191,181 +179,181 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      <div
-        className={`fixed inset-0 bg-black/50 z-20 md:hidden transition-opacity ${
-            isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setMobileOpen(false)}
-        aria-hidden="true"
-      />
-      <aside className={`fixed inset-y-0 left-0 w-72 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-4 flex flex-col border-r border-slate-900/5 dark:border-white/10 z-30 overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/30 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} ${className || ''}`}>
-        <div className="flex items-center gap-3 px-2 mb-8">
-          <div className="bg-indigo-600 p-2.5 rounded-lg">
-            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 12h2v6H8v-6zm3-3h2v9h-2V9zm3-4h2v13h-2V5z"/>
-            </svg>
+        <div
+            className={`fixed inset-0 bg-black/50 z-20 md:hidden transition-opacity ${
+                isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+        />
+        <aside className={`fixed top-0 left-0 h-full w-72 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-4 flex flex-col border-r border-slate-900/5 dark:border-white/10 z-30 transition-transform duration-300 ease-in-out md:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} ${className || ''}`}>
+          <div className="flex items-center gap-3 px-2 mb-8">
+            <div className="bg-indigo-600 p-2.5 rounded-lg">
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 12h2v6H8v-6zm3-3h2v9h-2V9zm3-4h2v13h-2V5z"/>
+              </svg>
+            </div>
+            <h1 className="text-xl font-bold text-gray-800 dark:text-white tracking-tighter">FinanTech AI</h1>
           </div>
-          <h1 className="text-xl font-bold text-gray-800 dark:text-white tracking-tighter">FinanTech AI</h1>
-        </div>
-        <nav className="flex-1 relative">
-          {/* Main Menu Panel */}
-          <div className={`absolute top-0 left-0 w-full h-full transition-transform duration-300 ease-in-out ${activeSubMenu !== 'main' ? '-translate-x-full' : 'translate-x-0'}`}>
-            <ul className="space-y-1">
-              <NavItem
-                key={VIEWS.DASHBOARD}
-                label="Dashboard"
-                icon={<DashboardIcon />}
-                isActive={activeView === VIEWS.DASHBOARD}
-                onClick={() => handleNavItemClick(VIEWS.DASHBOARD)}
-              />
-              <NavItem
-                  key={VIEWS.BANK_RECONCILIATION}
-                  label="Conciliação Bancária"
-                  icon={<ReconciliationIcon />}
-                  isActive={activeView === VIEWS.BANK_RECONCILIATION}
-                  onClick={() => handleNavItemClick(VIEWS.BANK_RECONCILIATION)}
-              />
-              <NavItem
-                  key={VIEWS.CONTACTS}
-                  label="Contatos"
-                  icon={<AddressBookIcon />}
-                  isActive={activeView === VIEWS.CONTACTS}
-                  onClick={() => handleNavItemClick(VIEWS.CONTACTS)}
-              />
-              <div className="px-2.5 py-3">
-                  <div className="border-t border-slate-200 dark:border-slate-800"></div>
-              </div>
-              <NavItem
-                key="projetos"
-                label="Projetos & Comercial"
-                icon={<ProjectsIcon />}
-                isActive={isSubMenuActive('projetos')}
-                onClick={() => setActiveSubMenu('projetos')}
-                hasSubMenu
-              />
-              <NavItem
-                key="pagamentos"
-                label="Pagamentos"
-                icon={<PayableIcon />}
-                isActive={isSubMenuActive('pagamentos')}
-                onClick={() => setActiveSubMenu('pagamentos')}
-                hasSubMenu
-              />
-              <NavItem
-                key="recebimentos"
-                label="Recebimentos"
-                icon={<ReceivableIcon />}
-                isActive={isSubMenuActive('recebimentos')}
-                onClick={() => setActiveSubMenu('recebimentos')}
-                hasSubMenu
-              />
-              <NavItem
-                key={VIEWS.CASH_FLOW_RECORDS}
-                label="Extrato de Caixa"
-                icon={<CashFlowRecordsIcon />}
-                isActive={activeView === VIEWS.CASH_FLOW_RECORDS}
-                onClick={() => handleNavItemClick(VIEWS.CASH_FLOW_RECORDS)}
-              />
-              <div className="px-2.5 py-3">
-                  <div className="border-t border-slate-200 dark:border-slate-800"></div>
-              </div>
-              {menuItems.map(item => {
-                if (item.module === 'accountant' && !isAccountantModuleEnabled) return null;
-                if (item.module === 'properties' && !company?.enabledModules.includes('properties')) return null;
-                if (item.module === 'fiscal' && !company?.enabledModules.includes('fiscal')) return null;
-                if (item.view === VIEWS.INTEGRATIONS && !company?.enabledModules.includes('integrations')) return null;
-                if (item.module === 'ai_advisor' && !company?.enabledModules.includes('ai_advisor')) return null;
-                if (item.roles && !item.roles.includes(currentUser.role)) return null;
-                
-                return (
-                  <NavItem
-                    key={item.view}
-                    label={item.label}
-                    view={item.view}
-                    icon={item.icon}
-                    isActive={activeView === item.view}
-                    onClick={() => handleNavItemClick(item.view)}
-                  />
-                );
-              })}
+          <nav className="flex-1 relative">
+            {/* Main Menu Panel */}
+            <div className={`absolute top-0 left-0 w-full h-full transition-transform duration-300 ease-in-out ${activeSubMenu !== 'main' ? '-translate-x-full' : 'translate-x-0'}`}>
+              <ul className="space-y-1">
+                <NavItem
+                  key={VIEWS.DASHBOARD}
+                  label="Dashboard"
+                  icon={<DashboardIcon />}
+                  isActive={activeView === VIEWS.DASHBOARD}
+                  onClick={() => handleNavigation(() => setActiveView(VIEWS.DASHBOARD))}
+                />
+                <NavItem
+                    key={VIEWS.BANK_RECONCILIATION}
+                    label="Conciliação Bancária"
+                    icon={<ReconciliationIcon />}
+                    isActive={activeView === VIEWS.BANK_RECONCILIATION}
+                    onClick={() => handleNavigation(() => setActiveView(VIEWS.BANK_RECONCILIATION))}
+                />
+                <NavItem
+                    key={VIEWS.CONTACTS}
+                    label="Contatos"
+                    icon={<AddressBookIcon />}
+                    isActive={activeView === VIEWS.CONTACTS}
+                    onClick={() => handleNavigation(() => setActiveView(VIEWS.CONTACTS))}
+                />
+                <div className="px-2.5 py-3">
+                    <div className="border-t border-slate-200 dark:border-slate-800"></div>
+                </div>
+                <NavItem
+                  key="projetos"
+                  label="Projetos & Comercial"
+                  icon={<ProjectsIcon />}
+                  isActive={isSubMenuActive('projetos')}
+                  onClick={() => setActiveSubMenu('projetos')}
+                  hasSubMenu
+                />
+                <NavItem
+                  key="pagamentos"
+                  label="Pagamentos"
+                  icon={<PayableIcon />}
+                  isActive={isSubMenuActive('pagamentos')}
+                  onClick={() => setActiveSubMenu('pagamentos')}
+                  hasSubMenu
+                />
+                <NavItem
+                  key="recebimentos"
+                  label="Recebimentos"
+                  icon={<ReceivableIcon />}
+                  isActive={isSubMenuActive('recebimentos')}
+                  onClick={() => setActiveSubMenu('recebimentos')}
+                  hasSubMenu
+                />
+                <NavItem
+                  key={VIEWS.CASH_FLOW_RECORDS}
+                  label="Extrato de Caixa"
+                  icon={<CashFlowRecordsIcon />}
+                  isActive={activeView === VIEWS.CASH_FLOW_RECORDS}
+                  onClick={() => handleNavigation(() => setActiveView(VIEWS.CASH_FLOW_RECORDS))}
+                />
+                <div className="px-2.5 py-3">
+                    <div className="border-t border-slate-200 dark:border-slate-800"></div>
+                </div>
+                {menuItems.map(item => {
+                  if (item.module === 'accountant' && !isAccountantModuleEnabled) return null;
+                  if (item.module === 'properties' && !company?.enabledModules.includes('properties')) return null;
+                  if (item.module === 'fiscal' && !company?.enabledModules.includes('fiscal')) return null;
+                  if (item.view === VIEWS.INTEGRATIONS && !company?.enabledModules.includes('integrations')) return null;
+                  if (item.module === 'ai_advisor' && !company?.enabledModules.includes('ai_advisor')) return null;
+                  if (item.roles && !item.roles.includes(currentUser.role)) return null;
+                  
+                  return (
+                    <NavItem
+                      key={item.view}
+                      label={item.label}
+                      view={item.view}
+                      icon={item.icon}
+                      isActive={activeView === item.view}
+                      onClick={() => handleNavigation(() => setActiveView(item.view))}
+                    />
+                  );
+                })}
 
-              {/* Settings Section */}
-              <div className="px-2.5 py-3">
-                  <div className="border-t border-slate-200 dark:border-slate-800"></div>
-              </div>
-              <NavItem
-                  key={VIEWS.SETTINGS}
-                  label="Configurações"
-                  icon={<SettingsIcon />}
-                  isActive={settingsRelatedViews.includes(activeView)}
-                  onClick={() => handleNavItemClick(VIEWS.SETTINGS)}
-              />
-              <NavItem
-                  key={VIEWS.HELP}
-                  label="Ajuda"
-                  icon={<HelpIcon />}
-                  isActive={activeView === VIEWS.HELP}
-                  onClick={() => handleNavItemClick(VIEWS.HELP)}
-              />
-            </ul>
-          </div>
+                {/* Settings Section */}
+                <div className="px-2.5 py-3">
+                    <div className="border-t border-slate-200 dark:border-slate-800"></div>
+                </div>
+                <NavItem
+                    key={VIEWS.SETTINGS}
+                    label="Configurações"
+                    icon={<SettingsIcon />}
+                    isActive={settingsRelatedViews.includes(activeView)}
+                    onClick={() => handleNavigation(() => setActiveView(VIEWS.SETTINGS))}
+                />
+                <NavItem
+                    key={VIEWS.HELP}
+                    label="Ajuda"
+                    icon={<HelpIcon />}
+                    isActive={activeView === VIEWS.HELP}
+                    onClick={() => handleNavigation(() => setActiveView(VIEWS.HELP))}
+                />
+              </ul>
+            </div>
 
-          {/* Sub-Menu Panel */}
-          <div className={`absolute top-0 left-0 w-full h-full transition-transform duration-300 ease-in-out bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl ${activeSubMenu !== 'main' ? 'translate-x-0' : 'translate-x-full'}`}>
-            {renderSubMenu()}
+            {/* Sub-Menu Panel */}
+            <div className={`absolute top-0 left-0 w-full h-full transition-transform duration-300 ease-in-out bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl ${activeSubMenu !== 'main' ? 'translate-x-0' : 'translate-x-full'}`}>
+              {renderSubMenu()}
+            </div>
+          </nav>
+          <div className="mt-auto pt-4 space-y-4">
+            <div>
+              <label htmlFor="company-select" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 px-1">Empresa Ativa</label>
+                <select
+                  id="company-select"
+                  value={selectedCompany}
+                  onChange={(e) => setSelectedCompany(e.target.value)}
+                  className="block w-full rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2.5 pl-3 pr-10 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
+                >
+                  {accessibleCompanies.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                </select>
+            </div>
+            <div className="border-t border-gray-200/50 dark:border-gray-800/50 pt-4 flex items-center justify-between">
+                <div className="flex items-center p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-slate-800/50">
+                    <img className="w-10 h-10 rounded-full" src={currentUser.avatar} alt="User" />
+                    <div className="ml-3">
+                        <p className="font-semibold text-sm text-gray-800 dark:text-white">{currentUser.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{currentUser.role}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={onToggleFullscreen}
+                        title={isFullscreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
+                        className="p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                    >
+                        {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
+                    </button>
+                    <button
+                        onClick={() => setIsNotificationsOpen(prev => !prev)}
+                        title="Notificações"
+                        className="relative p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                    >
+                        <BellIcon />
+                        {unreadNotificationsCount > 0 && (
+                            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                              {unreadNotificationsCount}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={onLogout}
+                        title="Sair"
+                        className="p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-red-50/50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                    >
+                        <LogoutIcon />
+                    </button>
+                </div>
+            </div>
           </div>
-        </nav>
-        <div className="mt-auto pt-4 space-y-4">
-          <div>
-            <label htmlFor="company-select" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 px-1">Empresa Ativa</label>
-              <select
-                id="company-select"
-                value={selectedCompany}
-                onChange={(e) => setSelectedCompany(e.target.value)}
-                className="block w-full rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2.5 pl-3 pr-10 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
-              >
-                {accessibleCompanies.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-              </select>
-          </div>
-          <div className="border-t border-gray-200/50 dark:border-gray-800/50 pt-4 flex items-center justify-between">
-              <div className="flex items-center p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-slate-800/50">
-                  <img className="w-10 h-10 rounded-full" src={currentUser.avatar} alt="User" />
-                  <div className="ml-3">
-                      <p className="font-semibold text-sm text-gray-800 dark:text-white">{currentUser.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{currentUser.role}</p>
-                  </div>
-              </div>
-              <div className="flex items-center gap-1">
-                  <button
-                      onClick={onToggleFullscreen}
-                      title={isFullscreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
-                      className="p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
-                  >
-                      {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
-                  </button>
-                  <button
-                      onClick={() => setIsNotificationsOpen(prev => !prev)}
-                      title="Notificações"
-                      className="relative p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
-                  >
-                      <BellIcon />
-                      {unreadNotificationsCount > 0 && (
-                          <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                            {unreadNotificationsCount}
-                          </span>
-                      )}
-                  </button>
-                  <button
-                      onClick={onLogout}
-                      title="Sair"
-                      className="p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-red-50/50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                  >
-                      <LogoutIcon />
-                  </button>
-              </div>
-          </div>
-        </div>
-      </aside>
+        </aside>
     </>
   );
 };

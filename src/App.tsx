@@ -703,7 +703,7 @@ export default function App() {
   );
 
   return (
-    <div className="flex h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
         <Sidebar 
           activeView={activeView} 
           setActiveView={setActiveView} 
@@ -722,7 +722,7 @@ export default function App() {
           isMobileOpen={isMobileSidebarOpen}
           setMobileOpen={setMobileSidebarOpen}
         />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="md:ml-72 p-4 md:p-8">
             <button
                 onClick={() => setMobileSidebarOpen(true)}
                 className="md:hidden p-2 mb-4 -ml-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
