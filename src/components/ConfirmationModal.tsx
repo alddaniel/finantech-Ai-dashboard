@@ -16,7 +16,6 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, on
 
     const handleConfirm = () => {
         onConfirm();
-        // The parent component is now responsible for closing the modal
     };
 
     return (

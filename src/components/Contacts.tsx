@@ -99,7 +99,6 @@ export const Contacts: React.FC<ContactsProps> = ({ contacts, setContacts, selec
             });
         } catch (error) {
             addToast({ type: 'warning', title: 'Erro', description: 'Não foi possível excluir o contato.'});
-            // Revert state if API call fails
             setContacts(contacts);
         } finally {
             setIsDeleting(false);
@@ -247,4 +246,4 @@ export const Contacts: React.FC<ContactsProps> = ({ contacts, setContacts, selec
 };
 
 const PlusIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>;
-const BankIcon = () => <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>;
+const BankIcon = () => <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v

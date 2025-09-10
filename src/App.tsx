@@ -58,14 +58,9 @@ interface BeforeInstallPromptEvent extends Event {
 
 
 export default function App() {
-  // FIX: Add loading state to manage async data fetching.
   const [isLoading, setIsLoading] = useState(true);
-
-  // FIX: Initialize with synchronous getter, as it doesn't return a promise.
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => apiService.getIsAuthenticated());
   
-  // FIX: Initialize states with default empty values instead of async calls.
-  // Data will be fetched in a useEffect hook.
   const [companies, setCompanies] = useState<Company[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   
@@ -110,7 +105,6 @@ export default function App() {
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState(false);
   const [transactionForQRCode, setTransactionForQRCode] = useState<Transaction | null>(null);
 
-  // FIX: Initialize dependent states with default empty/null values.
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<string>('');
   
@@ -159,20 +153,11 @@ export default function App() {
     });
   };
   
-  // FIX: Fetch initial data asynchronously after component mounts.
   useEffect(() => {
     const loadInitialData = async () => {
         setIsLoading(true);
         if (isAuthenticated) {
-            const [
-                data,
-                accModuleEnabled,
-                accRequests,
-            ] = await Promise.all([
-                apiService.fetchAllInitialData(),
-                apiService.getIsAccountantModuleEnabled(),
-                apiService.getAccountantRequests(),
-            ]);
+            const data = await apiService.fetchAllInitialData();
 
             setCompanies(data.companies);
             setUsers(data.users);
@@ -190,11 +175,10 @@ export default function App() {
             setBankTransactions(data.bankTransactions);
             setSystemTransactions(data.systemTransactions);
             setNotifications(data.notifications);
+            // FIX: The properties 'isAccountantModuleEnabled' and 'accountantRequests' were missing from the return type of 'fetchAllInitialData'. They have been added in apiService.ts.
+            setIsAccountantModuleEnabled(data.isAccountantModuleEnabled);
+            setAccountantRequests(data.accountantRequests);
 
-            setIsAccountantModuleEnabled(accModuleEnabled);
-            setAccountantRequests(accRequests);
-
-            // Set states that depend on the fetched data
             const initialUser = apiService.getCurrentUser(data.users);
             setCurrentUser(initialUser);
             setSelectedCompany(apiService.getSelectedCompany(data.companies));
@@ -207,27 +191,27 @@ export default function App() {
 
 
   // Systematically persist all key states to our abstracted service layer.
-  useEffect(() => { if (companies.length) apiService.saveCompanies(companies); }, [companies]);
-  useEffect(() => { if (users.length) apiService.saveUsers(users); }, [users]);
-  useEffect(() => { if (contacts.length) apiService.saveContacts(contacts); }, [contacts]);
-  useEffect(() => { if (properties.length) apiService.saveProperties(properties); }, [properties]);
-  useEffect(() => { if (projects.length) apiService.saveProjects(projects); }, [projects]);
-  useEffect(() => { if (proposals.length) apiService.saveProposals(proposals); }, [proposals]);
-  useEffect(() => { if (costCenters.length) apiService.saveCostCenters(costCenters); }, [costCenters]);
-  useEffect(() => { if (categories.length) apiService.saveCategories(categories); }, [categories]);
-  useEffect(() => { if (adjustmentIndexes.length) apiService.saveAdjustmentIndexes(adjustmentIndexes); }, [adjustmentIndexes]);
-  useEffect(() => { if (customAvatars.length) apiService.saveCustomAvatars(customAvatars); }, [customAvatars]);
-  useEffect(() => { apiService.saveIsAuthenticated(isAuthenticated); }, [isAuthenticated]);
-  useEffect(() => { if (selectedCompany) apiService.saveSelectedCompany(selectedCompany); }, [selectedCompany]);
-  useEffect(() => { if (payables.length) apiService.savePayables(payables); }, [payables]);
-  useEffect(() => { if (receivables.length) apiService.saveReceivables(receivables); }, [receivables]);
-  useEffect(() => { if (currentUser) apiService.saveCurrentUser(currentUser); }, [currentUser]);
-  useEffect(() => { apiService.saveIsAccountantModuleEnabled(isAccountantModuleEnabled); }, [isAccountantModuleEnabled]);
-  useEffect(() => { if (accountantRequests.length) apiService.saveAccountantRequests(accountantRequests); }, [accountantRequests]);
-  useEffect(() => { if (bankAccounts.length) apiService.saveBankAccounts(bankAccounts); }, [bankAccounts]);
-  useEffect(() => { if (bankTransactions.length) apiService.saveBankTransactions(bankTransactions); }, [bankTransactions]);
-  useEffect(() => { if (systemTransactions.length) apiService.saveSystemTransactions(systemTransactions); }, [systemTransactions]);
-  useEffect(() => { if (notifications.length) apiService.saveNotifications(notifications); }, [notifications]);
+  useEffect(() => { if (!isLoading && companies.length) apiService.saveCompanies(companies); }, [companies, isLoading]);
+  useEffect(() => { if (!isLoading && users.length) apiService.saveUsers(users); }, [users, isLoading]);
+  useEffect(() => { if (!isLoading && contacts.length) apiService.saveContacts(contacts); }, [contacts, isLoading]);
+  useEffect(() => { if (!isLoading && properties.length) apiService.saveProperties(properties); }, [properties, isLoading]);
+  useEffect(() => { if (!isLoading && projects.length) apiService.saveProjects(projects); }, [projects, isLoading]);
+  useEffect(() => { if (!isLoading && proposals.length) apiService.saveProposals(proposals); }, [proposals, isLoading]);
+  useEffect(() => { if (!isLoading && costCenters.length) apiService.saveCostCenters(costCenters); }, [costCenters, isLoading]);
+  useEffect(() => { if (!isLoading && categories.length) apiService.saveCategories(categories); }, [categories, isLoading]);
+  useEffect(() => { if (!isLoading && adjustmentIndexes.length) apiService.saveAdjustmentIndexes(adjustmentIndexes); }, [adjustmentIndexes, isLoading]);
+  useEffect(() => { if (!isLoading && customAvatars.length) apiService.saveCustomAvatars(customAvatars); }, [customAvatars, isLoading]);
+  useEffect(() => { if (!isLoading) apiService.saveIsAuthenticated(isAuthenticated); }, [isAuthenticated, isLoading]);
+  useEffect(() => { if (!isLoading && selectedCompany) apiService.saveSelectedCompany(selectedCompany); }, [selectedCompany, isLoading]);
+  useEffect(() => { if (!isLoading && payables.length) apiService.savePayables(payables); }, [payables, isLoading]);
+  useEffect(() => { if (!isLoading && receivables.length) apiService.saveReceivables(receivables); }, [receivables, isLoading]);
+  useEffect(() => { if (!isLoading && currentUser) apiService.saveCurrentUser(currentUser); }, [currentUser, isLoading]);
+  useEffect(() => { if (!isLoading) apiService.saveIsAccountantModuleEnabled(isAccountantModuleEnabled); }, [isAccountantModuleEnabled, isLoading]);
+  useEffect(() => { if (!isLoading && accountantRequests.length) apiService.saveAccountantRequests(accountantRequests); }, [accountantRequests, isLoading]);
+  useEffect(() => { if (!isLoading && bankAccounts.length) apiService.saveBankAccounts(bankAccounts); }, [bankAccounts, isLoading]);
+  useEffect(() => { if (!isLoading && bankTransactions.length) apiService.saveBankTransactions(bankTransactions); }, [bankTransactions, isLoading]);
+  useEffect(() => { if (!isLoading && systemTransactions.length) apiService.saveSystemTransactions(systemTransactions); }, [systemTransactions, isLoading]);
+  useEffect(() => { if (!isLoading && notifications.length) apiService.saveNotifications(notifications); }, [notifications, isLoading]);
 
   
   // When user logs in or out, adjust the selected company
@@ -244,7 +228,6 @@ export default function App() {
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
-      // If the user manually exits fullscreen (e.g., with ESC key), update our desired state
       if (!document.fullscreenElement) {
         setIsDesiredFullscreen(false);
       }
@@ -365,7 +348,6 @@ export default function App() {
       const isNew = !projectToEdit;
       const finalProject = isNew ? { ...projectData, id: `proj${Date.now()}` } : projectData;
 
-      // Automatically create a new cost center if it doesn't exist
       const costCenterExists = costCenters.some(cc => cc.name === finalProject.costCenterName && cc.company === finalProject.company);
       if (!costCenterExists && finalProject.costCenterName) {
           const newCostCenter: CostCenter = {
@@ -461,12 +443,10 @@ export default function App() {
             break;
     }
     
-    // Mark as read and close
     setNotifications(prev => prev.map(n => n.id === notification.id ? {...n, isRead: true} : n));
     setIsNotificationsOpen(false);
   }
   
-  // FIX: Show a loading spinner while initial data is being fetched.
   if (isLoading) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-slate-100 dark:bg-slate-900">
@@ -476,7 +456,6 @@ export default function App() {
   }
 
 
-  // Render Logic
   if (!isAuthenticated) {
     return <Login users={users} onLoginSuccess={handleLoginSuccess} onSuperAdminLoginSuccess={handleSuperAdminLoginSuccess} />;
   }
@@ -757,6 +736,7 @@ export default function App() {
           currentUser={currentUser!}
           onLogout={handleLogout}
           isAccountantModuleEnabled={isAccountantModuleEnabled}
+          // FIX: Corrected typo from onOpenInvoiceModal to handleOpenInvoiceModal
           onOpenInvoiceModal={handleOpenInvoiceModal}
           isFullscreen={isFullscreen}
           onToggleFullscreen={() => setIsDesiredFullscreen(prev => !prev)}

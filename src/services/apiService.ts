@@ -133,24 +133,27 @@ export const getDashboardSettings = (): Promise<DashboardSettings> => apiGet('fi
 export const saveDashboardSettings = (settings: DashboardSettings): Promise<void> => apiSet('finantech_dashboard_settings', settings);
 
 // --- Initial Data Loader ---
+// FIX: Added 'isAccountantModuleEnabled' and 'accountantRequests' to the data fetching and return object.
 export const fetchAllInitialData = async () => {
     const [
         companies, users, contacts, properties, projects, proposals,
         costCenters, categories, adjustmentIndexes, customAvatars,
         payables, receivables, bankAccounts, bankTransactions,
-        systemTransactions, notifications
+        systemTransactions, notifications, isAccountantModuleEnabled, accountantRequests
     ] = await Promise.all([
         getCompanies(), getUsers(), getContacts(), getProperties(), getProjects(), getProposals(),
         getCostCenters(), getCategories(), getAdjustmentIndexes(), getCustomAvatars(),
         getPayables(), getReceivables(), getBankAccounts(), getBankTransactions(),
-        getSystemTransactions(), getNotifications()
+        getSystemTransactions(), getNotifications(),
+        getIsAccountantModuleEnabled(),
+        getAccountantRequests(),
     ]);
 
     return {
         companies, users, contacts, properties, projects, proposals,
         costCenters, categories, adjustmentIndexes, customAvatars,
         payables, receivables, bankAccounts, bankTransactions,
-        systemTransactions, notifications
+        systemTransactions, notifications, isAccountantModuleEnabled, accountantRequests
     };
 };
 

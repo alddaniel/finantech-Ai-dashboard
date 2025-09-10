@@ -24,7 +24,6 @@ const stageStatusColors: Record<string, { bg: string; border: string }> = {
     'Pendente': { bg: 'bg-yellow-400/70', border: 'border-yellow-500' },
     'Aprovado Cliente': { bg: 'bg-blue-400/70', border: 'border-blue-500' },
     'Aprovado Órgão Público': { bg: 'bg-purple-400/70', border: 'border-purple-500' },
-// FIX: Corrected typo from "Concluído" to "Concluido" to match type.
     'Concluído': { bg: 'bg-green-400/70', border: 'border-green-500' },
 };
 
@@ -41,7 +40,6 @@ const StageStatusIcon: React.FC<{ status: Project['stages'][0]['status'] }> = ({
         case 'Pendente': return <ClockIcon />;
         case 'Aprovado Cliente': return <ThumbsUpIcon />;
         case 'Aprovado Órgão Público': return <BuildingIcon />;
-// FIX: Corrected typo from "Concluído" to "Concluido" to match type.
         case 'Concluído': return <CheckIcon />;
         default: return null;
     }
@@ -136,7 +134,7 @@ export const ProjectTimeline: React.FC<{ projects: Project[] }> = ({ projects })
                                         const daysInEndMonth = getDaysInMonth(stageEnd.getFullYear(), stageEnd.getMonth());
                                         const rightOffset = (endMonthIndex + (endDay / daysInEndMonth)) / totalMonths * 100;
                                         
-                                        const width = Math.max(0, rightOffset - leftOffset);
+                                        const width = Math.max(0.5, rightOffset - leftOffset);
                                         
                                         const { bg, border } = stageStatusColors[stage.status] || stageStatusColors['Pendente'];
 

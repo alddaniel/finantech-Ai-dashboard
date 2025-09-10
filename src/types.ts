@@ -241,7 +241,6 @@ export interface Property {
     condoAmount?: number;
     iptuDueDate?: number; // Dia do mês
     condoDueDate?: number; // Dia do mês
-    // FIX: Added optional 'icon' property to support custom icons for property types.
     icon?: string;
 }
 
@@ -300,7 +299,6 @@ export interface ProjectStage {
     id: string;
     name: string;
     dueDate: string;
-// FIX: Corrected typo from "Concluido" to "Concluído" for consistency.
     status: 'Pendente' | 'Aprovado Cliente' | 'Aprovado Órgão Público' | 'Concluído';
     deliverables?: {
         fileName: string;

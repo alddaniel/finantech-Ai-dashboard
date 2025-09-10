@@ -87,10 +87,7 @@ const formatCurrencyOnInput = (value: string): string => {
   const digitsOnly = value.replace(/\D/g, '');
   if (digitsOnly.length === 0) return '';
   const numberValue = parseFloat(digitsOnly) / 100;
-  return numberValue.toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return numberValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
 const parseFormattedCurrency = (value: string): number => {
@@ -237,7 +234,6 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ isOpen, onClose, onS
             );
 
             let newProjectStatus = prev.status;
-// FIX: Corrected status string to "Concluido" to match type definition.
             const allStagesCompleted = newStages.length > 0 && newStages.every(s => s.status === 'Concluído');
 
             if (allStagesCompleted) {
@@ -589,7 +585,6 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ isOpen, onClose, onS
                                                     <option>Pendente</option>
                                                     <option>Aprovado Cliente</option>
                                                     <option>Aprovado Órgão Público</option>
-{/* FIX: Corrected status string to "Concluido" to match type definition. */}
                                                     <option>Concluído</option>
                                                 </select>
                                             </div>
