@@ -277,21 +277,19 @@ export const AccountsPayable: React.FC<AccountsPayableProps> = ({ selectedCompan
     return (
         <>
         <div className="space-y-8">
-            <div className="flex flex-wrap justify-between items-center gap-4">
-                <div className="flex items-center gap-4 flex-wrap">
-                    <button 
-                        onClick={handleExportCsv}
-                        className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 text-sm"
-                    >
-                        <ExcelIcon /> Exportar CSV
-                    </button>
-                    <button 
-                        onClick={() => downloadPdfFromElement('payables-printable-area', `contas_a_pagar_${selectedCompany}.pdf`)}
-                        className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 text-sm"
-                    >
-                        <PdfIcon /> Salvar PDF
-                    </button>
-                </div>
+            <div className="flex flex-wrap justify-end items-center gap-4">
+                <button 
+                    onClick={handleExportCsv}
+                    className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 text-sm"
+                >
+                    <ExcelIcon /> Exportar CSV
+                </button>
+                <button 
+                    onClick={() => downloadPdfFromElement('payables-printable-area', `contas_a_pagar_${selectedCompany}.pdf`)}
+                    className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 text-sm"
+                >
+                    <PdfIcon /> Salvar PDF
+                </button>
                 <button 
                     onClick={() => onOpenExpenseModal(null)}
                     className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center"

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Header';
 import { Dashboard } from './components/Dashboard';
 import { AccountsPayable } from './components/AccountsPayable';
 import { Receipts } from './components/Receipts';
@@ -26,12 +27,12 @@ import { CashFlowRecords } from './components/CashFlowRecords';
 import { Properties } from './components/Properties';
 import { Projects } from './components/Projects';
 import { Proposals } from './components/Proposals';
-import { PriceQuotations } from './components/PriceQuotations';
 import { SchemaGenerator } from './components/SchemaGenerator';
 import { PaymentConfirmationModal } from './components/PaymentConfirmationModal';
 import { ExpenseModal } from './components/ExpenseModal';
 import { ProjectModal } from './components/ProjectModal';
 import { ProposalModal } from './components/ProposalModal';
+import { PriceQuotations } from './components/PriceQuotations';
 import { QuotationModal } from './components/QuotationModal';
 import { AutomatedNotificationManager } from './components/AutomatedNotificationManager';
 import { ToastContainer } from './components/ToastContainer';
@@ -76,28 +77,18 @@ export default function App() {
 
   const [activeView, setActiveView] = useState<View>(VIEWS.DASHBOARD);
   
-  // State for Invoice Modal
+  // Modal States
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [invoiceInitialData, setInvoiceInitialData] = useState<{ customer: string; amount: number; } | { receivableToEdit: Transaction } | null>(null);
-
-  // State for Expense Modal
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState<Transaction | null>(null);
-  
-  // State for Project Modal
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   const [proposalForProject, setProposalForProject] = useState<Proposal | null>(null);
-
-  // State for Proposal Modal
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const [proposalToEdit, setProposalToEdit] = useState<Proposal | null>(null);
-
-  // State for Quotation Modal
   const [isQuotationModalOpen, setIsQuotationModalOpen] = useState(false);
   const [quotationToEdit, setQuotationToEdit] = useState<QuotationRequest | null>(null);
-
-  // State for QR Code Modal
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState(false);
   const [transactionForQRCode, setTransactionForQRCode] = useState<Transaction | null>(null);
 
@@ -109,22 +100,23 @@ export default function App() {
   const [isAccountantModuleEnabled, setIsAccountantModuleEnabled] = useState<boolean>(() => apiService.getIsAccountantModuleEnabled());
   const [accountantRequests, setAccountantRequests] = useState<AccountantRequest[]>(() => apiService.getAccountantRequests());
 
-  // Fullscreen management state
+  // UI State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile sidebar toggle
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => apiService.getIsSidebarCollapsed()); // Desktop sidebar toggle
   const [isDesiredFullscreen, setIsDesiredFullscreen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
   
-  // Payment Confirmation Modal State
+  // Modals
   const [isConfirmPaymentModalOpen, setIsConfirmPaymentModalOpen] = useState(false);
   const [transactionToConfirm, setTransactionToConfirm] = useState<Transaction | null>(null);
   
-  // Toast notifications state (for temporary messages)
+  // Notifications
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  // Unified Notification Center state (for persistent alerts)
   const [notifications, setNotifications] = useState<Notification[]>(() => apiService.getNotifications());
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   
-  // State to manage pre-login view (regular login or admin panel)
+  // Admin view
   const [isSuperAdminView, setIsSuperAdminView] = useState<boolean>(false);
 
   // Systematically persist all key states to our abstracted service layer.
@@ -150,7 +142,7 @@ export default function App() {
   useEffect(() => { apiService.saveBankTransactions(bankTransactions); }, [bankTransactions]);
   useEffect(() => { apiService.saveSystemTransactions(systemTransactions); }, [systemTransactions]);
   useEffect(() => { apiService.saveNotifications(notifications); }, [notifications]);
-
+  useEffect(() => { apiService.saveIsSidebarCollapsed(isSidebarCollapsed); }, [isSidebarCollapsed]);
   
   // When user logs in or out, adjust the selected company
   useEffect(() => {
@@ -166,12 +158,10 @@ export default function App() {
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
-      // If the user manually exits fullscreen (e.g., with ESC key), update our desired state
       if (!document.fullscreenElement) {
         setIsDesiredFullscreen(false);
       }
     };
-
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
@@ -185,7 +175,6 @@ export default function App() {
         });
       }
     };
-    
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, [isDesiredFullscreen]);
@@ -252,7 +241,7 @@ export default function App() {
     setProposalToEdit(proposal || null);
     setIsProposalModalOpen(true);
   }, []);
-
+  
   const handleOpenQuotationModal = useCallback((quotation?: QuotationRequest | null) => {
     setQuotationToEdit(quotation || null);
     setIsQuotationModalOpen(true);
@@ -302,11 +291,7 @@ export default function App() {
               company: finalProject.company,
           };
           setCostCenters(prev => [...prev, newCostCenter]);
-          addToast({
-              type: 'info',
-              title: 'Centro de Custo Criado',
-              description: `Centro de custo "${newCostCenter.name}" foi criado automaticamente.`
-          });
+          addToast({ type: 'info', title: 'Centro de Custo Criado', description: `Centro de custo "${newCostCenter.name}" foi criado automaticamente.` });
       }
 
       setProjects(prev => {
@@ -322,11 +307,7 @@ export default function App() {
            }
       }
 
-       addToast({
-            type: 'success',
-            title: 'Projeto Salvo!',
-            description: `Os dados do projeto "${finalProject.name}" foram salvos.`
-        });
+       addToast({ type: 'success', title: 'Projeto Salvo!', description: `Os dados do projeto "${finalProject.name}" foram salvos.` });
   };
 
   const handleConfirmPayment = (transactionId: string, amount: number, paymentDate: string, paymentMethod: string) => {
@@ -349,29 +330,21 @@ export default function App() {
   };
   
   const handleSaveProposal = (proposalData: Proposal) => {
-        if (proposalToEdit) {
-            setProposals(proposals.map(p => p.id === proposalToEdit.id ? { ...proposalToEdit, ...proposalData } : p));
-        } else {
-            const newProposal = {
-                ...proposalData,
-                id: `prop-${Date.now()}`,
-                createdAt: new Date().toISOString(),
-            };
-            setProposals(prev => [...prev, newProposal]);
-        }
-    };
+    if (proposalToEdit) {
+        setProposals(proposals.map(p => p.id === proposalToEdit.id ? { ...proposalToEdit, ...proposalData } : p));
+    } else {
+        const newProposal = { ...proposalData, id: `prop-${Date.now()}`, createdAt: new Date().toISOString() };
+        setProposals(prev => [...prev, newProposal]);
+    }
+  };
 
   const handleSaveQuotation = (quotationData: QuotationRequest) => {
-      if (quotationToEdit) {
-          setQuotations(quotations.map(q => q.id === quotationToEdit.id ? { ...quotationToEdit, ...quotationData } : q));
-      } else {
-          const newQuotation = {
-              ...quotationData,
-              id: `quote-${Date.now()}`,
-              createdAt: new Date().toISOString(),
-          };
-          setQuotations(prev => [...prev, newQuotation]);
-      }
+    if (quotationToEdit) {
+        setQuotations(quotations.map(q => q.id === quotationToEdit.id ? quotationData : q));
+    } else {
+        const newQuotation = { ...quotationData, id: `quote-${Date.now()}`, createdAt: new Date().toISOString(), company: selectedCompany };
+        setQuotations(prev => [...prev, newQuotation]);
+    }
   };
   
   const currentCompany = useMemo(() => companies.find(c => c.name === selectedCompany), [companies, selectedCompany]);
@@ -380,28 +353,16 @@ export default function App() {
     const { type, entityId } = notification;
     
     switch(type) {
-        case 'overdue_payable':
-            setActiveView(VIEWS.PAYABLE);
-            break;
-        case 'overdue_receivable':
-            setActiveView(VIEWS.RECEIPTS);
-            break;
-        case 'accountant_request':
-            setActiveView(VIEWS.ACCOUNTANT_PANEL);
-            break;
+        case 'overdue_payable': setActiveView(VIEWS.PAYABLE); break;
+        case 'overdue_receivable': setActiveView(VIEWS.RECEIPTS); break;
+        case 'accountant_request': setActiveView(VIEWS.ACCOUNTANT_PANEL); break;
         case 'payment_due_today':
             const payable = payables.find(p => p.id === entityId);
-            if(payable) {
-                setActiveView(VIEWS.PAYMENT_SCHEDULE);
-            } else {
-                setActiveView(VIEWS.RECEIVABLE_SCHEDULE);
-            }
+            setActiveView(payable ? VIEWS.PAYMENT_SCHEDULE : VIEWS.RECEIVABLE_SCHEDULE);
             break;
-        default:
-            break;
+        default: break;
     }
     
-    // Mark as read and close
     setNotifications(prev => prev.map(n => n.id === notification.id ? {...n, isRead: true} : n));
     setIsNotificationsOpen(false);
   }
@@ -413,270 +374,131 @@ export default function App() {
   
   if (isSuperAdminView) {
       return <AdminPanel 
-        companies={companies}
-        setCompanies={setCompanies}
-        users={users}
-        setUsers={setUsers}
-        onLogout={handleSuperAdminLogout}
-        currentUser={currentUser!}
-        payables={payables}
-        receivables={receivables}
-        addToast={addToast}
+        companies={companies} setCompanies={setCompanies} users={users} setUsers={setUsers}
+        onLogout={handleSuperAdminLogout} currentUser={currentUser!} payables={payables}
+        receivables={receivables} addToast={addToast}
       />;
   }
   
   const renderActiveView = () => {
     switch(activeView) {
       case VIEWS.DASHBOARD: return <Dashboard 
-        setActiveView={setActiveView} 
-        selectedCompany={selectedCompany} 
-        payables={payables} 
-        receivables={receivables} 
-        accountantRequests={accountantRequests} 
-        setAccountantRequests={setAccountantRequests}
-        currentUser={currentUser!}
-        isAccountantModuleEnabled={isAccountantModuleEnabled}
-        bankAccounts={bankAccounts}
-        bankTransactions={bankTransactions}
-        onOpenInvoiceModal={handleOpenInvoiceModal}
-        onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal}
-        onOpenQRCodeModal={handleOpenQRCodeModal}
+        setActiveView={setActiveView} selectedCompany={selectedCompany} payables={payables} 
+        receivables={receivables} accountantRequests={accountantRequests} setAccountantRequests={setAccountantRequests}
+        currentUser={currentUser!} isAccountantModuleEnabled={isAccountantModuleEnabled} bankAccounts={bankAccounts}
+        bankTransactions={bankTransactions} onOpenInvoiceModal={handleOpenInvoiceModal}
+        onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal} onOpenQRCodeModal={handleOpenQRCodeModal}
       />;
       case VIEWS.PAYABLE: return <AccountsPayable 
-        selectedCompany={selectedCompany} 
-        payables={payables}
-        setPayables={setPayables}
-        contacts={contacts}
-        setContacts={setContacts}
-        properties={properties}
-        onOpenExpenseModal={handleOpenExpenseModal} 
-        onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal} 
-        bankAccounts={bankAccounts}
-        addToast={addToast}
+        selectedCompany={selectedCompany} payables={payables} setPayables={setPayables} contacts={contacts}
+        setContacts={setContacts} properties={properties} onOpenExpenseModal={handleOpenExpenseModal} 
+        onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal} bankAccounts={bankAccounts} addToast={addToast}
       />;
       case VIEWS.RECEIPTS: return <Receipts 
-        selectedCompany={selectedCompany} 
-        receivables={receivables} 
-        setReceivables={setReceivables} 
-        onOpenInvoiceModal={handleOpenInvoiceModal}
-        onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal}
-        contacts={contacts}
-        properties={properties}
-        bankAccounts={bankAccounts}
-        onOpenQRCodeModal={handleOpenQRCodeModal}
-        addToast={addToast}
+        selectedCompany={selectedCompany} receivables={receivables} setReceivables={setReceivables} 
+        onOpenInvoiceModal={handleOpenInvoiceModal} onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal}
+        contacts={contacts} properties={properties} bankAccounts={bankAccounts} onOpenQRCodeModal={handleOpenQRCodeModal} addToast={addToast}
+      />;
+      case VIEWS.PRICE_QUOTATIONS: return <PriceQuotations
+        quotations={quotations} setQuotations={setQuotations} contacts={contacts} selectedCompany={selectedCompany}
+        onOpenQuotationModal={handleOpenQuotationModal} addToast={addToast}
       />;
       case VIEWS.REPORTS: return <Reports
-          selectedCompany={selectedCompany}
-          payables={payables}
-          setPayables={setPayables}
-          receivables={receivables}
-          setReceivables={setReceivables}
-          contacts={contacts}
-          setContacts={setContacts}
-          properties={properties}
-          onOpenExpenseModal={handleOpenExpenseModal}
-          onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal}
-          onOpenInvoiceModal={handleOpenInvoiceModal}
-          bankAccounts={bankAccounts}
-          projects={projects}
-          setProjects={setProjects}
-          onOpenProjectModal={handleOpenProjectModal}
-          categories={categories}
-          onOpenQRCodeModal={handleOpenQRCodeModal}
-          addToast={addToast}
-        />;
+        selectedCompany={selectedCompany} payables={payables} setPayables={setPayables} receivables={receivables}
+        setReceivables={setReceivables} contacts={contacts} setContacts={setContacts} properties={properties}
+        onOpenExpenseModal={handleOpenExpenseModal} onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal}
+        onOpenInvoiceModal={handleOpenInvoiceModal} bankAccounts={bankAccounts} projects={projects}
+        setProjects={setProjects} onOpenProjectModal={handleOpenProjectModal} categories={categories}
+        onOpenQRCodeModal={handleOpenQRCodeModal} addToast={addToast}
+      />;
       case VIEWS.AI_ADVISOR: return <AIFinancialAdvisor payables={payables} receivables={receivables} selectedCompany={selectedCompany} />;
       case VIEWS.FISCAL_MODULE: return <FiscalModule company={currentCompany} />;
       case VIEWS.CRM: return <FinancialCRM 
         selectedCompany={selectedCompany} 
         onGenerateInvoice={(debtor) => handleOpenInvoiceModal({ customer: debtor.name, amount: debtor.totalDebt })}
-        receivables={receivables}
-        contacts={contacts}
+        receivables={receivables} contacts={contacts}
       />;
       case VIEWS.CONTACTS: return <Contacts 
-          contacts={contacts} 
-          setContacts={setContacts} 
-          selectedCompany={selectedCompany} 
-          company={currentCompany}
-          customAvatars={customAvatars}
-          setCustomAvatars={setCustomAvatars}
-          payables={payables}
-          receivables={receivables}
-          addToast={addToast}
-        />;
+          contacts={contacts} setContacts={setContacts} selectedCompany={selectedCompany} company={currentCompany}
+          customAvatars={customAvatars} setCustomAvatars={setCustomAvatars} payables={payables} receivables={receivables} addToast={addToast}
+      />;
       case VIEWS.USER_MANAGEMENT: return <UserManagement 
-        companies={companies} 
-        setCompanies={setCompanies} 
-        users={users} 
-        setUsers={setUsers} 
-        auditLogs={auditLogs}
-        isAccountantModuleEnabled={isAccountantModuleEnabled} 
-        selectedCompany={selectedCompany}
-        currentUser={currentUser!}
-        setActiveView={setActiveView}
-        addToast={addToast}
+        companies={companies} setCompanies={setCompanies} users={users} setUsers={setUsers} auditLogs={auditLogs}
+        isAccountantModuleEnabled={isAccountantModuleEnabled} selectedCompany={selectedCompany} currentUser={currentUser!}
+        setActiveView={setActiveView} addToast={addToast}
       />;
       case VIEWS.GENERATED_INVOICES: return <GeneratedInvoices 
-        selectedCompany={selectedCompany} 
-        receivables={receivables}
-        setReceivables={setReceivables}
-        onOpenInvoiceModal={handleOpenInvoiceModal}
-        addToast={addToast}
+        selectedCompany={selectedCompany} receivables={receivables} setReceivables={setReceivables}
+        onOpenInvoiceModal={handleOpenInvoiceModal} addToast={addToast}
       />;
-       case VIEWS.ACCOUNTANT_PANEL: return <AccountantPanel 
-          users={users} 
-          companies={companies} 
-          accountantRequests={accountantRequests}
-          setAccountantRequests={setAccountantRequests}
-          currentUser={currentUser!}
-        />;
+      case VIEWS.ACCOUNTANT_PANEL: return <AccountantPanel 
+        users={users} companies={companies} accountantRequests={accountantRequests}
+        setAccountantRequests={setAccountantRequests} currentUser={currentUser!}
+      />;
       case VIEWS.BANK_ACCOUNTS: return <BankAccounts 
-          bankAccounts={bankAccounts} 
-          setBankAccounts={setBankAccounts} 
-          selectedCompany={selectedCompany}
-          bankTransactions={bankTransactions}
-          setActiveView={setActiveView}
-          addToast={addToast}
-        />;
+        bankAccounts={bankAccounts} setBankAccounts={setBankAccounts} selectedCompany={selectedCompany}
+        bankTransactions={bankTransactions} setActiveView={setActiveView} addToast={addToast}
+      />;
       case VIEWS.BANK_RECONCILIATION: return <BankReconciliation 
-          bankTransactions={bankTransactions}
-          systemTransactions={systemTransactions}
-          setSystemTransactions={setSystemTransactions}
-          bankAccounts={bankAccounts}
-          selectedCompany={selectedCompany}
-        />;
+        bankTransactions={bankTransactions} systemTransactions={systemTransactions}
+        setSystemTransactions={setSystemTransactions} bankAccounts={bankAccounts} selectedCompany={selectedCompany}
+      />;
       case VIEWS.RECURRENCES: return <Recurrences 
-          receivables={receivables} 
-          selectedCompany={selectedCompany}
-          setReceivables={setReceivables}
-          addToast={addToast}
-        />;
+        receivables={receivables} selectedCompany={selectedCompany} setReceivables={setReceivables} addToast={addToast}
+      />;
       case VIEWS.PAYABLE_RECURRENCES: return <PayableRecurrences 
-        payables={payables}
-        selectedCompany={selectedCompany}
-        setPayables={setPayables}
-        addToast={addToast}
+        payables={payables} selectedCompany={selectedCompany} setPayables={setPayables} addToast={addToast}
       />;
       case VIEWS.PAYMENT_SCHEDULE: return <PaymentSchedule 
-          payables={payables}
-          setPayables={setPayables}
-          selectedCompany={selectedCompany}
-          setActiveView={setActiveView}
-          contacts={contacts}
-          onOpenExpenseModal={handleOpenExpenseModal}
-          bankAccounts={bankAccounts}
-        />;
+        payables={payables} setPayables={setPayables} selectedCompany={selectedCompany} setActiveView={setActiveView}
+        contacts={contacts} onOpenExpenseModal={handleOpenExpenseModal} bankAccounts={bankAccounts}
+      />;
       case VIEWS.RECEIVABLE_SCHEDULE: return <ReceivableSchedule 
-          receivables={receivables}
-          setReceivables={setReceivables}
-          selectedCompany={selectedCompany}
-          setActiveView={setActiveView}
-          contacts={contacts}
-          onOpenInvoiceModal={handleOpenInvoiceModal}
-          bankAccounts={bankAccounts}
-          onOpenQRCodeModal={handleOpenQRCodeModal}
-        />;
+        receivables={receivables} setReceivables={setReceivables} selectedCompany={selectedCompany}
+        setActiveView={setActiveView} contacts={contacts} onOpenInvoiceModal={handleOpenInvoiceModal}
+        bankAccounts={bankAccounts} onOpenQRCodeModal={handleOpenQRCodeModal}
+      />;
       case VIEWS.CASH_FLOW_RECORDS: return <CashFlowRecords 
-          payables={payables} 
-          receivables={receivables} 
-          selectedCompany={selectedCompany}
-        />;
+        payables={payables} receivables={receivables} selectedCompany={selectedCompany}
+      />;
       case VIEWS.PROPERTIES: return <Properties
-        properties={properties}
-        setProperties={setProperties}
-        contacts={contacts}
-        payables={payables}
-        setPayables={setPayables}
-        receivables={receivables}
-        setReceivables={setReceivables}
-        selectedCompany={selectedCompany}
-        adjustmentIndexes={adjustmentIndexes}
-        addToast={addToast}
-        customAvatars={customAvatars}
-        setCustomAvatars={setCustomAvatars}
+        properties={properties} setProperties={setProperties} contacts={contacts} payables={payables} setPayables={setPayables}
+        receivables={receivables} setReceivables={setReceivables} selectedCompany={selectedCompany}
+        adjustmentIndexes={adjustmentIndexes} addToast={addToast} customAvatars={customAvatars} setCustomAvatars={setCustomAvatars}
        />;
        case VIEWS.PROJECTS: return <Projects
-        projects={projects}
-        setProjects={setProjects}
-        contacts={contacts}
-        payables={payables}
-        receivables={receivables}
-        selectedCompany={selectedCompany}
-        onOpenProjectModal={handleOpenProjectModal}
-        addToast={addToast}
+        projects={projects} setProjects={setProjects} contacts={contacts} payables={payables} receivables={receivables}
+        selectedCompany={selectedCompany} onOpenProjectModal={handleOpenProjectModal} addToast={addToast}
         />;
        case VIEWS.PROPOSALS: return <Proposals
-        proposals={proposals}
-        setProposals={setProposals}
-        contacts={contacts}
-        selectedCompany={selectedCompany}
-        onOpenProposalModal={handleOpenProposalModal}
-        onOpenProjectModal={handleOpenProjectModal}
-        addToast={addToast}
-        />;
-       case VIEWS.PRICE_QUOTATIONS: return <PriceQuotations
-        quotations={quotations}
-        setQuotations={setQuotations}
-        contacts={contacts}
-        selectedCompany={selectedCompany}
-        onOpenQuotationModal={handleOpenQuotationModal}
-        addToast={addToast}
+        proposals={proposals} setProposals={setProposals} contacts={contacts} selectedCompany={selectedCompany}
+        onOpenProposalModal={handleOpenProposalModal} onOpenProjectModal={handleOpenProjectModal} addToast={addToast}
         />;
       case VIEWS.SCHEMA_GENERATOR: return <SchemaGenerator />;
       case VIEWS.COST_CENTERS: return <CostCenters 
-        costCenters={costCenters} 
-        setCostCenters={setCostCenters} 
-        selectedCompany={selectedCompany} 
-        setActiveView={setActiveView}
-        payables={payables}
-        receivables={receivables}
-        properties={properties}
-        addToast={addToast}
+        costCenters={costCenters} setCostCenters={setCostCenters} selectedCompany={selectedCompany} setActiveView={setActiveView}
+        payables={payables} receivables={receivables} properties={properties} addToast={addToast}
       />;
       case VIEWS.COMPANY_PROFILE: return <CompanyProfile 
-        company={currentCompany} 
-        companies={companies}
-        setCompanies={setCompanies}
-        currentUser={currentUser!}
-        setActiveView={setActiveView}
+        company={currentCompany} companies={companies} setCompanies={setCompanies} currentUser={currentUser!} setActiveView={setActiveView}
       />;
       case VIEWS.PLAN_SUBSCRIPTION: return <PlanSubscription 
-        company={currentCompany}
-        setActiveView={setActiveView}
+        company={currentCompany} setActiveView={setActiveView}
       />;
       case VIEWS.SETTINGS: return <Settings 
-          setActiveView={setActiveView}
-          currentUser={currentUser!}
-          properties={properties}
-          receivables={receivables}
-          setReceivables={setReceivables}
-          adjustmentIndexes={adjustmentIndexes}
-          setAdjustmentIndexes={setAdjustmentIndexes}
-          addToast={addToast}
-        />;
+        setActiveView={setActiveView} currentUser={currentUser!} properties={properties} receivables={receivables}
+        setReceivables={setReceivables} adjustmentIndexes={adjustmentIndexes} setAdjustmentIndexes={setAdjustmentIndexes} addToast={addToast}
+      />;
       case VIEWS.CATEGORIES: return <Categories 
-          categories={categories}
-          setCategories={setCategories}
-          selectedCompany={selectedCompany}
-          setActiveView={setActiveView}
-          addToast={addToast}
-        />;
+        categories={categories} setCategories={setCategories} selectedCompany={selectedCompany} setActiveView={setActiveView} addToast={addToast}
+      />;
       case VIEWS.INDEXES: return <Indexes
-        adjustmentIndexes={adjustmentIndexes}
-        setAdjustmentIndexes={setAdjustmentIndexes}
-        selectedCompany={selectedCompany}
-        setActiveView={setActiveView}
-        properties={properties}
-        receivables={receivables}
-        setReceivables={setReceivables}
-        addToast={addToast}
+        adjustmentIndexes={adjustmentIndexes} setAdjustmentIndexes={setAdjustmentIndexes} selectedCompany={selectedCompany}
+        setActiveView={setActiveView} properties={properties} receivables={receivables} setReceivables={setReceivables} addToast={addToast}
       />;
       case VIEWS.INTEGRATIONS: return <Integrations
-        isAccountantModuleEnabled={isAccountantModuleEnabled}
-        setIsAccountantModuleEnabled={setIsAccountantModuleEnabled}
-        setActiveView={setActiveView}
-        company={currentCompany}
+        isAccountantModuleEnabled={isAccountantModuleEnabled} setIsAccountantModuleEnabled={setIsAccountantModuleEnabled}
+        setActiveView={setActiveView} company={currentCompany}
        />;
       case VIEWS.HELP: return <Help />;
       default: return <div>View not found</div>
@@ -695,88 +517,65 @@ export default function App() {
           currentUser={currentUser!}
           onLogout={handleLogout}
           isAccountantModuleEnabled={isAccountantModuleEnabled}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+          // FIX: Pass missing props to Sidebar
           onOpenInvoiceModal={handleOpenInvoiceModal}
           isFullscreen={isFullscreen}
           onToggleFullscreen={() => setIsDesiredFullscreen(prev => !prev)}
           notifications={notifications}
           setIsNotificationsOpen={setIsNotificationsOpen}
         />
-        <main className="flex-1 overflow-y-auto p-8">
-            {renderActiveView()}
-        </main>
+        <div className="flex flex-col flex-1 overflow-hidden">
+            <Header 
+                activeView={activeView}
+                currentUser={currentUser!}
+                onLogout={handleLogout}
+                isFullscreen={isFullscreen}
+                onToggleFullscreen={() => setIsDesiredFullscreen(prev => !prev)}
+                notifications={notifications}
+                setIsNotificationsOpen={setIsNotificationsOpen}
+                onOpenInvoiceModal={handleOpenInvoiceModal}
+                onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+            />
+            <main className={`flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 transition-all duration-300 md:pl-20 ${!isSidebarCollapsed ? 'md:translate-x-52' : ''}`}>
+                <div className="mx-auto max-w-7xl">
+                    {renderActiveView()}
+                </div>
+            </main>
+        </div>
         {isInvoiceModalOpen && <InvoiceGenerator
-          isOpen={isInvoiceModalOpen}
-          onClose={() => setIsInvoiceModalOpen(false)}
-          contacts={contacts}
-          setContacts={setContacts}
-          receivables={receivables}
-          setReceivables={setReceivables}
-          selectedCompany={selectedCompany}
-          companies={companies}
-          properties={properties}
-          projects={projects}
-          initialData={invoiceInitialData}
-          costCenters={costCenters}
-          categories={categories}
-          adjustmentIndexes={adjustmentIndexes}
+          isOpen={isInvoiceModalOpen} onClose={() => setIsInvoiceModalOpen(false)} contacts={contacts} setContacts={setContacts}
+          receivables={receivables} setReceivables={setReceivables} selectedCompany={selectedCompany} companies={companies}
+          properties={properties} projects={projects} initialData={invoiceInitialData} costCenters={costCenters}
+          categories={categories} adjustmentIndexes={adjustmentIndexes}
         />}
         {isExpenseModalOpen && <ExpenseModal
-          isOpen={isExpenseModalOpen}
-          onClose={() => setIsExpenseModalOpen(false)}
-          onSave={handleSaveExpense}
-          onSaveMultiple={handleSaveMultipleExpenses}
-          addToast={addToast}
-          expenseToEdit={expenseToEdit}
-          selectedCompany={selectedCompany}
-          contacts={contacts}
-          setContacts={setContacts}
-          properties={properties}
-          projects={projects}
-          bankAccounts={bankAccounts}
-          costCenters={costCenters}
-          categories={categories}
+          isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} onSave={handleSaveExpense}
+          onSaveMultiple={handleSaveMultipleExpenses} addToast={addToast} expenseToEdit={expenseToEdit}
+          selectedCompany={selectedCompany} contacts={contacts} setContacts={setContacts} properties={properties}
+          projects={projects} bankAccounts={bankAccounts} costCenters={costCenters} categories={categories}
         />}
         {isProjectModalOpen && <ProjectModal
-          isOpen={isProjectModalOpen}
-          onClose={() => setIsProjectModalOpen(false)}
-          onSave={handleSaveProject}
-          projectToEdit={projectToEdit}
-          proposalForProject={proposalForProject}
-          contacts={contacts}
-          setContacts={setContacts}
-          selectedCompany={selectedCompany}
-          costCenters={costCenters}
-          setCostCenters={setCostCenters}
+          isOpen={isProjectModalOpen} onClose={() => setIsProjectModalOpen(false)} onSave={handleSaveProject}
+          projectToEdit={projectToEdit} proposalForProject={proposalForProject} contacts={contacts}
+          setContacts={setContacts} selectedCompany={selectedCompany} costCenters={costCenters} setCostCenters={setCostCenters}
         />}
          {isProposalModalOpen && <ProposalModal
-          isOpen={isProposalModalOpen}
-          onClose={() => setIsProposalModalOpen(false)}
-          onSave={handleSaveProposal}
-          proposalToEdit={proposalToEdit}
-          contacts={contacts}
-          setContacts={setContacts}
-          selectedCompany={selectedCompany}
+          isOpen={isProposalModalOpen} onClose={() => setIsProposalModalOpen(false)} onSave={handleSaveProposal}
+          proposalToEdit={proposalToEdit} contacts={contacts} setContacts={setContacts} selectedCompany={selectedCompany}
         />}
-        {isQuotationModalOpen && <QuotationModal
-          isOpen={isQuotationModalOpen}
-          onClose={() => setIsQuotationModalOpen(false)}
-          onSave={handleSaveQuotation}
-          quotationToEdit={quotationToEdit}
-          contacts={contacts}
-          selectedCompany={selectedCompany}
-          addToast={addToast}
-          onGenerateExpense={handleOpenExpenseModal}
+         {isQuotationModalOpen && <QuotationModal
+            isOpen={isQuotationModalOpen} onClose={() => setIsQuotationModalOpen(false)} onSave={handleSaveQuotation}
+            quotationToEdit={quotationToEdit} contacts={contacts} selectedCompany={selectedCompany} addToast={addToast}
+            onGenerateExpense={handleOpenExpenseModal}
         />}
         {isConfirmPaymentModalOpen && <PaymentConfirmationModal 
-          isOpen={isConfirmPaymentModalOpen}
-          onClose={() => setIsConfirmPaymentModalOpen(false)}
-          onConfirm={handleConfirmPayment}
-          transaction={transactionToConfirm}
+          isOpen={isConfirmPaymentModalOpen} onClose={() => setIsConfirmPaymentModalOpen(false)}
+          onConfirm={handleConfirmPayment} transaction={transactionToConfirm}
         />}
         {isQRCodeModalOpen && <QRCodeModal 
-            isOpen={isQRCodeModalOpen}
-            onClose={() => setIsQRCodeModalOpen(false)}
-            transaction={transactionForQRCode}
+            isOpen={isQRCodeModalOpen} onClose={() => setIsQRCodeModalOpen(false)} transaction={transactionForQRCode}
         />}
         {isNotificationsOpen && <NotificationCenter 
             notifications={notifications.filter(n => n.company === selectedCompany)}
@@ -785,13 +584,9 @@ export default function App() {
             onMarkAllAsRead={() => setNotifications(prev => prev.map(n => ({...n, isRead: true})))}
             onNotificationClick={handleNotificationClick}
         />}
-
         <ToastContainer toasts={toasts} onDismiss={removeToast} />
         <AutomatedNotificationManager 
-            payables={payables}
-            receivables={receivables}
-            addNotification={addNotification}
-            notifications={notifications}
+            payables={payables} receivables={receivables} addNotification={addNotification} notifications={notifications}
         />
     </div>
   )

@@ -104,11 +104,10 @@ export const GeneratedInvoices: React.FC<GeneratedInvoicesProps> = ({ selectedCo
     return (
         <>
             <div className={`space-y-8 ${viewingInvoice ? 'print-hide' : ''}`}>
-                <div className="flex flex-wrap justify-between items-center gap-4">
+                <div className="flex justify-end items-center">
                     <button 
                         onClick={() => onOpenInvoiceModal()}
-                        className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center"
-                    >
+                        className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center">
                         <PlusIcon />
                         <span className="ml-2">Gerar Nova Cobrança</span>
                     </button>

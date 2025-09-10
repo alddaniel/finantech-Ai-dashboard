@@ -147,6 +147,10 @@ const defaultDashboardSettings: DashboardSettings = {
 export const getDashboardSettings = (): DashboardSettings => get('finantech_dashboard_settings', defaultDashboardSettings);
 export const saveDashboardSettings = (settings: DashboardSettings): void => set('finantech_dashboard_settings', settings);
 
+// --- Sidebar State ---
+export const getIsSidebarCollapsed = (): boolean => get('finantech_sidebar_collapsed', false);
+export const saveIsSidebarCollapsed = (isCollapsed: boolean): void => set('finantech_sidebar_collapsed', isCollapsed);
+
 
 // ====================================================================================
 // UTILITY FUNCTIONS

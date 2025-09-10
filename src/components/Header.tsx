@@ -14,7 +14,7 @@ interface HeaderProps {
     onOpenInvoiceModal: () => void;
 }
 
-// FIX: Corrected the type definition to satisfy Record<View, string> by including all possible keys.
+// FIX: Completed the viewTitles object to satisfy the Record<View, string> type.
 const viewTitles: Record<View, string> = {
     [VIEWS.DASHBOARD]: 'Dashboard',
     [VIEWS.PAYABLE]: 'Contas a Pagar',
