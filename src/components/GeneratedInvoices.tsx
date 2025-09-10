@@ -71,6 +71,7 @@ export const GeneratedInvoices: React.FC<GeneratedInvoicesProps> = ({ selectedCo
             title: 'Cobrança Excluída!',
             description: `A cobrança para "${itemToDelete.invoiceDetails?.customer}" foi removida.`
         });
+        setItemToDelete(null);
     };
 
     const handleDownloadXml = (xmlContent: string, fileName: string) => {
@@ -103,11 +104,11 @@ export const GeneratedInvoices: React.FC<GeneratedInvoicesProps> = ({ selectedCo
     return (
         <>
             <div className={`space-y-8 ${viewingInvoice ? 'print-hide' : ''}`}>
-                <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Cobranças Geradas</h1>
+                <div className="flex flex-wrap justify-between items-center gap-4">
                     <button 
                         onClick={() => onOpenInvoiceModal()}
-                        className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center">
+                        className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center"
+                    >
                         <PlusIcon />
                         <span className="ml-2">Gerar Nova Cobrança</span>
                     </button>

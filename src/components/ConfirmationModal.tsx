@@ -15,6 +15,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, on
     if (!isOpen) return null;
 
     const handleConfirm = () => {
+        if (isConfirming) return;
         onConfirm();
     };
 

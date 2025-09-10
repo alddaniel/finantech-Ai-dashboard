@@ -50,7 +50,6 @@ self.addEventListener('fetch', (event) => {
       try {
         const networkResponse = await fetch(event.request);
         // If the request is successful, cache it and return it.
-        // We only cache requests to our own origin, not external resources like Google Fonts.
         if (networkResponse.ok && event.request.url.startsWith(self.location.origin)) {
           cache.put(event.request, networkResponse.clone());
         }
@@ -62,8 +61,6 @@ self.addEventListener('fetch', (event) => {
           return cachedResponse;
         }
         // If not in cache either, it's a genuine network error.
-        // For navigation requests, you might want to return a fallback offline page.
-        // For now, we just let the error propagate.
         return new Response("Network error happened", {
           status: 408,
           headers: { "Content-Type": "text/plain" },

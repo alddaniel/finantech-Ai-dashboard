@@ -3,6 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { AccountsPayable } from './components/AccountsPayable';
 import { Receipts } from './components/Receipts';
+import { CashManagement } from './components/CashManagement';
 import { Reports } from './components/Reports';
 import { AIFinancialAdvisor } from './components/AIFinancialAdvisor';
 import { InvoiceGenerator } from './components/InvoiceGenerator';
@@ -25,11 +26,13 @@ import { CashFlowRecords } from './components/CashFlowRecords';
 import { Properties } from './components/Properties';
 import { Projects } from './components/Projects';
 import { Proposals } from './components/Proposals';
+import { PriceQuotations } from './components/PriceQuotations';
 import { SchemaGenerator } from './components/SchemaGenerator';
 import { PaymentConfirmationModal } from './components/PaymentConfirmationModal';
 import { ExpenseModal } from './components/ExpenseModal';
 import { ProjectModal } from './components/ProjectModal';
 import { ProposalModal } from './components/ProposalModal';
+import { QuotationModal } from './components/QuotationModal';
 import { AutomatedNotificationManager } from './components/AutomatedNotificationManager';
 import { ToastContainer } from './components/ToastContainer';
 import { AdminPanel } from './components/AdminPanel';
@@ -41,38 +44,34 @@ import { Settings } from './components/Settings';
 import { Categories } from './components/Categories';
 import { Indexes } from './components/Indexes';
 import { QRCodeModal } from './components/QRCodeModal';
-import { Contracts } from './components/Contracts';
-import { ContractModal } from './components/ContractModal';
-import { BottomNavBar } from './components/BottomNavBar';
-import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, Contract } from './types';
+import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, QuotationRequest } from './types';
 import { VIEWS, MOCK_AUDIT_LOGS } from './constants';
 import * as apiService from './services/apiService';
-import { Spinner } from './components/ui/Spinner';
+
 
 export default function App() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => apiService.getIsAuthenticated());
   
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [companies, setCompanies] = useState<Company[]>(() => apiService.getCompanies());
+  const [users, setUsers] = useState<User[]>(() => apiService.getUsers());
   
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(MOCK_AUDIT_LOGS);
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [contracts, setContracts] = useState<Contract[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [adjustmentIndexes, setAdjustmentIndexes] = useState<AdjustmentIndex[]>([]);
-  const [customAvatars, setCustomAvatars] = useState<string[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>(() => apiService.getContacts());
+  const [properties, setProperties] = useState<Property[]>(() => apiService.getProperties());
+  const [projects, setProjects] = useState<Project[]>(() => apiService.getProjects());
+  const [proposals, setProposals] = useState<Proposal[]>(() => apiService.getProposals());
+  const [quotations, setQuotations] = useState<QuotationRequest[]>(() => apiService.getQuotations());
+  const [costCenters, setCostCenters] = useState<CostCenter[]>(() => apiService.getCostCenters());
+  const [categories, setCategories] = useState<Category[]>(() => apiService.getCategories());
+  const [adjustmentIndexes, setAdjustmentIndexes] = useState<AdjustmentIndex[]>(() => apiService.getAdjustmentIndexes());
+  const [customAvatars, setCustomAvatars] = useState<string[]>(() => apiService.getCustomAvatars());
 
   // Centralized state for transactions
-  const [payables, setPayables] = useState<Transaction[]>([]);
-  const [receivables, setReceivables] = useState<Transaction[]>([]);
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
-  const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>([]);
-  const [systemTransactions, setSystemTransactions] = useState<SystemTransaction[]>([]);
+  const [payables, setPayables] = useState<Transaction[]>(() => apiService.getPayables());
+  const [receivables, setReceivables] = useState<Transaction[]>(() => apiService.getReceivables());
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(() => apiService.getBankAccounts());
+  const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>(() => apiService.getBankTransactions());
+  const [systemTransactions, setSystemTransactions] = useState<SystemTransaction[]>(() => apiService.getSystemTransactions());
 
 
   const [activeView, setActiveView] = useState<View>(VIEWS.DASHBOARD);
@@ -93,21 +92,22 @@ export default function App() {
   // State for Proposal Modal
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const [proposalToEdit, setProposalToEdit] = useState<Proposal | null>(null);
-  
-  // State for Contract Modal
-  const [isContractModalOpen, setIsContractModalOpen] = useState(false);
-  const [contractToEdit, setContractToEdit] = useState<Contract | null>(null);
+
+  // State for Quotation Modal
+  const [isQuotationModalOpen, setIsQuotationModalOpen] = useState(false);
+  const [quotationToEdit, setQuotationToEdit] = useState<QuotationRequest | null>(null);
 
   // State for QR Code Modal
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState(false);
   const [transactionForQRCode, setTransactionForQRCode] = useState<Transaction | null>(null);
 
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
+
+  const [currentUser, setCurrentUser] = useState<User | null>(() => apiService.getCurrentUser(users));
+  const [selectedCompany, setSelectedCompany] = useState<string>(() => apiService.getSelectedCompany(companies));
   
   // Add-on Modules State
-  const [isAccountantModuleEnabled, setIsAccountantModuleEnabled] = useState<boolean>(false);
-  const [accountantRequests, setAccountantRequests] = useState<AccountantRequest[]>([]);
+  const [isAccountantModuleEnabled, setIsAccountantModuleEnabled] = useState<boolean>(() => apiService.getIsAccountantModuleEnabled());
+  const [accountantRequests, setAccountantRequests] = useState<AccountantRequest[]>(() => apiService.getAccountantRequests());
 
   // Fullscreen management state
   const [isDesiredFullscreen, setIsDesiredFullscreen] = useState(false);
@@ -120,81 +120,36 @@ export default function App() {
   // Toast notifications state (for temporary messages)
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   // Unified Notification Center state (for persistent alerts)
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>(() => apiService.getNotifications());
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  
-  // State for PWA installation prompt
-  const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
 
   
   // State to manage pre-login view (regular login or admin panel)
   const [isSuperAdminView, setIsSuperAdminView] = useState<boolean>(false);
-  
-  useEffect(() => {
-    const checkAuth = apiService.getIsAuthenticated();
-    setIsAuthenticated(checkAuth);
-  }, []);
-
-  useEffect(() => {
-    const loadInitialData = async () => {
-        setIsLoading(true);
-        if (isAuthenticated) {
-            const data = await apiService.fetchAllInitialData();
-
-            setCompanies(data.companies);
-            setUsers(data.users);
-            setContacts(data.contacts);
-            setProperties(data.properties);
-            setContracts(data.contracts);
-            setProjects(data.projects);
-            setProposals(data.proposals);
-            setCostCenters(data.costCenters);
-            setCategories(data.categories);
-            setAdjustmentIndexes(data.adjustmentIndexes);
-            setCustomAvatars(data.customAvatars);
-            setPayables(data.payables);
-            setReceivables(data.receivables);
-            setBankAccounts(data.bankAccounts);
-            setBankTransactions(data.bankTransactions);
-            setSystemTransactions(data.systemTransactions);
-            setNotifications(data.notifications);
-            setIsAccountantModuleEnabled(data.isAccountantModuleEnabled);
-            setAccountantRequests(data.accountantRequests);
-
-            const initialUser = apiService.getCurrentUser(data.users);
-            setCurrentUser(initialUser);
-            setSelectedCompany(apiService.getSelectedCompany(data.companies));
-        }
-        setIsLoading(false);
-    };
-
-    loadInitialData();
-  }, [isAuthenticated]);
-
 
   // Systematically persist all key states to our abstracted service layer.
-  useEffect(() => { if (!isLoading && companies.length) apiService.saveCompanies(companies); }, [companies, isLoading]);
-  useEffect(() => { if (!isLoading && users.length) apiService.saveUsers(users); }, [users, isLoading]);
-  useEffect(() => { if (!isLoading && contacts.length) apiService.saveContacts(contacts); }, [contacts, isLoading]);
-  useEffect(() => { if (!isLoading && properties.length) apiService.saveProperties(properties); }, [properties, isLoading]);
-  useEffect(() => { if (!isLoading && contracts.length) apiService.saveContracts(contracts); }, [contracts, isLoading]);
-  useEffect(() => { if (!isLoading && projects.length) apiService.saveProjects(projects); }, [projects, isLoading]);
-  useEffect(() => { if (!isLoading && proposals.length) apiService.saveProposals(proposals); }, [proposals, isLoading]);
-  useEffect(() => { if (!isLoading && costCenters.length) apiService.saveCostCenters(costCenters); }, [costCenters, isLoading]);
-  useEffect(() => { if (!isLoading && categories.length) apiService.saveCategories(categories); }, [categories, isLoading]);
-  useEffect(() => { if (!isLoading && adjustmentIndexes.length) apiService.saveAdjustmentIndexes(adjustmentIndexes); }, [adjustmentIndexes, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveCustomAvatars(customAvatars); }, [customAvatars, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveIsAuthenticated(isAuthenticated); }, [isAuthenticated, isLoading]);
-  useEffect(() => { if (!isLoading && selectedCompany) apiService.saveSelectedCompany(selectedCompany); }, [selectedCompany, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.savePayables(payables); }, [payables, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveReceivables(receivables); }, [receivables, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveCurrentUser(currentUser); }, [currentUser, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveIsAccountantModuleEnabled(isAccountantModuleEnabled); }, [isAccountantModuleEnabled, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveAccountantRequests(accountantRequests); }, [accountantRequests, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveBankAccounts(bankAccounts); }, [bankAccounts, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveBankTransactions(bankTransactions); }, [bankTransactions, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveSystemTransactions(systemTransactions); }, [systemTransactions, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveNotifications(notifications); }, [notifications, isLoading]);
+  useEffect(() => { apiService.saveCompanies(companies); }, [companies]);
+  useEffect(() => { apiService.saveUsers(users); }, [users]);
+  useEffect(() => { apiService.saveContacts(contacts); }, [contacts]);
+  useEffect(() => { apiService.saveProperties(properties); }, [properties]);
+  useEffect(() => { apiService.saveProjects(projects); }, [projects]);
+  useEffect(() => { apiService.saveProposals(proposals); }, [proposals]);
+  useEffect(() => { apiService.saveQuotations(quotations); }, [quotations]);
+  useEffect(() => { apiService.saveCostCenters(costCenters); }, [costCenters]);
+  useEffect(() => { apiService.saveCategories(categories); }, [categories]);
+  useEffect(() => { apiService.saveAdjustmentIndexes(adjustmentIndexes); }, [adjustmentIndexes]);
+  useEffect(() => { apiService.saveCustomAvatars(customAvatars); }, [customAvatars]);
+  useEffect(() => { apiService.saveIsAuthenticated(isAuthenticated); }, [isAuthenticated]);
+  useEffect(() => { apiService.saveSelectedCompany(selectedCompany); }, [selectedCompany]);
+  useEffect(() => { apiService.savePayables(payables); }, [payables]);
+  useEffect(() => { apiService.saveReceivables(receivables); }, [receivables]);
+  useEffect(() => { apiService.saveCurrentUser(currentUser); }, [currentUser]);
+  useEffect(() => { apiService.saveIsAccountantModuleEnabled(isAccountantModuleEnabled); }, [isAccountantModuleEnabled]);
+  useEffect(() => { apiService.saveAccountantRequests(accountantRequests); }, [accountantRequests]);
+  useEffect(() => { apiService.saveBankAccounts(bankAccounts); }, [bankAccounts]);
+  useEffect(() => { apiService.saveBankTransactions(bankTransactions); }, [bankTransactions]);
+  useEffect(() => { apiService.saveSystemTransactions(systemTransactions); }, [systemTransactions]);
+  useEffect(() => { apiService.saveNotifications(notifications); }, [notifications]);
 
   
   // When user logs in or out, adjust the selected company
@@ -211,6 +166,7 @@ export default function App() {
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
+      // If the user manually exits fullscreen (e.g., with ESC key), update our desired state
       if (!document.fullscreenElement) {
         setIsDesiredFullscreen(false);
       }
@@ -218,20 +174,6 @@ export default function App() {
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
-  
-  // PWA Install prompt listener
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setInstallPromptEvent(e);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
   }, []);
 
   // Re-enter fullscreen automatically after file dialog closes
@@ -288,19 +230,6 @@ export default function App() {
       setIsAuthenticated(true);
       setIsSuperAdminView(true);
   };
-
-  const handleInstallClick = useCallback(async () => {
-    if (!installPromptEvent) {
-      addToast({ type: 'info', title: 'App Instalado', description: 'O aplicativo já foi instalado ou a opção não está disponível no seu navegador.' });
-      return;
-    }
-    installPromptEvent.prompt();
-    const { outcome } = await installPromptEvent.userChoice;
-    if (outcome === 'accepted') {
-        addToast({ type: 'success', title: 'Instalado!', description: 'O aplicativo foi adicionado à sua tela inicial.' });
-    }
-    setInstallPromptEvent(null);
-  }, [installPromptEvent, addToast]);
   
   // --- Modal Openers ---
   const handleOpenInvoiceModal = useCallback((data?: { customer: string; amount: number; } | { receivableToEdit: Transaction } | null) => {
@@ -323,10 +252,10 @@ export default function App() {
     setProposalToEdit(proposal || null);
     setIsProposalModalOpen(true);
   }, []);
-  
-  const handleOpenContractModal = useCallback((contract?: Contract | null) => {
-    setContractToEdit(contract || null);
-    setIsContractModalOpen(true);
+
+  const handleOpenQuotationModal = useCallback((quotation?: QuotationRequest | null) => {
+    setQuotationToEdit(quotation || null);
+    setIsQuotationModalOpen(true);
   }, []);
 
   const handleOpenConfirmPaymentModal = useCallback((transaction: Transaction) => {
@@ -363,6 +292,7 @@ export default function App() {
       const isNew = !projectToEdit;
       const finalProject = isNew ? { ...projectData, id: `proj${Date.now()}` } : projectData;
 
+      // Automatically create a new cost center if it doesn't exist
       const costCenterExists = costCenters.some(cc => cc.name === finalProject.costCenterName && cc.company === finalProject.company);
       if (!costCenterExists && finalProject.costCenterName) {
           const newCostCenter: CostCenter = {
@@ -430,55 +360,24 @@ export default function App() {
             setProposals(prev => [...prev, newProposal]);
         }
     };
-    
-   const handleSaveContract = (contractData: Contract) => {
-        const isNew = !contractToEdit;
-        const finalContract = isNew ? { ...contractData, id: `contract${Date.now()}` } : contractData;
 
-        // Save contract
-        setContracts(prev => {
-            if (isNew) return [...prev, finalContract];
-            return prev.map(c => c.id === finalContract.id ? finalContract : c);
-        });
-
-        // Update linked property
-        setProperties(prev => prev.map(p => {
-            if (p.id === finalContract.propertyId) {
-                return { ...p, contractId: finalContract.id, status: 'Alugado' };
-            }
-            if (contractToEdit && p.id === contractToEdit.propertyId && contractToEdit.propertyId !== finalContract.propertyId) {
-                return { ...p, contractId: undefined, status: 'Disponível' };
-            }
-            return p;
-        }));
-
-        // Generate/Adjust receivables
-        const property = properties.find(p => p.id === finalContract.propertyId);
-        if (property) {
-            const { receivablesToKeep, newReceivables } = apiService.generateAndAdjustRentReceivables(finalContract, property, adjustmentIndexes, receivables);
-            setReceivables([...receivablesToKeep, ...newReceivables]);
-            if (newReceivables.length > 0) {
-                addToast({
-                    type: 'info',
-                    title: 'Receitas Geradas',
-                    description: `${newReceivables.length} aluguéis futuros foram criados/atualizados a partir do contrato.`
-                });
-            }
-        }
-        
-        addToast({
-            type: 'success',
-            title: isNew ? 'Contrato Salvo!' : 'Contrato Atualizado!',
-            description: `O contrato para o imóvel foi salvo com sucesso.`
-        });
-        
-        setIsContractModalOpen(false);
-   };
+  const handleSaveQuotation = (quotationData: QuotationRequest) => {
+      if (quotationToEdit) {
+          setQuotations(quotations.map(q => q.id === quotationToEdit.id ? { ...quotationToEdit, ...quotationData } : q));
+      } else {
+          const newQuotation = {
+              ...quotationData,
+              id: `quote-${Date.now()}`,
+              createdAt: new Date().toISOString(),
+          };
+          setQuotations(prev => [...prev, newQuotation]);
+      }
+  };
   
   const currentCompany = useMemo(() => companies.find(c => c.name === selectedCompany), [companies, selectedCompany]);
 
   const handleNotificationClick = (notification: Notification) => {
-    const { type } = notification;
+    const { type, entityId } = notification;
     
     switch(type) {
         case 'overdue_payable':
@@ -491,10 +390,14 @@ export default function App() {
             setActiveView(VIEWS.ACCOUNTANT_PANEL);
             break;
         case 'payment_due_today':
-            setActiveView(VIEWS.PAYMENT_SCHEDULE);
+            const payable = payables.find(p => p.id === entityId);
+            if(payable) {
+                setActiveView(VIEWS.PAYMENT_SCHEDULE);
+            } else {
+                setActiveView(VIEWS.RECEIVABLE_SCHEDULE);
+            }
             break;
         default:
-            setActiveView(VIEWS.DASHBOARD);
             break;
     }
     
@@ -504,14 +407,6 @@ export default function App() {
   }
 
   // Render Logic
-  if (isLoading) {
-    return (
-        <div className="flex h-screen w-full items-center justify-center bg-slate-100 dark:bg-slate-900">
-            <Spinner className="h-12 w-12" />
-        </div>
-    );
-  }
-
   if (!isAuthenticated) {
     return <Login users={users} onLoginSuccess={handleLoginSuccess} onSuperAdminLoginSuccess={handleSuperAdminLoginSuccess} />;
   }
@@ -696,21 +591,10 @@ export default function App() {
         receivables={receivables}
         setReceivables={setReceivables}
         selectedCompany={selectedCompany}
-        // FIX: The 'adjustmentIndexes' prop was missing and is required by the Properties component.
         adjustmentIndexes={adjustmentIndexes}
         addToast={addToast}
         customAvatars={customAvatars}
         setCustomAvatars={setCustomAvatars}
-        contracts={contracts}
-       />;
-       case VIEWS.CONTRACTS: return <Contracts 
-        contracts={contracts}
-        setContracts={setContracts}
-        properties={properties}
-        contacts={contacts}
-        selectedCompany={selectedCompany}
-        onOpenContractModal={handleOpenContractModal}
-        addToast={addToast}
        />;
        case VIEWS.PROJECTS: return <Projects
         projects={projects}
@@ -729,6 +613,14 @@ export default function App() {
         selectedCompany={selectedCompany}
         onOpenProposalModal={handleOpenProposalModal}
         onOpenProjectModal={handleOpenProjectModal}
+        addToast={addToast}
+        />;
+       case VIEWS.PRICE_QUOTATIONS: return <PriceQuotations
+        quotations={quotations}
+        setQuotations={setQuotations}
+        contacts={contacts}
+        selectedCompany={selectedCompany}
+        onOpenQuotationModal={handleOpenQuotationModal}
         addToast={addToast}
         />;
       case VIEWS.SCHEMA_GENERATOR: return <SchemaGenerator />;
@@ -808,22 +700,10 @@ export default function App() {
           onToggleFullscreen={() => setIsDesiredFullscreen(prev => !prev)}
           notifications={notifications}
           setIsNotificationsOpen={setIsNotificationsOpen}
-          installPromptEvent={installPromptEvent}
-          onInstallClick={handleInstallClick}
         />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8 relative">
+        <main className="flex-1 overflow-y-auto p-8">
             {renderActiveView()}
         </main>
-        <BottomNavBar
-            activeView={activeView}
-            setActiveView={setActiveView}
-            onOpenInvoiceModal={handleOpenInvoiceModal}
-            company={currentCompany}
-            currentUser={currentUser!}
-            isAccountantModuleEnabled={isAccountantModuleEnabled}
-            installPromptEvent={installPromptEvent}
-            onInstallClick={handleInstallClick}
-        />
         {isInvoiceModalOpen && <InvoiceGenerator
           isOpen={isInvoiceModalOpen}
           onClose={() => setIsInvoiceModalOpen(false)}
@@ -839,7 +719,6 @@ export default function App() {
           costCenters={costCenters}
           categories={categories}
           adjustmentIndexes={adjustmentIndexes}
-          contracts={contracts}
         />}
         {isExpenseModalOpen && <ExpenseModal
           isOpen={isExpenseModalOpen}
@@ -878,16 +757,15 @@ export default function App() {
           setContacts={setContacts}
           selectedCompany={selectedCompany}
         />}
-        {isContractModalOpen && <ContractModal
-          isOpen={isContractModalOpen}
-          onClose={() => setIsContractModalOpen(false)}
-          onSave={handleSaveContract}
-          contractToEdit={contractToEdit}
-          properties={properties}
+        {isQuotationModalOpen && <QuotationModal
+          isOpen={isQuotationModalOpen}
+          onClose={() => setIsQuotationModalOpen(false)}
+          onSave={handleSaveQuotation}
+          quotationToEdit={quotationToEdit}
           contacts={contacts}
           selectedCompany={selectedCompany}
-          adjustmentIndexes={adjustmentIndexes}
-          contracts={contracts}
+          addToast={addToast}
+          onGenerateExpense={handleOpenExpenseModal}
         />}
         {isConfirmPaymentModalOpen && <PaymentConfirmationModal 
           isOpen={isConfirmPaymentModalOpen}

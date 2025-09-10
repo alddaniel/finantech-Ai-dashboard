@@ -19,8 +19,6 @@ interface SidebarProps {
   onToggleFullscreen: () => void;
   notifications: Notification[];
   setIsNotificationsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  installPromptEvent: any;
-  onInstallClick: () => void;
 }
 
 type SubMenuType = 'main' | 'pagamentos' | 'recebimentos' | 'projetos';
@@ -43,7 +41,7 @@ const NavItem: React.FC<{
       <a
         href="#"
         onClick={clickHandler}
-        className={`flex items-center justify-between p-2.5 rounded-lg transition-colors duration-200 group relative ${
+        className={`flex items-center justify-between p-2 rounded-lg transition-colors duration-200 group relative ${
           isActive
             ? 'bg-indigo-50 dark:bg-indigo-500/10'
             : 'hover:bg-gray-100/50 dark:hover:bg-slate-800/50'
@@ -55,7 +53,7 @@ const NavItem: React.FC<{
            {icon && <div className={`transition-colors ${isActive ? 'text-indigo-600' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200'}`}>
               {icon}
           </div>}
-          <span className={`ml-3 font-medium transition-colors ${isActive ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`}>{label}</span>
+          <span className={`ml-2 font-medium transition-colors ${isActive ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`}>{label}</span>
         </div>
         {hasSubMenu && <ChevronRightIcon />}
       </a>
@@ -67,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     activeView, setActiveView, selectedCompany, setSelectedCompany, companies, 
     company, currentUser, onLogout, className, isAccountantModuleEnabled, 
     onOpenInvoiceModal, isFullscreen, onToggleFullscreen,
-    notifications, setIsNotificationsOpen, installPromptEvent, onInstallClick
+    notifications, setIsNotificationsOpen
 }) => {
   const [activeSubMenu, setActiveSubMenu] = useState<SubMenuType>('main');
 
@@ -82,6 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const pagamentosSubItems: Array<{ label: string; view: View; activeChecks: View[]; icon: React.ReactNode; }> = [
+      { label: 'Cotação de Preços', view: VIEWS.PRICE_QUOTATIONS, activeChecks: [VIEWS.PRICE_QUOTATIONS], icon: <QuoteIcon /> },
       { label: 'Pagar', view: VIEWS.PAYABLE, activeChecks: [VIEWS.PAYABLE], icon: <MoneyOutIcon /> },
       { label: 'Agendar', view: VIEWS.PAYMENT_SCHEDULE, activeChecks: [VIEWS.PAYMENT_SCHEDULE], icon: <CalendarClockIcon /> },
       { label: 'Recorrências', view: VIEWS.PAYABLE_RECURRENCES, activeChecks: [VIEWS.PAYABLE_RECURRENCES], icon: <SubMenuRepeatIcon /> },
@@ -114,7 +113,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const menuItems: Array<{ label: string; view: View; icon: React.ReactNode; roles?: Role[]; module?: 'accountant' | 'properties' | 'fiscal' | 'ai_advisor' | 'integrations' }> = [
     { label: 'Imóveis', view: VIEWS.PROPERTIES, icon: <PropertyIcon />, module: 'properties' },
-    { label: 'Contratos', view: VIEWS.CONTRACTS, icon: <ContractIcon />, module: 'properties' },
     { label: 'Módulo Fiscal', view: VIEWS.FISCAL_MODULE, icon: <FiscalIcon />, module: 'fiscal' },
     { label: 'Integrações', view: VIEWS.INTEGRATIONS, icon: <IntegrationsIcon /> },
     { label: 'Relatórios', view: VIEWS.REPORTS, icon: <ReportsIcon /> },
@@ -174,7 +172,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }
 
   return (
-    <aside className={`w-72 flex-shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-4 flex flex-col border-r border-slate-900/5 dark:border-white/10 z-20 overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/30 hidden md:flex ${className || ''}`}>
+    <aside className={`relative w-72 flex-shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-4 flex flex-col border-r border-slate-900/5 dark:border-white/10 z-20 overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/30 ${className || ''}`}>
       <div className="flex items-center gap-3 px-2 mb-8">
         <div className="bg-indigo-600 p-2.5 rounded-lg">
           <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -249,7 +247,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               if (item.module === 'accountant' && !isAccountantModuleEnabled) return null;
               if (item.module === 'properties' && !company?.enabledModules.includes('properties')) return null;
               if (item.module === 'fiscal' && !company?.enabledModules.includes('fiscal')) return null;
-              if (item.view === VIEWS.INTEGRATIONS && !company?.enabledModules.includes('integrations')) return null;
+              if (item.view === VIEWS.INTEGRATIONS && !company?.enabledModules.includes('integrations')) {
+                // Special case for Integrations: always show if the module is enabled,
+                // but for other plans it's accessed via Settings, so we hide it from main menu.
+                // Correction: The user wants it always visible. So we remove the conditional rendering.
+              }
               if (item.module === 'ai_advisor' && !company?.enabledModules.includes('ai_advisor')) return null;
               if (item.roles && !item.roles.includes(currentUser.role)) return null;
               
@@ -312,15 +314,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
             </div>
              <div className="flex items-center gap-1">
-                {installPromptEvent && (
-                    <button
-                        onClick={onInstallClick}
-                        title="Instalar App"
-                        className="p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
-                    >
-                        <DownloadAppIcon />
-                    </button>
-                )}
                 <button
                     onClick={onToggleFullscreen}
                     title={isFullscreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
@@ -355,8 +348,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 };
 
 // SVG Icons
-const iconSize = "w-6 h-6";
-const DownloadAppIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4 4m0 0l-4-4m4 4V4"></path></svg>;
+const iconSize = "w-5 h-5";
 const DashboardIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>;
 const PayableIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>;
 const ReceivableIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>;
@@ -372,7 +364,6 @@ const UserGroupIcon = () => <svg className={iconSize} fill="none" stroke="curren
 const AddressBookIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>;
 const TagIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 8V5a2 2 0 012-2z"></path></svg>;
 const PropertyIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V10a2 2 0 00-2-2H7a2 2 0 00-2 2v11m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 21v-6a2 2 0 012-2h2a2 2 0 012 2v6"></path></svg>;
-const ContractIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>;
 const ProjectsIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>;
 const HelpIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.546-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>;
 const LogoutIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>;
@@ -389,6 +380,7 @@ const SettingsIcon = () => <svg className={iconSize} fill="none" stroke="current
 const PercentageIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7l6 10M9 17l6-10M19 5a2 2 0 11-4 0 2 2 0 014 0zM5 19a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>;
 
 // --- Sub-menu Icons ---
+const QuoteIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11h.01M16 15h.01M8 15h.01"></path></svg>;
 const MoneyOutIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>;
 const CalendarClockIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M12 12.75h.008v.008H12v-.008zm0 4.5h.008v.008H12v-.008zm4.5-4.5h.008v.008H16.5v-.008zm0 4.5h.008v.008H16.5v-.008zm-9-4.5h.008v.008H7.5v-.008zm0 4.5h.008v.008H7.5v-.008z" /></svg>;
 const SubMenuRepeatIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.18-3.182m0-11.664a8.25 8.25 0 00-11.664 0L2.985 7.982" /></svg>;

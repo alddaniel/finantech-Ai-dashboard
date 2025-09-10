@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from './ui/Card';
 import { CustomerDetailModal } from './CustomerDetailModal';
@@ -192,7 +190,6 @@ export const FinancialCRM: React.FC<FinancialCRMProps> = ({ selectedCompany, onG
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">CRM Financeiro - Funil de Inadimplência</h1>
             <p className="text-lg text-gray-600 dark:text-gray-400">
                 Gerencie o ciclo de cobrança de seus clientes de forma visual e interativa.
             </p>

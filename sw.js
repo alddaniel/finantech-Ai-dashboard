@@ -1,12 +1,13 @@
-const CACHE_NAME = 'finantech-ai-cache-v1';
+const CACHE_NAME = 'finantech-ai-cache-v2';
 // Add all the files that should be cached for offline use.
 // At a minimum, this is the HTML, CSS, and JS files that make up the app shell.
 const urlsToCache = [
   '/',
   '/index.html',
-  '/index.tsx',
-  '/manifest.json'
-  // Note: The JS dependencies from esm.sh will be cached on the fly by the fetch handler.
+  '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
+  '/icons/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -17,6 +18,7 @@ self.addEventListener('install', (event) => {
         console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
+      .then(() => self.skipWaiting()) // Force the new service worker to activate
   );
 });
 
@@ -32,43 +34,40 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // Take control of all open clients
   );
 });
 
 self.addEventListener('fetch', (event) => {
+  // We only want to cache GET requests.
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return response
-        if (response) {
-          return response;
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // Try the network first to get the most up-to-date resources.
+      try {
+        const networkResponse = await fetch(event.request);
+        // If the request is successful, cache it and return it.
+        // We only cache requests from our origin to avoid caching external resources unnecessarily.
+        if (networkResponse.ok && (event.request.url.startsWith(self.location.origin) || event.request.url.startsWith('https://aistudiocdn.com'))) {
+          cache.put(event.request, networkResponse.clone());
         }
-
-        // Clone the request because it's a stream and can only be consumed once.
-        const fetchRequest = event.request.clone();
-
-        return fetch(fetchRequest).then(
-          (response) => {
-            // Check if we received a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic' && response.type !== 'cors') {
-              return response;
-            }
-
-            // Clone the response because it's a stream and can only be consumed once.
-            const responseToCache = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                // We don't cache POST requests or chrome-extension requests
-                if (event.request.method === 'GET' && !event.request.url.startsWith('chrome-extension://')) {
-                    cache.put(event.request, responseToCache);
-                }
-              });
-
-            return response;
-          }
-        );
-      })
+        return networkResponse;
+      } catch (error) {
+        // If the network fails, try to serve from the cache.
+        const cachedResponse = await cache.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        // If not in cache either, it's a genuine network error.
+        // This could be improved to return a custom offline page.
+        return new Response("Network error happened", {
+          status: 408,
+          headers: { "Content-Type": "text/plain" },
+        });
+      }
+    })
   );
 });

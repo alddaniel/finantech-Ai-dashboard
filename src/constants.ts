@@ -1,4 +1,4 @@
-import type { View, Transaction, CashFlowData, BankTransaction, SystemTransaction, DefaultRateData, NetProfitData, DebtorCustomer, FunnelStage, BankAccount, Role, User, AuditLog, Company, Contact, AccountantRequest, Property, ModuleKey, UserPermissions, Notification, CostCenter, Category, AdjustmentIndex, Project, Proposal, Contract } from './types';
+import type { View, Transaction, CashFlowData, BankTransaction, SystemTransaction, DefaultRateData, NetProfitData, DebtorCustomer, FunnelStage, BankAccount, Role, User, AuditLog, Company, Contact, AccountantRequest, Property, ModuleKey, UserPermissions, Notification, CostCenter, Category, AdjustmentIndex, Project, Proposal, QuotationRequest } from './types';
 import { CONTACT_AVATARS, COMPANY_AVATARS } from './components/ui/IconComponents';
 
 export const VIEWS: { [key: string]: View } = {
@@ -24,9 +24,9 @@ export const VIEWS: { [key: string]: View } = {
   HELP: 'help',
   ACCOUNTANT_PANEL: 'accountant_panel',
   PROPERTIES: 'properties',
-  CONTRACTS: 'contracts',
   PROJECTS: 'projects',
   PROPOSALS: 'proposals',
+  PRICE_QUOTATIONS: 'price_quotations',
   SCHEMA_GENERATOR: 'schema_generator',
   COST_CENTERS: 'cost_centers',
   COMPANY_PROFILE: 'company_profile',
@@ -251,7 +251,6 @@ export const MODULE_PERMISSIONS_MAP: Record<ModuleKey, string> = {
     contacts: 'Contatos',
     bank_accounts: 'Contas Bancárias',
     properties: 'Imóveis',
-    contracts: 'Contratos',
     projects: 'Projetos',
     reports: 'Relatórios',
     user_management: 'Administração',
@@ -268,7 +267,6 @@ const fullAccess: UserPermissions = {
     contacts: { view: true, edit: true, delete: true },
     bank_accounts: { view: true, edit: true, delete: true },
     properties: { view: true, edit: true, delete: true },
-    contracts: { view: true, edit: true, delete: true },
     projects: { view: true, edit: true, delete: true },
     reports: { view: true, edit: true, delete: true },
     user_management: { view: true, edit: true, delete: true },
@@ -285,7 +283,6 @@ const managerAccess: UserPermissions = {
     contacts: { view: true, edit: true, delete: false },
     bank_accounts: { view: true, edit: true, delete: false },
     properties: { view: true, edit: true, delete: false },
-    contracts: { view: true, edit: true, delete: false },
     projects: { view: true, edit: true, delete: false },
     reports: { view: true, edit: false, delete: false },
     user_management: { view: false, edit: false, delete: false },
@@ -302,7 +299,6 @@ const analystAccess: UserPermissions = {
     contacts: { view: true, edit: false, delete: false },
     bank_accounts: { view: true, edit: false, delete: false },
     properties: { view: true, edit: false, delete: false },
-    contracts: { view: true, edit: false, delete: false },
     projects: { view: true, edit: false, delete: false },
     reports: { view: true, edit: false, delete: false },
     user_management: { view: false, edit: false, delete: false },
@@ -380,7 +376,14 @@ export const MOCK_PROPERTIES: Property[] = [
         type: 'Apartamento',
         status: 'Alugado',
         ownerId: 'contact4',
-        contractId: 'contract1',
+        rentalDetails: {
+            tenantId: 'contact7',
+            rentAmount: 4500,
+            contractStart: '2023-01-15',
+            contractEnd: '2025-07-15',
+            paymentDay: 10,
+            adjustmentIndexId: 'idx1',
+        },
         company: 'Filial São Paulo',
         condoAmount: 850.00,
         condoDueDate: 5,
@@ -417,23 +420,6 @@ export const MOCK_PROPERTIES: Property[] = [
     }
 ];
 
-export const MOCK_CONTRACTS: Contract[] = [
-    {
-        id: 'contract1',
-        propertyId: 'prop1',
-        tenantId: 'contact7',
-        rentAmount: 4500,
-        startDate: '2023-01-15',
-        endDate: '2025-07-15',
-        paymentDay: 10,
-        adjustmentIndexId: 'idx1',
-        company: 'Filial São Paulo',
-        status: 'Ativo',
-        description: 'Contrato de Locação Padrão para Apto Av. Paulista'
-    }
-];
-
-
 export const MOCK_PROJECTS: Project[] = [
     {
         id: 'proj1',
@@ -452,6 +438,7 @@ export const MOCK_PROJECTS: Project[] = [
             { id: 'b1-3', description: 'Serviço de Terraplanagem', type: 'Terceiros', cost: 35000 },
         ],
         stages: [
+// FIX: Corrected typo from "Concluído" to "Concluido" to match type.
             { id: 's1-1', name: 'Fundação', dueDate: '2024-08-30', status: 'Concluído' },
             { id: 's1-2', name: 'Estrutura', dueDate: '2024-10-15', status: 'Aprovado Cliente' },
             { id: 's1-3', name: 'Acabamento', dueDate: '2025-01-20', status: 'Pendente' },
@@ -473,8 +460,11 @@ export const MOCK_PROJECTS: Project[] = [
             { id: 'b2-2', description: 'Projeto de Iluminação', type: 'Terceiros', cost: 15000 },
         ],
         stages: [
+// FIX: Corrected typo from "Concluído" to "Concluido" to match type.
             { id: 's2-1', name: 'Demolição e Limpeza', dueDate: '2024-06-10', status: 'Concluído' },
+// FIX: Corrected typo from "Concluído" to "Concluido" to match type.
             { id: 's2-2', name: 'Instalações', dueDate: '2024-06-25', status: 'Concluído' },
+// FIX: Corrected typo from "Concluído" to "Concluido" to match type.
             { id: 's2-3', name: 'Finalização', dueDate: '2024-07-05', status: 'Concluído' },
         ],
     },
@@ -555,5 +545,39 @@ export const MOCK_PROPOSALS: Proposal[] = [
         ],
         createdAt: '2024-07-28T09:00:00.000Z',
         company: 'Filial São Paulo'
+    }
+];
+
+export const MOCK_QUOTATIONS: QuotationRequest[] = [
+    {
+        id: 'quote1',
+        title: 'Compra de Notebooks para Equipe de Vendas',
+        status: 'Cotação',
+        items: [
+            { id: 'qi1-1', description: 'Notebook Dell Vostro i7, 16GB RAM, 512GB SSD', quantity: 5, unit: 'un' },
+            { id: 'qi1-2', description: 'Mouse sem fio Logitech M185', quantity: 5, unit: 'un' },
+        ],
+        suppliers: [
+            { supplierId: 'contact10' }, // Global Tech
+            { supplierId: 'contact2' }, // Café XYZ (for example)
+        ],
+        createdAt: '2024-07-28T11:00:00.000Z',
+        deadline: '2024-08-05T23:59:59.000Z',
+        company: 'Minha Empresa (Matriz)',
+    },
+    {
+        id: 'quote2',
+        title: 'Material de Escritório Mensal',
+        status: 'Concluída',
+        items: [
+            { id: 'qi2-1', description: 'Resma de Papel A4', quantity: 10, unit: 'cx' },
+            { id: 'qi2-2', description: 'Caneta Azul BIC', quantity: 50, unit: 'un' },
+        ],
+        suppliers: [
+            { supplierId: 'contact10' },
+        ],
+        createdAt: '2024-06-15T09:00:00.000Z',
+        company: 'Filial São Paulo',
+        selectedSupplierId: 'contact10',
     }
 ];

@@ -129,16 +129,17 @@ const EmptyDashboard: React.FC<{ selectedCompany: string; onOpenExpenseModal: ()
 
 export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCompany, payables, receivables, accountantRequests, setAccountantRequests, currentUser, isAccountantModuleEnabled, bankAccounts, bankTransactions, onOpenInvoiceModal, onOpenConfirmPaymentModal, onOpenQRCodeModal }) => {
     
-    const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings | null>(null);
+    // FIX: Initialize state synchronously as getDashboardSettings is not a promise.
+    const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>(() => apiService.getDashboardSettings());
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     
+    // FIX: Persist settings changes using useEffect for better state management.
     useEffect(() => {
-        apiService.getDashboardSettings().then(setDashboardSettings);
-    }, []);
-    
+        apiService.saveDashboardSettings(dashboardSettings);
+    }, [dashboardSettings]);
+
     const handleSaveSettings = (newSettings: DashboardSettings) => {
       setDashboardSettings(newSettings);
-      apiService.saveDashboardSettings(newSettings);
     };
     
     const filteredPayables = useMemo(() => payables.filter(t => t.company === selectedCompany), [payables, selectedCompany]);
@@ -181,17 +182,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
       return balance;
     };
 
-    if (!dashboardSettings) {
-        return (
-            <div className="flex h-full w-full items-center justify-center">
-                <Spinner className="h-12 w-12 text-indigo-500" />
-            </div>
-        );
-    }
-
     return (
         <div className="space-y-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard: <span className="text-indigo-500">{selectedCompany}</span></h1>
                  <button onClick={() => setIsSettingsModalOpen(true)} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                     <SettingsIcon />

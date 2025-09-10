@@ -1,14 +1,14 @@
-import type { Company, User, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, InvoiceItem, Property, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, DashboardSettings, Contract } from '../types';
-import { MOCK_COMPANIES, MOCK_USERS, MOCK_CONTACTS, MOCK_PAYABLES, MOCK_RECEIVABLES, MOCK_ACCOUNTANT_REQUESTS, MOCK_BANK_ACCOUNTS, MOCK_BANK_TRANSACTIONS, MOCK_PROPERTIES, MOCK_NOTIFICATIONS, MOCK_SYSTEM_TRANSACTIONS, MOCK_COST_CENTERS_DATA, MOCK_CATEGORIES_DATA, MOCK_ADJUSTMENT_INDEXES_DATA, MOCK_PROJECTS, MOCK_PROPOSALS, MOCK_CONTRACTS } from '../constants';
+import type { Company, User, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, InvoiceItem, Property, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, DashboardSettings, QuotationRequest } from '../types';
+import { MOCK_COMPANIES, MOCK_USERS, MOCK_CONTACTS, MOCK_PAYABLES, MOCK_RECEIVABLES, MOCK_ACCOUNTANT_REQUESTS, MOCK_BANK_ACCOUNTS, MOCK_BANK_TRANSACTIONS, MOCK_PROPERTIES, MOCK_NOTIFICATIONS, MOCK_SYSTEM_TRANSACTIONS, MOCK_COST_CENTERS_DATA, MOCK_CATEGORIES_DATA, MOCK_ADJUSTMENT_INDEXES_DATA, MOCK_PROJECTS, MOCK_PROPOSALS, MOCK_QUOTATIONS } from '../constants';
 
 // ====================================================================================
-// Abstraction Layer for Data Persistence (Simulated API)
+// Abstraction Layer for Data Persistence
 //
-// This service simulates a backend API by making localStorage access asynchronous.
-// This prepares the frontend architecture for a real backend implementation.
+// This service simulates a backend API. Currently, it uses localStorage.
+// To migrate to a real backend (e.g., connected to PostgreSQL), you would
+// only need to change the implementation of these functions to use `fetch`
+// to call your API endpoints, without changing any other part of the frontend.
 // ====================================================================================
-
-const SIMULATED_LATENCY = 100; 
 
 const get = <T,>(key: string, defaultValue: T): T => {
     try {
@@ -31,154 +31,143 @@ const set = <T,>(key: string, value: T): void => {
     }
 };
 
-// --- API Simulation Functions ---
-const apiGet = <T,>(key: string, defaultValue: T): Promise<T> => {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve(get<T>(key, defaultValue));
-        }, SIMULATED_LATENCY / 2); // Reads are faster
-    });
-};
-
-const apiSet = <T,>(key: string, value: T): Promise<void> => {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            set<T>(key, value);
-            resolve();
-        }, SIMULATED_LATENCY); // Writes are slower
-    });
-};
-
 // --- Authentication ---
 export const getIsAuthenticated = (): boolean => get('finantech_is_authenticated', false);
-export const saveIsAuthenticated = (isAuthenticated: boolean): Promise<void> => apiSet('finantech_is_authenticated', isAuthenticated);
+export const saveIsAuthenticated = (isAuthenticated: boolean): void => set('finantech_is_authenticated', isAuthenticated);
 
 // --- Current User ---
 export const getCurrentUser = (users: User[]): User | null => {
     const user = get<User | null>('finantech_current_user', null);
+    // Data integrity check: ensure the stored user exists in the main user list
     if (user && users.find(u => u.id === user.id)) {
         return user;
     }
     return null;
 }
-export const saveCurrentUser = (user: User | null): Promise<void> => apiSet('finantech_current_user', user);
+export const saveCurrentUser = (user: User | null): void => set('finantech_current_user', user);
 
 
-// --- Data Fetching & Saving ---
-export const getCompanies = (): Promise<Company[]> => apiGet('finantech_companies', MOCK_COMPANIES);
-export const saveCompanies = (companies: Company[]): Promise<void> => apiSet('finantech_companies', companies);
+// --- Companies ---
+export const getCompanies = (): Company[] => get('finantech_companies', MOCK_COMPANIES);
+export const saveCompanies = (companies: Company[]): void => set('finantech_companies', companies);
 
-export const getUsers = (): Promise<User[]> => apiGet('finantech_users', MOCK_USERS);
-export const saveUsers = (users: User[]): Promise<void> => apiSet('finantech_users', users);
+// --- Users ---
+export const getUsers = (): User[] => get('finantech_users', MOCK_USERS);
+export const saveUsers = (users: User[]): void => set('finantech_users', users);
 
-export const getContacts = (): Promise<Contact[]> => apiGet('finantech_contacts', MOCK_CONTACTS);
-export const saveContacts = (contacts: Contact[]): Promise<void> => apiSet('finantech_contacts', contacts);
+// --- Contacts ---
+export const getContacts = (): Contact[] => get('finantech_contacts', MOCK_CONTACTS);
+export const saveContacts = (contacts: Contact[]): void => set('finantech_contacts', contacts);
 
-export const getPayables = (): Promise<Transaction[]> => apiGet('finantech_payables', MOCK_PAYABLES);
-export const savePayables = (payables: Transaction[]): Promise<void> => apiSet('finantech_payables', payables);
+// --- Transactions: Payables ---
+export const getPayables = (): Transaction[] => get('finantech_payables', MOCK_PAYABLES);
+export const savePayables = (payables: Transaction[]): void => set('finantech_payables', payables);
 
-export const getReceivables = (): Promise<Transaction[]> => apiGet('finantech_receivables', MOCK_RECEIVABLES);
-export const saveReceivables = (receivables: Transaction[]): Promise<void> => apiSet('finantech_receivables', receivables);
+// --- Transactions: Receivables ---
+export const getReceivables = (): Transaction[] => get('finantech_receivables', MOCK_RECEIVABLES);
+export const saveReceivables = (receivables: Transaction[]): void => set('finantech_receivables', receivables);
 
-export const getBankAccounts = (): Promise<BankAccount[]> => apiGet('finantech_bank_accounts', MOCK_BANK_ACCOUNTS);
-export const saveBankAccounts = (accounts: BankAccount[]): Promise<void> => apiSet('finantech_bank_accounts', accounts);
+// --- Bank Accounts ---
+export const getBankAccounts = (): BankAccount[] => get('finantech_bank_accounts', MOCK_BANK_ACCOUNTS);
+export const saveBankAccounts = (accounts: BankAccount[]): void => set('finantech_bank_accounts', accounts);
 
-export const getBankTransactions = (): Promise<BankTransaction[]> => apiGet('finantech_bank_transactions', MOCK_BANK_TRANSACTIONS);
-export const saveBankTransactions = (transactions: BankTransaction[]): Promise<void> => apiSet('finantech_bank_transactions', transactions);
+// --- Bank Transactions ---
+export const getBankTransactions = (): BankTransaction[] => get('finantech_bank_transactions', MOCK_BANK_TRANSACTIONS);
+export const saveBankTransactions = (transactions: BankTransaction[]): void => set('finantech_bank_transactions', transactions);
 
-export const getSystemTransactions = (): Promise<SystemTransaction[]> => apiGet('finantech_system_transactions', MOCK_SYSTEM_TRANSACTIONS);
-export const saveSystemTransactions = (transactions: SystemTransaction[]): Promise<void> => apiSet('finantech_system_transactions', transactions);
+// --- System Transactions (for reconciliation) ---
+export const getSystemTransactions = (): SystemTransaction[] => get('finantech_system_transactions', MOCK_SYSTEM_TRANSACTIONS);
+export const saveSystemTransactions = (transactions: SystemTransaction[]): void => set('finantech_system_transactions', transactions);
 
-export const getProperties = (): Promise<Property[]> => apiGet('finantech_properties', MOCK_PROPERTIES);
-export const saveProperties = (properties: Property[]): Promise<void> => apiSet('finantech_properties', properties);
+// --- Properties ---
+export const getProperties = (): Property[] => get('finantech_properties', MOCK_PROPERTIES);
+export const saveProperties = (properties: Property[]): void => set('finantech_properties', properties);
 
-// FIX: Add getContracts and saveContracts
-export const getContracts = (): Promise<Contract[]> => apiGet('finantech_contracts', MOCK_CONTRACTS);
-export const saveContracts = (contracts: Contract[]): Promise<void> => apiSet('finantech_contracts', contracts);
+// --- Projects ---
+export const getProjects = (): Project[] => get('finantech_projects', MOCK_PROJECTS);
+export const saveProjects = (projects: Project[]): void => set('finantech_projects', projects);
 
-export const getProjects = (): Promise<Project[]> => apiGet('finantech_projects', MOCK_PROJECTS);
-export const saveProjects = (projects: Project[]): Promise<void> => apiSet('finantech_projects', projects);
+// --- Proposals ---
+export const getProposals = (): Proposal[] => get('finantech_proposals', MOCK_PROPOSALS);
+export const saveProposals = (proposals: Proposal[]): void => set('finantech_proposals', proposals);
 
-export const getProposals = (): Promise<Proposal[]> => apiGet('finantech_proposals', MOCK_PROPOSALS);
-export const saveProposals = (proposals: Proposal[]): Promise<void> => apiSet('finantech_proposals', proposals);
+// --- Price Quotations ---
+export const getQuotations = (): QuotationRequest[] => get('finantech_quotations', MOCK_QUOTATIONS);
+export const saveQuotations = (quotations: QuotationRequest[]): void => set('finantech_quotations', quotations);
 
-export const getCostCenters = (): Promise<CostCenter[]> => apiGet('finantech_cost_centers', MOCK_COST_CENTERS_DATA);
-export const saveCostCenters = (costCenters: CostCenter[]): Promise<void> => apiSet('finantech_cost_centers', costCenters);
 
-export const getCategories = (): Promise<Category[]> => apiGet('finantech_categories', MOCK_CATEGORIES_DATA);
-export const saveCategories = (categories: Category[]): Promise<void> => apiSet('finantech_categories', categories);
+// --- Cost Centers ---
+export const getCostCenters = (): CostCenter[] => get('finantech_cost_centers', MOCK_COST_CENTERS_DATA);
+export const saveCostCenters = (costCenters: CostCenter[]): void => set('finantech_cost_centers', costCenters);
 
-export const getAdjustmentIndexes = (): Promise<AdjustmentIndex[]> => apiGet('finantech_adjustment_indexes', MOCK_ADJUSTMENT_INDEXES_DATA);
-export const saveAdjustmentIndexes = (indexes: AdjustmentIndex[]): Promise<void> => apiSet('finantech_adjustment_indexes', indexes);
+// --- Categories ---
+export const getCategories = (): Category[] => get('finantech_categories', MOCK_CATEGORIES_DATA);
+export const saveCategories = (categories: Category[]): void => set('finantech_categories', categories);
+
+// --- Adjustment Indexes ---
+export const getAdjustmentIndexes = (): AdjustmentIndex[] => get('finantech_adjustment_indexes', MOCK_ADJUSTMENT_INDEXES_DATA);
+export const saveAdjustmentIndexes = (indexes: AdjustmentIndex[]): void => set('finantech_adjustment_indexes', indexes);
+
 
 // --- User Preferences ---
-export const getSelectedCompany = (companies: Company[]): string => get('finantech_selected_company', companies[0]?.name || '');
-export const saveSelectedCompany = (companyName: string): Promise<void> => apiSet('finantech_selected_company', companyName);
+export const getSelectedCompany = (companies: Company[]): string => {
+    const defaultCompany = companies[0]?.name || '';
+    return get('finantech_selected_company', defaultCompany);
+};
+export const saveSelectedCompany = (companyName: string): void => set('finantech_selected_company', companyName);
 
-// --- Modules & Other Settings ---
-export const getIsAccountantModuleEnabled = (): Promise<boolean> => apiGet('finantech_accountant_module_enabled', false);
-export const saveIsAccountantModuleEnabled = (isEnabled: boolean): Promise<void> => apiSet('finantech_accountant_module_enabled', isEnabled);
+// --- Accountant Module ---
+export const getIsAccountantModuleEnabled = (): boolean => get('finantech_accountant_module_enabled', false);
+export const saveIsAccountantModuleEnabled = (isEnabled: boolean): void => set('finantech_accountant_module_enabled', isEnabled);
 
-export const getAccountantRequests = (): Promise<AccountantRequest[]> => apiGet('finantech_accountant_requests', MOCK_ACCOUNTANT_REQUESTS);
-export const saveAccountantRequests = (requests: AccountantRequest[]): Promise<void> => apiSet('finantech_accountant_requests', requests);
+export const getAccountantRequests = (): AccountantRequest[] => get('finantech_accountant_requests', MOCK_ACCOUNTANT_REQUESTS);
+export const saveAccountantRequests = (requests: AccountantRequest[]): void => set('finantech_accountant_requests', requests);
 
-export const getNotifications = (): Promise<Notification[]> => apiGet('finantech_notifications', MOCK_NOTIFICATIONS);
-export const saveNotifications = (notifications: Notification[]): Promise<void> => apiSet('finantech_notifications', notifications);
+// --- Notifications ---
+export const getNotifications = (): Notification[] => get('finantech_notifications', MOCK_NOTIFICATIONS);
+export const saveNotifications = (notifications: Notification[]): void => set('finantech_notifications', notifications);
 
-export const getCustomAvatars = (): Promise<string[]> => apiGet('finantech_custom_avatars', []);
-export const saveCustomAvatars = (avatars: string[]): Promise<void> => apiSet('finantech_custom_avatars', avatars);
+// --- Custom Avatars ---
+export const getCustomAvatars = (): string[] => get('finantech_custom_avatars', []);
+export const saveCustomAvatars = (avatars: string[]): void => set('finantech_custom_avatars', avatars);
 
+// --- Dashboard Settings ---
 const defaultDashboardSettings: DashboardSettings = {
-    summaryCards: true, cashFlowChart: true, bankBalances: true, overduePayables: true,
-    overdueReceivables: true, latestPayables: true, latestReceivables: true,
-    aiInsight: true, scheduledItems: true, accountantRequests: true,
+    summaryCards: true,
+    cashFlowChart: true,
+    bankBalances: true,
+    overduePayables: true,
+    overdueReceivables: true,
+    latestPayables: true,
+    latestReceivables: true,
+    aiInsight: true,
+    scheduledItems: true,
+    accountantRequests: true,
 };
-export const getDashboardSettings = (): Promise<DashboardSettings> => apiGet('finantech_dashboard_settings', defaultDashboardSettings);
-export const saveDashboardSettings = (settings: DashboardSettings): Promise<void> => apiSet('finantech_dashboard_settings', settings);
-
-// --- Initial Data Loader ---
-export const fetchAllInitialData = async () => {
-    const [
-        companies, users, contacts, properties, projects, proposals, contracts,
-        costCenters, categories, adjustmentIndexes, customAvatars,
-        payables, receivables, bankAccounts, bankTransactions,
-        systemTransactions, notifications, isAccountantModuleEnabled, accountantRequests,
-        dashboardSettings
-    ] = await Promise.all([
-        getCompanies(), getUsers(), getContacts(), getProperties(), getProjects(), getProposals(), getContracts(),
-        getCostCenters(), getCategories(), getAdjustmentIndexes(), getCustomAvatars(),
-        getPayables(), getReceivables(), getBankAccounts(), getBankTransactions(),
-        getSystemTransactions(), getNotifications(), getIsAccountantModuleEnabled(),
-        getAccountantRequests(), getDashboardSettings()
-    ]);
-
-    return {
-        companies, users, contacts, properties, projects, proposals, contracts,
-        costCenters, categories, adjustmentIndexes, customAvatars,
-        payables, receivables, bankAccounts, bankTransactions,
-        systemTransactions, notifications, isAccountantModuleEnabled, accountantRequests,
-        dashboardSettings
-    };
-};
+export const getDashboardSettings = (): DashboardSettings => get('finantech_dashboard_settings', defaultDashboardSettings);
+export const saveDashboardSettings = (settings: DashboardSettings): void => set('finantech_dashboard_settings', settings);
 
 
 // ====================================================================================
-// UTILITY FUNCTIONS (Unchanged)
+// UTILITY FUNCTIONS
 // ====================================================================================
 
 export const parseDate = (dateStr: string): Date => {
     let date;
+    // Check for DD/MM/YYYY format
     if (dateStr.includes('/')) {
         const parts = dateStr.split('/');
         if (parts.length === 3 && parts[2].length === 4) {
+            // new Date(year, monthIndex, day)
             date = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
         }
-    } else if (dateStr.includes('-')) {
+    } else if (dateStr.includes('-')) { // Check for YYYY-MM-DD format
         const parts = dateStr.split('-');
         if (parts.length === 3 && parts[0].length === 4) {
            date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
         }
     }
+    // Return an invalid date if parsing failed or format is unexpected
     if (date && !isNaN(date.getTime())) {
         return date;
     }
@@ -228,9 +217,7 @@ export const calculateCharges = (transaction: Transaction) => {
     };
 };
 
-// FIX: Updated function signature and logic to use Contract type instead of deprecated rentalDetails on Property.
 export const generateAndAdjustRentReceivables = (
-    contract: Contract,
     property: Property,
     adjustmentIndexes: AdjustmentIndex[],
     existingReceivables: Transaction[]
@@ -248,12 +235,12 @@ export const generateAndAdjustRentReceivables = (
         return true; // Keep all other transactions
     });
 
-    // Stop if property is not rented or contract is not active
-    if (property.status !== 'Alugado' || contract.status !== 'Ativo') {
+    // Stop if property is not rented or details are missing
+    if (property.status !== 'Alugado' || !property.rentalDetails) {
         return { receivablesToKeep, newReceivables: [] };
     }
 
-    const { tenantId, rentAmount, startDate: contractStart, endDate: contractEnd, paymentDay, adjustmentIndexId } = contract;
+    const { tenantId, rentAmount, contractStart, contractEnd, paymentDay, adjustmentIndexId } = property.rentalDetails;
     if (!tenantId || !rentAmount || !contractStart || !contractEnd || !paymentDay) {
         return { receivablesToKeep, newReceivables: [] };
     }
@@ -292,8 +279,8 @@ export const generateAndAdjustRentReceivables = (
                 status: 'Pendente',
                 type: 'receita',
                 company: property.company,
-                costCenter: 'Imobiliário', // It could be defined in the contract or property
-                bankAccount: '', // Should be defined somewhere
+                costCenter: 'Imobiliário',
+                bankAccount: '',
                 contactId: tenantId,
                 propertyId: property.id,
             };
@@ -309,7 +296,11 @@ export const generateAndAdjustRentReceivables = (
 
 
 // ====================================================================================
-// SIMULAÇÃO DE API FISCAL EXTERNA
+// SIMULAÇÃO DE API FISCAL EXTERNA (Ex: TecnoSpeed)
+//
+// Este serviço simula o comportamento de uma chamada a uma API externa para
+// emissão de notas fiscais. Ele introduz um atraso para simular a latência da rede
+// e retorna uma resposta estruturada com sucesso ou erro.
 // ====================================================================================
 
 interface ApiPayload {
@@ -335,17 +326,9 @@ export interface ApiResponse {
     errorMessage?: string;
 }
 
-const parseFormattedCurrency = (value: string): number => {
-    if (typeof value !== 'string' || !value) return 0;
-    const cleanedValue = value.replace(/R\$\s?/, '').replace(/\./g, '');
-    const numericString = cleanedValue.replace(',', '.');
-    return parseFloat(numericString) || 0;
-};
-
 const generateMockNFeXml = (payload: ApiPayload, providerId: string, cfop: string): string => {
-    // ... (implementation is unchanged)
     const itemsXml = payload.items.map((item, index) => {
-        const price = typeof item.price === 'string' ? parseFormattedCurrency(item.price) : item.price;
+        const price = parseFloat(item.price.replace(',', '.')) || 0;
         const total = price * item.quantity;
         return `
         <det nItem="${index + 1}">
@@ -359,16 +342,140 @@ const generateMockNFeXml = (payload: ApiPayload, providerId: string, cfop: strin
                 <vUnCom>${price.toFixed(2)}</vUnCom>
                 <vProd>${total.toFixed(2)}</vProd>
             </prod>
+            <imposto>
+                <ICMS>
+                    <ICMS00>
+                        <orig>0</orig>
+                        <CST>00</CST>
+                        <modBC>3</modBC>
+                        <vBC>${total.toFixed(2)}</vBC>
+                        <pICMS>0.00</pICMS>
+                        <vICMS>0.00</vICMS>
+                    </ICMS00>
+                </ICMS>
+            </imposto>
         </det>`;
     }).join('');
-    return `<?xml version="1.0" encoding="UTF-8"?><NFe><infNFe Id="NFe${providerId}"><ide><nNF>123</nNF><serie>1</serie><dhEmi>${new Date().toISOString()}</dhEmi></ide><emit><xNome>${payload.issuer.name}</xNome></emit><dest><xNome>${payload.customer.name}</xNome></dest>${itemsXml}<total><ICMSTot><vNF>${payload.total.toFixed(2)}</vNF></ICMSTot></total></infNFe></NFe>`;
+    
+    const installmentsXml = (payload.installments && payload.installments.length > 0 ? payload.installments : [{ number: '001', dueDate: payload.dueDate, amount: payload.total }])
+        .map(inst => `
+            <dup>
+                <nDup>${inst.number}</nDup>
+                <dVenc>${inst.dueDate}</dVenc>
+                <vDup>${inst.amount.toFixed(2)}</vDup>
+            </dup>`).join('');
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<NFe xmlns="http://www.portalfiscal.inf.br/nfe">
+    <infNFe versao="4.00" Id="NFe${providerId}">
+        <ide>
+            <cUF>35</cUF>
+            <cNF>${Math.floor(Math.random() * 100000000)}</cNF>
+            <natOp>VENDA DE PRODUTO/SERVICO</natOp>
+            <mod>55</mod>
+            <serie>1</serie>
+            <nNF>${Math.floor(Math.random() * 100000)}</nNF>
+            <dhEmi>${new Date().toISOString()}</dhEmi>
+            <tpNF>1</tpNF>
+            <idDest>1</idDest>
+            <cMunFG>3550308</cMunFG>
+            <tpImp>1</tpImp>
+            <tpEmis>1</tpEmis>
+            <cDV>2</cDV>
+            <tpAmb>2</tpAmb>
+            <finNFe>1</finNFe>
+            <indFinal>0</indFinal>
+            <indPres>1</indPres>
+            <procEmi>0</procEmi>
+            <verProc>FinanTechAI 1.0</verProc>
+        </ide>
+        <emit>
+            <CNPJ>${payload.issuer.cnpj.replace(/\D/g, '')}</CNPJ>
+            <xNome>${payload.issuer.name}</xNome>
+            <enderEmit>
+                <xLgr>${payload.issuer.address.street}</xLgr>
+                <nro>${payload.issuer.address.number}</nro>
+                <xCpl/>
+                <xBairro>Centro</xBairro>
+                <cMun>3550308</cMun>
+                <xMun>${payload.issuer.address.city}</xMun>
+                <UF>${payload.issuer.address.state}</UF>
+                <CEP>${payload.issuer.address.zip.replace(/\D/g, '')}</CEP>
+                <cPais>1058</cPais>
+                <xPais>BRASIL</xPais>
+            </enderEmit>
+            <IE>ISENTO</IE>
+            <CRT>1</CRT>
+        </emit>
+        <dest>
+            <CNPJ>${payload.customer.document.replace(/\D/g, '')}</CNPJ>
+            <xNome>${payload.customer.name}</xNome>
+            <enderDest>
+                <xLgr>${payload.customer.address.street}</xLgr>
+                <nro>${payload.customer.address.number}</nro>
+                <xBairro>Centro</xBairro>
+                <cMun>3550308</cMun>
+                <xMun>${payload.customer.address.city}</xMun>
+                <UF>${payload.customer.address.state}</UF>
+                <CEP>${payload.customer.address.zip.replace(/\D/g, '')}</CEP>
+                <cPais>1058</cPais>
+                <xPais>BRASIL</xPais>
+            </enderDest>
+            <indIEDest>9</indIEDest>
+        </dest>
+        ${itemsXml}
+        <total>
+            <ICMSTot>
+                <vBC>0.00</vBC>
+                <vICMS>0.00</vICMS>
+                <vBCST>0.00</vBCST>
+                <vST>0.00</vST>
+                <vProd>${payload.total.toFixed(2)}</vProd>
+                <vFrete>0.00</vFrete>
+                <vSeg>0.00</vSeg>
+                <vDesc>0.00</vDesc>
+                <vII>0.00</vII>
+                <vIPI>0.00</vIPI>
+                <vPIS>0.00</vPIS>
+                <vCOFINS>0.00</vCOFINS>
+                <vOutro>0.00</vOutro>
+                <vNF>${payload.total.toFixed(2)}</vNF>
+            </ICMSTot>
+        </total>
+        <transp>
+            <modFrete>9</modFrete>
+        </transp>
+        <cobr>
+            <fat>
+                <nFat>001</nFat>
+                <vOrig>${payload.total.toFixed(2)}</vOrig>
+                <vLiq>${payload.total.toFixed(2)}</vLiq>
+            </fat>
+            ${installmentsXml}
+        </cobr>
+        <pag>
+            <detPag>
+                <tPag>01</tPag>
+                <vPag>${payload.total.toFixed(2)}</vPag>
+            </detPag>
+        </pag>
+    </infNFe>
+</NFe>`;
 };
 
+
+/**
+ * Simula a emissão de uma NF-e através de um provedor externo.
+ * @param payload Os dados da fatura a serem enviados.
+ * @returns Uma promessa que resolve com o resultado da API.
+ */
 export const emitirNFe = (payload: ApiPayload): Promise<ApiResponse> => {
     console.log("Simulando chamada para API Fiscal com payload:", payload);
 
     return new Promise(resolve => {
+        // Simula um atraso de rede de 1.5 segundos
         setTimeout(() => {
+            // Lógica de simulação
             if (payload.total <= 0) {
                 resolve({
                     success: false,
@@ -377,18 +484,47 @@ export const emitirNFe = (payload: ApiPayload): Promise<ApiResponse> => {
                 });
                 return;
             }
-            const tecnoSpeedId = `TS_${Date.now()}`;
+
+            const tecnoSpeedId = `TS_${Date.now()}_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+
+            // Lógica fiscal dinâmica baseada nos dados
             const isInterstate = payload.issuer.address.state.toUpperCase() !== payload.customer.address.state.toUpperCase();
-            const cfop = isInterstate ? '6102' : '5102';
+            const cfop = isInterstate ? '6102' : '5102'; // 6102: Venda interestadual; 5102: Venda no mesmo estado
+
+            let icmsRate = 0.18; // Padrão para Lucro Presumido/Real
+            let pisRate = 0.0165;
+            let cofinsRate = 0.076;
+
+            if (payload.customer.taxRegime === 'Simples Nacional') {
+                // No Simples Nacional, os impostos são unificados em uma única guia (DAS).
+                // Para fins de simulação, mostraremos valores reduzidos ou zerados.
+                icmsRate = 0.025; // Simulação de uma alíquota dentro do Simples
+                pisRate = 0;
+                cofinsRate = 0;
+            }
+            
+            const icms = payload.total * icmsRate;
+            const pis = payload.total * pisRate;
+            const cofins = payload.total * cofinsRate;
+
             const xmlContent = generateMockNFeXml(payload, tecnoSpeedId, cfop);
             
-            resolve({
+            const response: ApiResponse = {
                 success: true,
                 status: 'Aprovado',
                 providerId: tecnoSpeedId,
                 cfop: cfop,
                 xmlContent: xmlContent,
-            });
+                calculatedTaxes: {
+                    icms,
+                    pis,
+                    cofins
+                }
+            };
+            
+            console.log("Simulação de API Fiscal retornou:", response);
+            resolve(response);
+
         }, 1500);
     });
 };

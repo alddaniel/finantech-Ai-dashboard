@@ -277,9 +277,8 @@ export const AccountsPayable: React.FC<AccountsPayableProps> = ({ selectedCompan
     return (
         <>
         <div className="space-y-8">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Contas a Pagar</h1>
-                <div className="flex items-center gap-4">
+            <div className="flex flex-wrap justify-between items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
                     <button 
                         onClick={handleExportCsv}
                         className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 text-sm"
@@ -292,14 +291,14 @@ export const AccountsPayable: React.FC<AccountsPayableProps> = ({ selectedCompan
                     >
                         <PdfIcon /> Salvar PDF
                     </button>
-                    <button 
-                        onClick={() => onOpenExpenseModal(null)}
-                        className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center"
-                    >
-                        <PlusIcon />
-                        <span className="ml-2">Adicionar Despesa</span>
-                    </button>
                 </div>
+                <button 
+                    onClick={() => onOpenExpenseModal(null)}
+                    className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center"
+                >
+                    <PlusIcon />
+                    <span className="ml-2">Adicionar Despesa</span>
+                </button>
             </div>
             <div id="payables-printable-area" className="printable-area">
                 <Card className="!p-0">

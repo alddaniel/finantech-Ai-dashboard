@@ -1,9 +1,9 @@
-export type View = 'dashboard' | 'payable' | 'receipts' | 'cash_management' | 'reports' | 'ai_advisor' | 'fiscal_module' | 'crm' | 'integrations' | 'user_management' | 'contacts' | 'help' | 'generated_invoices' | 'accountant_panel' | 'bank_accounts' | 'bank_reconciliation' | 'recurrences' | 'payable_recurrences' | 'payment_schedule' | 'receivable_schedule' | 'cash_flow_records' | 'properties' | 'schema_generator' | 'cost_centers' | 'company_profile' | 'plan_subscription' | 'settings' | 'indexes' | 'categories' | 'projects' | 'proposals' | 'contracts';
+export type View = 'dashboard' | 'payable' | 'receipts' | 'cash_management' | 'reports' | 'ai_advisor' | 'fiscal_module' | 'crm' | 'integrations' | 'user_management' | 'contacts' | 'help' | 'generated_invoices' | 'accountant_panel' | 'bank_accounts' | 'bank_reconciliation' | 'recurrences' | 'payable_recurrences' | 'payment_schedule' | 'receivable_schedule' | 'cash_flow_records' | 'properties' | 'schema_generator' | 'cost_centers' | 'company_profile' | 'plan_subscription' | 'settings' | 'indexes' | 'categories' | 'projects' | 'proposals' | 'price_quotations';
 
 export type Role = 'Admin' | 'Manager' | 'Analyst' | 'Contador';
 
 // --- New Permission System Types ---
-export type ModuleKey = 'dashboard' | 'payable' | 'receipts' | 'contacts' | 'bank_accounts' | 'properties' | 'reports' | 'user_management' | 'crm' | 'fiscal_module' | 'integrations' | 'ai_advisor' | 'projects' | 'contracts';
+export type ModuleKey = 'dashboard' | 'payable' | 'receipts' | 'contacts' | 'bank_accounts' | 'properties' | 'reports' | 'user_management' | 'crm' | 'fiscal_module' | 'integrations' | 'ai_advisor' | 'projects';
 export type PermissionAction = 'view' | 'edit' | 'delete';
 export type UserPermissions = Partial<Record<ModuleKey, Partial<Record<PermissionAction, boolean>>>>;
 // --- End New Permission System Types ---
@@ -213,6 +213,16 @@ export interface AccountantRequest {
   priority?: 'High' | 'Medium' | 'Low';
 }
 
+// Types for Properties Module
+export interface RentalDetails {
+    tenantId: string;
+    rentAmount: number;
+    contractStart: string;
+    contractEnd: string;
+    paymentDay: number;
+    adjustmentIndexId?: string;
+}
+
 export interface SaleDetails {
     price: number;
 }
@@ -224,29 +234,15 @@ export interface Property {
     type: 'Apartamento' | 'Casa' | 'Terreno' | 'Comercial';
     status: 'Disponível' | 'Alugado' | 'Vendido' | 'À Venda';
     ownerId: string; // Contact ID of the owner
-    contractId?: string; // ID of the linked Contract
+    rentalDetails?: RentalDetails;
     saleDetails?: SaleDetails;
     company: string;
     iptuAmount?: number;
     condoAmount?: number;
     iptuDueDate?: number; // Dia do mês
     condoDueDate?: number; // Dia do mês
+    // FIX: Added optional 'icon' property to support custom icons for property types.
     icon?: string;
-}
-
-// Contract Management Module
-export interface Contract {
-    id: string;
-    propertyId: string;
-    tenantId: string;
-    rentAmount: number;
-    startDate: string; // YYYY-MM-DD
-    endDate: string; // YYYY-MM-DD
-    paymentDay: number;
-    adjustmentIndexId: string;
-    company: string;
-    status: 'Ativo' | 'Encerrado' | 'Rascunho';
-    description: string; 
 }
 
 export interface CostCenter {
@@ -304,6 +300,7 @@ export interface ProjectStage {
     id: string;
     name: string;
     dueDate: string;
+// FIX: Corrected typo from "Concluido" to "Concluído" for consistency.
     status: 'Pendente' | 'Aprovado Cliente' | 'Aprovado Órgão Público' | 'Concluído';
     deliverables?: {
         fileName: string;
@@ -329,6 +326,46 @@ export interface Project {
     costCenterName: string;
 }
 // --- End Project Management Module Types ---
+
+// --- Price Quotation Module Types ---
+export type QuotationStatus = 'Rascunho' | 'Cotação' | 'Concluída' | 'Cancelada';
+
+export interface QuotationItem {
+    id: string;
+    description: string;
+    quantity: number;
+    unit?: string;
+}
+
+export interface QuotationSupplierItem {
+    quotationItemId: string; // links to QuotationItem.id
+    price: number;
+    notes?: string;
+}
+
+export interface QuotationSupplierResponse {
+    id: string;
+    supplierId: string; // contactId
+    items: QuotationSupplierItem[];
+    total: number;
+    createdAt: string; // ISO date string
+}
+
+export interface QuotationRequest {
+    id: string;
+    title: string;
+    status: QuotationStatus;
+    items: QuotationItem[];
+    suppliers: {
+        supplierId: string; // contactId
+        response?: QuotationSupplierResponse; 
+    }[];
+    createdAt: string; // ISO date string
+    deadline?: string; // ISO date string
+    company: string;
+    selectedSupplierId?: string; // The winner
+}
+// --- End Price Quotation Module Types ---
 
 
 // --- DANFE Data Structure ---
