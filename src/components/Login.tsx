@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import type { User } from '../types';
 
@@ -93,7 +91,7 @@ export const Login: React.FC<LoginProps> = ({ users, onLoginSuccess, onSuperAdmi
                       <path d="M8 12h2v6H8v-6zm3-3h2v9h-2V9zm3-4h2v13h-2V5z"/>
                     </svg>
                 </div>
-                <h1 className="text-4xl font-bold text-gray-800 dark:text-white font-lexend">FinanTech AI</h1>
+                <h1 className="text-3xl text-center sm:text-4xl font-bold text-gray-800 dark:text-white font-lexend">FinanTech AI</h1>
             </div>
              <h2 className="mt-6 text-center text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {isSuperAdminLogin ? 'Acesso Global' : 'Acesse sua conta'}
@@ -103,7 +101,7 @@ export const Login: React.FC<LoginProps> = ({ users, onLoginSuccess, onSuperAdmi
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
                 {renderHeader()}
                 <div className="mt-8">
                     <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl py-8 px-4 shadow-2xl shadow-black/20 dark:shadow-black/60 rounded-xl sm:px-10 ring-1 ring-slate-900/5 dark:ring-white/10">
