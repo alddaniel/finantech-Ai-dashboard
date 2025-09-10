@@ -5,6 +5,7 @@ import { ContactModal } from './ContactModal';
 import { ConfirmationModal } from './ConfirmationModal';
 import type { Contact, Company, Transaction, ToastMessage } from '../types';
 import { IconDisplay } from './ui/IconComponents';
+import * as apiService from '../services/apiService';
 
 type ContactFilter = 'all' | 'customer' | 'supplier' | 'owner';
 
@@ -38,6 +39,7 @@ export const Contacts: React.FC<ContactsProps> = ({ contacts, setContacts, selec
     const [isModalOpen, setModalOpen] = useState(false);
     const [contactToEdit, setContactToEdit] = useState<Contact | null>(null);
     const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
 
     const canShowOwner = useMemo(() => company?.enabledModules.includes('properties'), [company]);
@@ -55,16 +57,15 @@ export const Contacts: React.FC<ContactsProps> = ({ contacts, setContacts, selec
         setModalOpen(true);
     };
 
-    const handleSaveContact = (contactData: Contact) => {
+    const handleSaveContact = async (contactData: Contact) => {
+        let updatedContacts;
         if (contactToEdit) {
-            setContacts(prevContacts => 
-                prevContacts.map(c => c.id === contactData.id ? contactData : c)
-            );
+            updatedContacts = contacts.map(c => c.id === contactData.id ? contactData : c);
         } else {
-            setContacts(prevContacts => 
-                [...prevContacts, { ...contactData, id: `contact${Date.now()}` }]
-            );
+            updatedContacts = [...contacts, { ...contactData, id: `contact${Date.now()}` }];
         }
+        setContacts(updatedContacts);
+        await apiService.saveContacts(updatedContacts);
     };
     
     const handleDeleteRequest = (contact: Contact) => {
@@ -84,15 +85,26 @@ export const Contacts: React.FC<ContactsProps> = ({ contacts, setContacts, selec
         setContactToDelete(contact);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (!contactToDelete) return;
-        setContacts(prevContacts => prevContacts.filter(c => c.id !== contactToDelete.id));
-        addToast({
-            type: 'success',
-            title: 'Contato Excluído!',
-            description: `O contato "${contactToDelete.name}" foi removido.`
-        });
-        setContactToDelete(null);
+        setIsDeleting(true);
+        try {
+            const updatedContacts = contacts.filter(c => c.id !== contactToDelete.id);
+            setContacts(updatedContacts);
+            await apiService.saveContacts(updatedContacts);
+            addToast({
+                type: 'success',
+                title: 'Contato Excluído!',
+                description: `O contato "${contactToDelete.name}" foi removido.`
+            });
+        } catch (error) {
+            addToast({ type: 'warning', title: 'Erro', description: 'Não foi possível excluir o contato.'});
+            // Revert state if API call fails
+            setContacts(contacts);
+        } finally {
+            setIsDeleting(false);
+            setContactToDelete(null);
+        }
     };
 
 
@@ -225,6 +237,7 @@ export const Contacts: React.FC<ContactsProps> = ({ contacts, setContacts, selec
                 isOpen={!!contactToDelete}
                 onClose={() => setContactToDelete(null)}
                 onConfirm={handleConfirmDelete}
+                isConfirming={isDeleting}
                 title="Confirmar Exclusão de Contato"
             >
                 Você tem certeza que deseja excluir o contato <strong className="text-slate-800 dark:text-slate-100">{contactToDelete?.name}</strong>? Esta ação não pode ser desfeita.

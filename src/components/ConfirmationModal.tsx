@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangleIcon } from './ui/IconComponents';
+import { Spinner } from './ui/Spinner';
 
 interface ConfirmationModalProps {
     isOpen: boolean;
@@ -7,14 +8,15 @@ interface ConfirmationModalProps {
     onConfirm: () => void;
     title: string;
     children: React.ReactNode;
+    isConfirming?: boolean;
 }
 
-export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, onConfirm, title, children }) => {
+export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, onConfirm, title, children, isConfirming = false }) => {
     if (!isOpen) return null;
 
     const handleConfirm = () => {
         onConfirm();
-        onClose();
+        // The parent component is now responsible for closing the modal
     };
 
     return (
@@ -41,16 +43,18 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, on
                     <button
                         type="button"
                         onClick={onClose}
-                        className="w-full sm:w-auto bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
+                        disabled={isConfirming}
+                        className="w-full sm:w-auto bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors disabled:opacity-50"
                     >
                         Cancelar
                     </button>
                     <button
                         type="button"
                         onClick={handleConfirm}
-                        className="w-full sm:w-auto bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors"
+                        disabled={isConfirming}
+                        className="w-full sm:w-auto bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors flex items-center justify-center disabled:bg-red-400"
                     >
-                        Excluir
+                        {isConfirming ? <Spinner className="w-5 h-5" /> : 'Excluir'}
                     </button>
                 </div>
             </div>

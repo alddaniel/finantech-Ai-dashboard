@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardContent } from './ui/Card';
 import { Badge } from './ui/Badge';
@@ -8,6 +7,8 @@ import * as apiService from '../services/apiService';
 import type { View, Transaction, AccountantRequest, User, BankAccount, BankTransaction, DashboardSettings } from '../types';
 import { VIEWS, MOCK_CASH_FLOW_DATA } from '../constants';
 import { getDashboardInsight } from '../services/geminiService';
+// FIX: Add Spinner import for loading state
+import { Spinner } from './ui/Spinner';
 
 const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -129,12 +130,20 @@ const EmptyDashboard: React.FC<{ selectedCompany: string; onOpenExpenseModal: ()
 
 export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCompany, payables, receivables, accountantRequests, setAccountantRequests, currentUser, isAccountantModuleEnabled, bankAccounts, bankTransactions, onOpenInvoiceModal, onOpenConfirmPaymentModal, onOpenQRCodeModal }) => {
     
-    const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>(() => apiService.getDashboardSettings());
+    // FIX: Initialize with null to handle async loading from apiService.
+    const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings | null>(null);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     
+    // FIX: Load settings asynchronously in useEffect.
     useEffect(() => {
-        apiService.saveDashboardSettings(dashboardSettings);
-    }, [dashboardSettings]);
+        apiService.getDashboardSettings().then(setDashboardSettings);
+    }, []);
+    
+    // FIX: Remove problematic useEffect for saving. Saving is now handled explicitly.
+    const handleSaveSettings = (newSettings: DashboardSettings) => {
+      setDashboardSettings(newSettings);
+      apiService.saveDashboardSettings(newSettings);
+    };
     
     const filteredPayables = useMemo(() => payables.filter(t => t.company === selectedCompany), [payables, selectedCompany]);
     const filteredReceivables = useMemo(() => receivables.filter(t => t.company === selectedCompany), [receivables, selectedCompany]);
@@ -157,8 +166,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
     }, [filteredPayables, filteredReceivables]);
 
     useEffect(() => {
-        fetchInsight();
-    }, [fetchInsight, selectedCompany]);
+        // FIX: Only fetch insight once settings are loaded.
+        if (dashboardSettings) {
+            fetchInsight();
+        }
+    }, [fetchInsight, selectedCompany, dashboardSettings]);
 
     const totalReceitas = filteredReceivables.filter(t => t.status === 'Pago').reduce((sum, t) => sum + t.amount, 0);
     const totalDespesas = filteredPayables.filter(t => t.status === 'Pago').reduce((sum, t) => sum + t.amount, 0);
@@ -173,6 +185,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
       }, account.balance);
       return balance;
     };
+
+    // FIX: Add loading state while settings are being fetched.
+    if (!dashboardSettings) {
+        return (
+            <div className="flex h-full w-full items-center justify-center">
+                <Spinner className="h-12 w-12 text-indigo-500" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">
@@ -276,7 +297,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
                 isOpen={isSettingsModalOpen}
                 onClose={() => setIsSettingsModalOpen(false)}
                 currentSettings={dashboardSettings}
-                onSave={setDashboardSettings}
+                onSave={handleSaveSettings}
             />
         </div>
     );
