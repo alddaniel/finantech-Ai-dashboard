@@ -3,7 +3,6 @@ import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { AccountsPayable } from './components/AccountsPayable';
 import { Receipts } from './components/Receipts';
-import { CashManagement } from './components/CashManagement';
 import { Reports } from './components/Reports';
 import { AIFinancialAdvisor } from './components/AIFinancialAdvisor';
 import { InvoiceGenerator } from './components/InvoiceGenerator';
@@ -42,7 +41,10 @@ import { Settings } from './components/Settings';
 import { Categories } from './components/Categories';
 import { Indexes } from './components/Indexes';
 import { QRCodeModal } from './components/QRCodeModal';
-import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal } from './types';
+import { Contracts } from './components/Contracts';
+import { ContractModal } from './components/ContractModal';
+import { BottomNavBar } from './components/BottomNavBar';
+import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, Contract } from './types';
 import { VIEWS, MOCK_AUDIT_LOGS } from './constants';
 import * as apiService from './services/apiService';
 import { Spinner } from './components/ui/Spinner';
@@ -57,6 +59,7 @@ export default function App() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(MOCK_AUDIT_LOGS);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
@@ -90,6 +93,10 @@ export default function App() {
   // State for Proposal Modal
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const [proposalToEdit, setProposalToEdit] = useState<Proposal | null>(null);
+  
+  // State for Contract Modal
+  const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [contractToEdit, setContractToEdit] = useState<Contract | null>(null);
 
   // State for QR Code Modal
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState(false);
@@ -115,11 +122,13 @@ export default function App() {
   // Unified Notification Center state (for persistent alerts)
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  
+  // State for PWA installation prompt
+  const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
 
   
   // State to manage pre-login view (regular login or admin panel)
   const [isSuperAdminView, setIsSuperAdminView] = useState<boolean>(false);
-  const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   
   useEffect(() => {
     const checkAuth = apiService.getIsAuthenticated();
@@ -136,6 +145,7 @@ export default function App() {
             setUsers(data.users);
             setContacts(data.contacts);
             setProperties(data.properties);
+            setContracts(data.contracts);
             setProjects(data.projects);
             setProposals(data.proposals);
             setCostCenters(data.costCenters);
@@ -167,6 +177,7 @@ export default function App() {
   useEffect(() => { if (!isLoading && users.length) apiService.saveUsers(users); }, [users, isLoading]);
   useEffect(() => { if (!isLoading && contacts.length) apiService.saveContacts(contacts); }, [contacts, isLoading]);
   useEffect(() => { if (!isLoading && properties.length) apiService.saveProperties(properties); }, [properties, isLoading]);
+  useEffect(() => { if (!isLoading && contracts.length) apiService.saveContracts(contracts); }, [contracts, isLoading]);
   useEffect(() => { if (!isLoading && projects.length) apiService.saveProjects(projects); }, [projects, isLoading]);
   useEffect(() => { if (!isLoading && proposals.length) apiService.saveProposals(proposals); }, [proposals, isLoading]);
   useEffect(() => { if (!isLoading && costCenters.length) apiService.saveCostCenters(costCenters); }, [costCenters, isLoading]);
@@ -207,6 +218,20 @@ export default function App() {
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+  
+  // PWA Install prompt listener
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setInstallPromptEvent(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
 
   // Re-enter fullscreen automatically after file dialog closes
@@ -263,6 +288,19 @@ export default function App() {
       setIsAuthenticated(true);
       setIsSuperAdminView(true);
   };
+
+  const handleInstallClick = useCallback(async () => {
+    if (!installPromptEvent) {
+      addToast({ type: 'info', title: 'App Instalado', description: 'O aplicativo já foi instalado ou a opção não está disponível no seu navegador.' });
+      return;
+    }
+    installPromptEvent.prompt();
+    const { outcome } = await installPromptEvent.userChoice;
+    if (outcome === 'accepted') {
+        addToast({ type: 'success', title: 'Instalado!', description: 'O aplicativo foi adicionado à sua tela inicial.' });
+    }
+    setInstallPromptEvent(null);
+  }, [installPromptEvent, addToast]);
   
   // --- Modal Openers ---
   const handleOpenInvoiceModal = useCallback((data?: { customer: string; amount: number; } | { receivableToEdit: Transaction } | null) => {
@@ -284,6 +322,11 @@ export default function App() {
   const handleOpenProposalModal = useCallback((proposal?: Proposal | null) => {
     setProposalToEdit(proposal || null);
     setIsProposalModalOpen(true);
+  }, []);
+  
+  const handleOpenContractModal = useCallback((contract?: Contract | null) => {
+    setContractToEdit(contract || null);
+    setIsContractModalOpen(true);
   }, []);
 
   const handleOpenConfirmPaymentModal = useCallback((transaction: Transaction) => {
@@ -387,11 +430,55 @@ export default function App() {
             setProposals(prev => [...prev, newProposal]);
         }
     };
+    
+   const handleSaveContract = (contractData: Contract) => {
+        const isNew = !contractToEdit;
+        const finalContract = isNew ? { ...contractData, id: `contract${Date.now()}` } : contractData;
+
+        // Save contract
+        setContracts(prev => {
+            if (isNew) return [...prev, finalContract];
+            return prev.map(c => c.id === finalContract.id ? finalContract : c);
+        });
+
+        // Update linked property
+        setProperties(prev => prev.map(p => {
+            if (p.id === finalContract.propertyId) {
+                return { ...p, contractId: finalContract.id, status: 'Alugado' };
+            }
+            if (contractToEdit && p.id === contractToEdit.propertyId && contractToEdit.propertyId !== finalContract.propertyId) {
+                return { ...p, contractId: undefined, status: 'Disponível' };
+            }
+            return p;
+        }));
+
+        // Generate/Adjust receivables
+        const property = properties.find(p => p.id === finalContract.propertyId);
+        if (property) {
+            const { receivablesToKeep, newReceivables } = apiService.generateAndAdjustRentReceivables(finalContract, property, adjustmentIndexes, receivables);
+            setReceivables([...receivablesToKeep, ...newReceivables]);
+            if (newReceivables.length > 0) {
+                addToast({
+                    type: 'info',
+                    title: 'Receitas Geradas',
+                    description: `${newReceivables.length} aluguéis futuros foram criados/atualizados a partir do contrato.`
+                });
+            }
+        }
+        
+        addToast({
+            type: 'success',
+            title: isNew ? 'Contrato Salvo!' : 'Contrato Atualizado!',
+            description: `O contrato para o imóvel foi salvo com sucesso.`
+        });
+        
+        setIsContractModalOpen(false);
+   };
   
   const currentCompany = useMemo(() => companies.find(c => c.name === selectedCompany), [companies, selectedCompany]);
 
   const handleNotificationClick = (notification: Notification) => {
-    const { type, entityId } = notification;
+    const { type } = notification;
     
     switch(type) {
         case 'overdue_payable':
@@ -404,21 +491,19 @@ export default function App() {
             setActiveView(VIEWS.ACCOUNTANT_PANEL);
             break;
         case 'payment_due_today':
-            const payable = payables.find(p => p.id === entityId);
-            if(payable) {
-                setActiveView(VIEWS.PAYMENT_SCHEDULE);
-            } else {
-                setActiveView(VIEWS.RECEIVABLE_SCHEDULE);
-            }
+            setActiveView(VIEWS.PAYMENT_SCHEDULE);
             break;
         default:
+            setActiveView(VIEWS.DASHBOARD);
             break;
     }
     
+    // Mark as read and close
     setNotifications(prev => prev.map(n => n.id === notification.id ? {...n, isRead: true} : n));
     setIsNotificationsOpen(false);
   }
-  
+
+  // Render Logic
   if (isLoading) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-slate-100 dark:bg-slate-900">
@@ -426,7 +511,6 @@ export default function App() {
         </div>
     );
   }
-
 
   if (!isAuthenticated) {
     return <Login users={users} onLoginSuccess={handleLoginSuccess} onSuperAdminLoginSuccess={handleSuperAdminLoginSuccess} />;
@@ -612,10 +696,21 @@ export default function App() {
         receivables={receivables}
         setReceivables={setReceivables}
         selectedCompany={selectedCompany}
+        // FIX: The 'adjustmentIndexes' prop was missing and is required by the Properties component.
         adjustmentIndexes={adjustmentIndexes}
         addToast={addToast}
         customAvatars={customAvatars}
         setCustomAvatars={setCustomAvatars}
+        contracts={contracts}
+       />;
+       case VIEWS.CONTRACTS: return <Contracts 
+        contracts={contracts}
+        setContracts={setContracts}
+        properties={properties}
+        contacts={contacts}
+        selectedCompany={selectedCompany}
+        onOpenContractModal={handleOpenContractModal}
+        addToast={addToast}
        />;
        case VIEWS.PROJECTS: return <Projects
         projects={projects}
@@ -696,14 +791,8 @@ export default function App() {
     }
   }
 
-  const HamburgerIcon = () => (
-    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-  );
-
   return (
-    <div className="relative md:flex min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+    <div className="flex h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
         <Sidebar 
           activeView={activeView} 
           setActiveView={setActiveView} 
@@ -719,19 +808,22 @@ export default function App() {
           onToggleFullscreen={() => setIsDesiredFullscreen(prev => !prev)}
           notifications={notifications}
           setIsNotificationsOpen={setIsNotificationsOpen}
-          isMobileOpen={isMobileSidebarOpen}
-          setMobileOpen={setMobileSidebarOpen}
+          installPromptEvent={installPromptEvent}
+          onInstallClick={handleInstallClick}
         />
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-            <button
-                onClick={() => setMobileSidebarOpen(true)}
-                className="md:hidden p-2 mb-4 -ml-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
-                aria-label="Abrir menu"
-            >
-                <HamburgerIcon />
-            </button>
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8 relative">
             {renderActiveView()}
         </main>
+        <BottomNavBar
+            activeView={activeView}
+            setActiveView={setActiveView}
+            onOpenInvoiceModal={handleOpenInvoiceModal}
+            company={currentCompany}
+            currentUser={currentUser!}
+            isAccountantModuleEnabled={isAccountantModuleEnabled}
+            installPromptEvent={installPromptEvent}
+            onInstallClick={handleInstallClick}
+        />
         {isInvoiceModalOpen && <InvoiceGenerator
           isOpen={isInvoiceModalOpen}
           onClose={() => setIsInvoiceModalOpen(false)}
@@ -747,6 +839,7 @@ export default function App() {
           costCenters={costCenters}
           categories={categories}
           adjustmentIndexes={adjustmentIndexes}
+          contracts={contracts}
         />}
         {isExpenseModalOpen && <ExpenseModal
           isOpen={isExpenseModalOpen}
@@ -784,6 +877,17 @@ export default function App() {
           contacts={contacts}
           setContacts={setContacts}
           selectedCompany={selectedCompany}
+        />}
+        {isContractModalOpen && <ContractModal
+          isOpen={isContractModalOpen}
+          onClose={() => setIsContractModalOpen(false)}
+          onSave={handleSaveContract}
+          contractToEdit={contractToEdit}
+          properties={properties}
+          contacts={contacts}
+          selectedCompany={selectedCompany}
+          adjustmentIndexes={adjustmentIndexes}
+          contracts={contracts}
         />}
         {isConfirmPaymentModalOpen && <PaymentConfirmationModal 
           isOpen={isConfirmPaymentModalOpen}

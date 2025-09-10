@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardHeader, CardContent } from './ui/Card';
 import type { User, UserPermissions, ModuleKey, PermissionAction, Company } from '../types';
@@ -25,7 +24,7 @@ export const PermissionsManager: React.FC<PermissionsManagerProps> = ({ users, c
         // Base modules always available regardless of plan
         const baseModules: ModuleKey[] = [
             'dashboard', 'payable', 'receipts', 'contacts', 
-            'bank_accounts', 'reports', 'user_management', 'crm'
+            'bank_accounts', 'reports', 'user_management', 'crm', 'contracts'
         ];
 
         // Map ModuleType from company.enabledModules to ModuleKey

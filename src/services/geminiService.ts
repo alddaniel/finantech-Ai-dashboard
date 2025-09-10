@@ -41,11 +41,6 @@ export const getFinancialAnalysis = async (
     payables: Transaction[]
 ): Promise<string> => {
     try {
-        // FIX: Use process.env.API_KEY and update error message.
-        if (!process.env.API_KEY) {
-            return "Chave de API não configurada. Por favor, configure a variável de ambiente API_KEY.";
-        }
-        
         const summary = generateFinancialSummary(cashFlow, receivables, payables);
         const prompt = `
             Você é um consultor financeiro especialista em análise de dados para pequenas e médias empresas.
@@ -73,10 +68,6 @@ export const getFinancialAnalysis = async (
 
 export const getCostCuttingSuggestions = async (payables: Transaction[]): Promise<string> => {
     try {
-        // FIX: Use process.env.API_KEY
-        if (!process.env.API_KEY) {
-            return "Chave de API não configurada.";
-        }
         const expensesSummary = payables.map(p => `- ${p.category}: ${p.description} - R$ ${p.amount.toFixed(2)}`).join('\n');
         const prompt = `
             Você é um especialista em otimização de custos. Com base na lista de despesas a seguir, sugira áreas onde a empresa pode cortar custos sem impactar negativamente a operação.
@@ -105,11 +96,6 @@ export const getTaxRegimeComparison = async (
     monthlyRevenue: number,
     businessActivity: string
 ): Promise<string> => {
-    // FIX: Use process.env.API_KEY
-    if (!process.env.API_KEY) {
-        return "Chave de API não configurada.";
-    }
-
     const prompt = `
         Você é um contador e consultor tributário brasileiro altamente qualificado, especialista em PMEs.
         Com base nos dados a seguir, gere uma análise comparativa detalhada entre os regimes tributários: Simples Nacional, Lucro Presumido e Lucro Real.
@@ -147,11 +133,6 @@ export const getTaxRegimeComparison = async (
 
 export const getSmartCollectionStrategy = async (debtor: DebtorCustomer): Promise<string> => {
     try {
-        // FIX: Use process.env.API_KEY
-        if (!process.env.API_KEY) {
-            return "Chave de API não configurada.";
-        }
-
         const history = debtor.communicationHistory.map(h => `- ${h.date}: ${h.type.toUpperCase()} - ${h.summary}`).join('\n');
 
         const prompt = `
@@ -192,11 +173,6 @@ export const reconcileTransactionsWithAI = async (
     bankTxs: BankTransaction[],
     systemTxs: SystemTransaction[]
 ): Promise<{ bankTxId: string; systemTxId: string; reason: string }[]> => {
-    // FIX: Use process.env.API_KEY
-    if (!process.env.API_KEY) {
-        throw new Error("Chave de API não configurada.");
-    }
-
     const schema = {
         type: Type.ARRAY,
         items: {
@@ -255,11 +231,6 @@ export const getSchemaModification = async (
     userPrompt: string,
     dialect: 'postgres' | 'mysql'
 ): Promise<string> => {
-    // FIX: Use process.env.API_KEY
-    if (!process.env.API_KEY) {
-        throw new Error("Chave de API não configurada.");
-    }
-
     const prompt = `
         Você é um arquiteto de banco de dados especialista em SQL. Sua tarefa é modificar um schema SQL existente com base na solicitação de um usuário.
         O dialeto do banco de dados é '${dialect}'.
@@ -301,11 +272,6 @@ export const getDashboardInsight = async (
     payables: Transaction[],
     receivables: Transaction[]
 ): Promise<string> => {
-    // FIX: Use process.env.API_KEY
-    if (!process.env.API_KEY) {
-        return "💡 A funcionalidade de insights está desativada. Configure sua chave de API.";
-    }
-
     const today = new Date();
     const nextWeek = new Date();
     nextWeek.setDate(today.getDate() + 7);

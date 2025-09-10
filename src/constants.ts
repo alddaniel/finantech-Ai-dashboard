@@ -1,4 +1,4 @@
-import type { View, Transaction, CashFlowData, BankTransaction, SystemTransaction, DefaultRateData, NetProfitData, DebtorCustomer, FunnelStage, BankAccount, Role, User, AuditLog, Company, Contact, AccountantRequest, Property, ModuleKey, UserPermissions, Notification, CostCenter, Category, AdjustmentIndex, Project, Proposal } from './types';
+import type { View, Transaction, CashFlowData, BankTransaction, SystemTransaction, DefaultRateData, NetProfitData, DebtorCustomer, FunnelStage, BankAccount, Role, User, AuditLog, Company, Contact, AccountantRequest, Property, ModuleKey, UserPermissions, Notification, CostCenter, Category, AdjustmentIndex, Project, Proposal, Contract } from './types';
 import { CONTACT_AVATARS, COMPANY_AVATARS } from './components/ui/IconComponents';
 
 export const VIEWS: { [key: string]: View } = {
@@ -24,6 +24,7 @@ export const VIEWS: { [key: string]: View } = {
   HELP: 'help',
   ACCOUNTANT_PANEL: 'accountant_panel',
   PROPERTIES: 'properties',
+  CONTRACTS: 'contracts',
   PROJECTS: 'projects',
   PROPOSALS: 'proposals',
   SCHEMA_GENERATOR: 'schema_generator',
@@ -250,6 +251,7 @@ export const MODULE_PERMISSIONS_MAP: Record<ModuleKey, string> = {
     contacts: 'Contatos',
     bank_accounts: 'Contas Bancárias',
     properties: 'Imóveis',
+    contracts: 'Contratos',
     projects: 'Projetos',
     reports: 'Relatórios',
     user_management: 'Administração',
@@ -266,6 +268,7 @@ const fullAccess: UserPermissions = {
     contacts: { view: true, edit: true, delete: true },
     bank_accounts: { view: true, edit: true, delete: true },
     properties: { view: true, edit: true, delete: true },
+    contracts: { view: true, edit: true, delete: true },
     projects: { view: true, edit: true, delete: true },
     reports: { view: true, edit: true, delete: true },
     user_management: { view: true, edit: true, delete: true },
@@ -282,6 +285,7 @@ const managerAccess: UserPermissions = {
     contacts: { view: true, edit: true, delete: false },
     bank_accounts: { view: true, edit: true, delete: false },
     properties: { view: true, edit: true, delete: false },
+    contracts: { view: true, edit: true, delete: false },
     projects: { view: true, edit: true, delete: false },
     reports: { view: true, edit: false, delete: false },
     user_management: { view: false, edit: false, delete: false },
@@ -298,6 +302,7 @@ const analystAccess: UserPermissions = {
     contacts: { view: true, edit: false, delete: false },
     bank_accounts: { view: true, edit: false, delete: false },
     properties: { view: true, edit: false, delete: false },
+    contracts: { view: true, edit: false, delete: false },
     projects: { view: true, edit: false, delete: false },
     reports: { view: true, edit: false, delete: false },
     user_management: { view: false, edit: false, delete: false },
@@ -375,14 +380,7 @@ export const MOCK_PROPERTIES: Property[] = [
         type: 'Apartamento',
         status: 'Alugado',
         ownerId: 'contact4',
-        rentalDetails: {
-            tenantId: 'contact7',
-            rentAmount: 4500,
-            contractStart: '2023-01-15',
-            contractEnd: '2025-07-15',
-            paymentDay: 10,
-            adjustmentIndexId: 'idx1',
-        },
+        contractId: 'contract1',
         company: 'Filial São Paulo',
         condoAmount: 850.00,
         condoDueDate: 5,
@@ -418,6 +416,23 @@ export const MOCK_PROPERTIES: Property[] = [
         icon: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=400&auto=format&fit=crop'
     }
 ];
+
+export const MOCK_CONTRACTS: Contract[] = [
+    {
+        id: 'contract1',
+        propertyId: 'prop1',
+        tenantId: 'contact7',
+        rentAmount: 4500,
+        startDate: '2023-01-15',
+        endDate: '2025-07-15',
+        paymentDay: 10,
+        adjustmentIndexId: 'idx1',
+        company: 'Filial São Paulo',
+        status: 'Ativo',
+        description: 'Contrato de Locação Padrão para Apto Av. Paulista'
+    }
+];
+
 
 export const MOCK_PROJECTS: Project[] = [
     {

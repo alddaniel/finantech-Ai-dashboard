@@ -1,5 +1,5 @@
-import type { Company, User, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, InvoiceItem, Property, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, DashboardSettings } from '../types';
-import { MOCK_COMPANIES, MOCK_USERS, MOCK_CONTACTS, MOCK_PAYABLES, MOCK_RECEIVABLES, MOCK_ACCOUNTANT_REQUESTS, MOCK_BANK_ACCOUNTS, MOCK_BANK_TRANSACTIONS, MOCK_PROPERTIES, MOCK_NOTIFICATIONS, MOCK_SYSTEM_TRANSACTIONS, MOCK_COST_CENTERS_DATA, MOCK_CATEGORIES_DATA, MOCK_ADJUSTMENT_INDEXES_DATA, MOCK_PROJECTS, MOCK_PROPOSALS } from '../constants';
+import type { Company, User, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, InvoiceItem, Property, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, DashboardSettings, Contract } from '../types';
+import { MOCK_COMPANIES, MOCK_USERS, MOCK_CONTACTS, MOCK_PAYABLES, MOCK_RECEIVABLES, MOCK_ACCOUNTANT_REQUESTS, MOCK_BANK_ACCOUNTS, MOCK_BANK_TRANSACTIONS, MOCK_PROPERTIES, MOCK_NOTIFICATIONS, MOCK_SYSTEM_TRANSACTIONS, MOCK_COST_CENTERS_DATA, MOCK_CATEGORIES_DATA, MOCK_ADJUSTMENT_INDEXES_DATA, MOCK_PROJECTS, MOCK_PROPOSALS, MOCK_CONTRACTS } from '../constants';
 
 // ====================================================================================
 // Abstraction Layer for Data Persistence (Simulated API)
@@ -8,7 +8,7 @@ import { MOCK_COMPANIES, MOCK_USERS, MOCK_CONTACTS, MOCK_PAYABLES, MOCK_RECEIVAB
 // This prepares the frontend architecture for a real backend implementation.
 // ====================================================================================
 
-const SIMULATED_LATENCY = 500; // ms
+const SIMULATED_LATENCY = 100; 
 
 const get = <T,>(key: string, defaultValue: T): T => {
     try {
@@ -92,6 +92,10 @@ export const saveSystemTransactions = (transactions: SystemTransaction[]): Promi
 export const getProperties = (): Promise<Property[]> => apiGet('finantech_properties', MOCK_PROPERTIES);
 export const saveProperties = (properties: Property[]): Promise<void> => apiSet('finantech_properties', properties);
 
+// FIX: Add getContracts and saveContracts
+export const getContracts = (): Promise<Contract[]> => apiGet('finantech_contracts', MOCK_CONTRACTS);
+export const saveContracts = (contracts: Contract[]): Promise<void> => apiSet('finantech_contracts', contracts);
+
 export const getProjects = (): Promise<Project[]> => apiGet('finantech_projects', MOCK_PROJECTS);
 export const saveProjects = (projects: Project[]): Promise<void> => apiSet('finantech_projects', projects);
 
@@ -135,13 +139,13 @@ export const saveDashboardSettings = (settings: DashboardSettings): Promise<void
 // --- Initial Data Loader ---
 export const fetchAllInitialData = async () => {
     const [
-        companies, users, contacts, properties, projects, proposals,
+        companies, users, contacts, properties, projects, proposals, contracts,
         costCenters, categories, adjustmentIndexes, customAvatars,
         payables, receivables, bankAccounts, bankTransactions,
         systemTransactions, notifications, isAccountantModuleEnabled, accountantRequests,
         dashboardSettings
     ] = await Promise.all([
-        getCompanies(), getUsers(), getContacts(), getProperties(), getProjects(), getProposals(),
+        getCompanies(), getUsers(), getContacts(), getProperties(), getProjects(), getProposals(), getContracts(),
         getCostCenters(), getCategories(), getAdjustmentIndexes(), getCustomAvatars(),
         getPayables(), getReceivables(), getBankAccounts(), getBankTransactions(),
         getSystemTransactions(), getNotifications(), getIsAccountantModuleEnabled(),
@@ -149,7 +153,7 @@ export const fetchAllInitialData = async () => {
     ]);
 
     return {
-        companies, users, contacts, properties, projects, proposals,
+        companies, users, contacts, properties, projects, proposals, contracts,
         costCenters, categories, adjustmentIndexes, customAvatars,
         payables, receivables, bankAccounts, bankTransactions,
         systemTransactions, notifications, isAccountantModuleEnabled, accountantRequests,
@@ -224,7 +228,9 @@ export const calculateCharges = (transaction: Transaction) => {
     };
 };
 
+// FIX: Updated function signature and logic to use Contract type instead of deprecated rentalDetails on Property.
 export const generateAndAdjustRentReceivables = (
+    contract: Contract,
     property: Property,
     adjustmentIndexes: AdjustmentIndex[],
     existingReceivables: Transaction[]
@@ -233,19 +239,21 @@ export const generateAndAdjustRentReceivables = (
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Filter out future, unpaid rent receivables for this specific property.
     const receivablesToKeep = existingReceivables.filter(r => {
         if (r.propertyId === property.id && r.category === 'Aluguéis') {
             const dueDate = parseDate(r.dueDate);
             return r.status === 'Pago' || dueDate < today;
         }
-        return true;
+        return true; // Keep all other transactions
     });
 
-    if (property.status !== 'Alugado' || !property.rentalDetails) {
+    // Stop if property is not rented or contract is not active
+    if (property.status !== 'Alugado' || contract.status !== 'Ativo') {
         return { receivablesToKeep, newReceivables: [] };
     }
 
-    const { tenantId, rentAmount, contractStart, contractEnd, paymentDay, adjustmentIndexId } = property.rentalDetails;
+    const { tenantId, rentAmount, startDate: contractStart, endDate: contractEnd, paymentDay, adjustmentIndexId } = contract;
     if (!tenantId || !rentAmount || !contractStart || !contractEnd || !paymentDay) {
         return { receivablesToKeep, newReceivables: [] };
     }
@@ -261,15 +269,18 @@ export const generateAndAdjustRentReceivables = (
     while (currentDate <= finalDate) {
         const dueDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), paymentDay);
 
+        // Only generate for future or current months
         if (dueDate >= today) {
             const monthYear = new Date(currentDate.getFullYear(), currentDate.getMonth()).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
             
+            // Calculate how many full years have passed since the contract started
             let yearsPassed = currentDate.getFullYear() - startDate.getFullYear();
             if (currentDate.getMonth() < startDate.getMonth() || (currentDate.getMonth() === startDate.getMonth() && currentDate.getDate() < startDate.getDate())) {
                 yearsPassed--;
             }
             yearsPassed = Math.max(0, yearsPassed);
 
+            // Apply adjustment based on the number of years passed
             const adjustedRentAmount = rentAmount * Math.pow(adjustmentRate, yearsPassed);
 
             const receivable: Transaction = {
@@ -281,19 +292,21 @@ export const generateAndAdjustRentReceivables = (
                 status: 'Pendente',
                 type: 'receita',
                 company: property.company,
-                costCenter: 'Imobiliário',
-                bankAccount: '',
+                costCenter: 'Imobiliário', // It could be defined in the contract or property
+                bankAccount: '', // Should be defined somewhere
                 contactId: tenantId,
                 propertyId: property.id,
             };
             newReceivables.push(receivable);
         }
 
+        // Move to the next month
         currentDate.setMonth(currentDate.getMonth() + 1);
     }
     
     return { receivablesToKeep, newReceivables };
 };
+
 
 // ====================================================================================
 // SIMULAÇÃO DE API FISCAL EXTERNA

@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from './ui/Card';
 import { CompanyModal } from './CompanyModal';
@@ -318,11 +316,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ companies, setCompanies,
                         Gerencie as empresas, usuários e ferramentas avançadas da plataforma FinanTech AI.
                     </p>
 
-                    <div className="border-b border-gray-200 dark:border-gray-700 flex flex-wrap">
-                        <TabButton label="Empresas" active={activeTab === 'companies'} onClick={() => setActiveTab('companies')} icon={<CompanyIcon />}/>
-                        <TabButton label="Usuários / Admins" active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={<UsersIcon />} />
-                        <TabButton label="Gerador de Schema" active={activeTab === 'schema'} onClick={() => setActiveTab('schema')} icon={<SchemaGeneratorIcon />} />
-                        <TabButton label="Consultor IA" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} icon={<AIIcon />} />
+                    <div className="border-b border-gray-200 dark:border-gray-700">
+                        <nav className="-mb-px flex flex-wrap" aria-label="Tabs">
+                            <TabButton label="Empresas" active={activeTab === 'companies'} onClick={() => setActiveTab('companies')} icon={<CompanyIcon />}/>
+                            <TabButton label="Usuários / Admins" active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={<UsersIcon />} />
+                            <TabButton label="Gerador de Schema" active={activeTab === 'schema'} onClick={() => setActiveTab('schema')} icon={<SchemaGeneratorIcon />} />
+                            <TabButton label="Consultor IA" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} icon={<AIIcon />} />
+                        </nav>
                     </div>
 
                     {activeTab === 'companies' && (

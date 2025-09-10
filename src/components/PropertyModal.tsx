@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import type { Property, Address, Contact, AdjustmentIndex } from '../types';
+import type { Property, Address, Contact } from '../types';
 import { PROPERTY_AVATARS } from './ui/IconComponents';
 
 interface PropertyModalProps {
@@ -10,7 +9,6 @@ interface PropertyModalProps {
     propertyToEdit: Property | null;
     contacts: Contact[];
     selectedCompany: string;
-    adjustmentIndexes: AdjustmentIndex[];
     customAvatars: string[];
     setCustomAvatars: React.Dispatch<React.SetStateAction<string[]>>;
 }
@@ -52,9 +50,8 @@ const parseFormattedCurrency = (value: string): number => {
 };
 // --- End Currency Formatting Utilities ---
 
-export const PropertyModal: React.FC<PropertyModalProps> = ({ isOpen, onClose, onSave, propertyToEdit, contacts, selectedCompany, adjustmentIndexes, customAvatars, setCustomAvatars }) => {
+export const PropertyModal: React.FC<PropertyModalProps> = ({ isOpen, onClose, onSave, propertyToEdit, contacts, selectedCompany, customAvatars, setCustomAvatars }) => {
     const [formData, setFormData] = useState<Omit<Property, 'id'> & { id?: string }>(() => ({ ...defaultProperty, company: selectedCompany }));
-    const [rentAmountString, setRentAmountString] = useState('');
     const [salePriceString, setSalePriceString] = useState('');
     const [iptuAmountString, setIptuAmountString] = useState('');
     const [condoAmountString, setCondoAmountString] = useState('');
@@ -65,17 +62,14 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({ isOpen, onClose, o
             const initialData = {
                 ...defaultProperty,
                 ...propertyToEdit,
-                rentalDetails: propertyToEdit.rentalDetails || { tenantId: '', rentAmount: 0, contractStart: '', contractEnd: '', paymentDay: 1, adjustmentIndexId: '' },
                 saleDetails: propertyToEdit.saleDetails || { price: 0 }
             };
             setFormData(initialData);
-            setRentAmountString(propertyToEdit.rentalDetails?.rentAmount ? propertyToEdit.rentalDetails.rentAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '');
             setSalePriceString(propertyToEdit.saleDetails?.price ? propertyToEdit.saleDetails.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '');
             setIptuAmountString(propertyToEdit.iptuAmount ? propertyToEdit.iptuAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '');
             setCondoAmountString(propertyToEdit.condoAmount ? propertyToEdit.condoAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '');
         } else {
             setFormData({ ...defaultProperty, company: selectedCompany });
-            setRentAmountString('');
             setSalePriceString('');
             setIptuAmountString('');
             setCondoAmountString('');
@@ -87,12 +81,6 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({ isOpen, onClose, o
         setFormData(prev => {
             const newState = { ...prev, [name]: value };
             if (name === 'status') {
-                if (value === 'Alugado' && !newState.rentalDetails) {
-                    newState.rentalDetails = { tenantId: '', rentAmount: 0, contractStart: '', contractEnd: '', paymentDay: 1 };
-                } else if (value !== 'Alugado') {
-                    setRentAmountString('');
-                }
-                
                 if (value === 'À Venda' && !newState.saleDetails) {
                     newState.saleDetails = { price: 0 };
                 } else if (value !== 'À Venda') {
@@ -108,14 +96,6 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({ isOpen, onClose, o
         setFormData(prev => ({
             ...prev,
             address: { ...prev.address, [name]: value, }
-        }));
-    };
-
-    const handleRentalDetailsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            rentalDetails: { ...prev.rentalDetails!, [name]: value }
         }));
     };
     
@@ -148,10 +128,6 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({ isOpen, onClose, o
         e.preventDefault();
         const finalData = {
             ...formData,
-            rentalDetails: formData.rentalDetails ? {
-                ...formData.rentalDetails,
-                rentAmount: parseFormattedCurrency(rentAmountString)
-            } : undefined,
             saleDetails: formData.saleDetails ? {
                 ...formData.saleDetails,
                 price: parseFormattedCurrency(salePriceString)
@@ -165,9 +141,6 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({ isOpen, onClose, o
 
     if (!isOpen) return null;
     
-    const companyContacts = contacts.filter(c => c.company === selectedCompany);
-    const companyIndexes = adjustmentIndexes.filter(i => i.company === selectedCompany);
-
     return (
         <>
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto" role="dialog">
@@ -181,72 +154,6 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({ isOpen, onClose, o
                         <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
                             <fieldset className="space-y-4">
                                 <legend className="text-lg font-semibold text-slate-800 dark:text-slate-200">Informações Gerais</legend>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Imagem do Imóvel</label>
-                                    <div className="mt-2 space-y-4">
-                                        <div>
-                                            <button
-                                                type="button"
-                                                onClick={() => fileInputRef.current?.click()}
-                                                className="bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors text-sm flex items-center gap-2"
-                                            >
-                                                <UploadIcon className="w-5 h-5" />
-                                                Carregar Imagem
-                                            </button>
-                                            <input
-                                                type="file"
-                                                ref={fileInputRef}
-                                                onChange={handleFileChange}
-                                                accept="image/png, image/jpeg, image/webp"
-                                                className="hidden"
-                                            />
-                                        </div>
-                                         {customAvatars.length > 0 && (
-                                            <div>
-                                                <h4 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Suas Imagens</h4>
-                                                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2">
-                                                    {customAvatars.map((url) => (
-                                                        <button
-                                                            key={url}
-                                                            type="button"
-                                                            onClick={() => setFormData(prev => ({ ...prev, icon: url }))}
-                                                            className={`p-0.5 rounded-lg transition-all duration-200 aspect-square ${
-                                                                formData.icon === url
-                                                                    ? 'ring-2 ring-offset-2 ring-indigo-500 ring-offset-white dark:ring-offset-slate-900'
-                                                                    : 'hover:ring-2 hover:ring-indigo-300'
-                                                            }`}
-                                                            aria-label="Selecionar imagem"
-                                                            aria-pressed={formData.icon === url}
-                                                        >
-                                                            <img src={url} alt="Opção de imagem customizada" className="w-full h-full object-cover rounded-lg" />
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                        <div>
-                                            <h4 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Imagens Padrão</h4>
-                                            <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2">
-                                                {PROPERTY_AVATARS.map((url) => (
-                                                    <button
-                                                        key={url}
-                                                        type="button"
-                                                        onClick={() => setFormData(prev => ({ ...prev, icon: url }))}
-                                                        className={`p-0.5 rounded-lg transition-all duration-200 aspect-square ${
-                                                            formData.icon === url
-                                                                ? 'ring-2 ring-offset-2 ring-indigo-500 ring-offset-white dark:ring-offset-slate-900'
-                                                                : 'hover:ring-2 hover:ring-indigo-300'
-                                                        }`}
-                                                        aria-label="Selecionar imagem"
-                                                        aria-pressed={formData.icon === url}
-                                                    >
-                                                        <img src={url} alt="Opção de imagem padrão" className="w-full h-full object-cover rounded-lg" />
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Nome de Identificação</label>
@@ -256,7 +163,7 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({ isOpen, onClose, o
                                         <label htmlFor="ownerId" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Proprietário</label>
                                         <select name="ownerId" id="ownerId" value={formData.ownerId} onChange={handleChange} required className={selectStyle}>
                                             <option value="">Selecione um contato</option>
-                                            {companyContacts.filter(c => c.type === 'Proprietário').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                            {contacts.filter(c => c.company === selectedCompany && c.type === 'Proprietário').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select>
                                     </div>
                                 </div>
@@ -337,46 +244,6 @@ export const PropertyModal: React.FC<PropertyModalProps> = ({ isOpen, onClose, o
                                     </div>
                                 </div>
                             </fieldset>
-
-                            {formData.status === 'Alugado' && (
-                                <fieldset className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-                                    <legend className="text-lg font-semibold text-slate-800 dark:text-slate-200">Detalhes do Aluguel</legend>
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                        <div className="md:col-span-2">
-                                            <label htmlFor="tenantId" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Inquilino</label>
-                                            <select name="tenantId" id="tenantId" value={formData.rentalDetails?.tenantId || ''} onChange={handleRentalDetailsChange} required className={selectStyle}>
-                                                <option value="">Selecione um inquilino</option>
-                                                {companyContacts.filter(c => c.type === 'Cliente').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label htmlFor="rentAmount" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Valor do Aluguel (R$)</label>
-                                            <input type="text" inputMode="decimal" id="rentAmount" value={rentAmountString} onChange={e => setRentAmountString(formatCurrencyOnInput(e.target.value))} required className={inputStyle} placeholder="0,00" />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="paymentDay" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dia do Vencimento</label>
-                                            <input type="number" min="1" max="31" name="paymentDay" id="paymentDay" value={formData.rentalDetails?.paymentDay || ''} onChange={handleRentalDetailsChange} required className={inputStyle} />
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label htmlFor="contractStart" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Início do Contrato</label>
-                                            <input type="date" name="contractStart" id="contractStart" value={formData.rentalDetails?.contractStart || ''} onChange={handleRentalDetailsChange} required className={inputStyle} />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="contractEnd" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Fim do Contrato</label>
-                                            <input type="date" name="contractEnd" id="contractEnd" value={formData.rentalDetails?.contractEnd || ''} onChange={handleRentalDetailsChange} required className={inputStyle} />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="adjustmentIndexId" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Índice de Reajuste</label>
-                                            <select name="adjustmentIndexId" id="adjustmentIndexId" value={formData.rentalDetails?.adjustmentIndexId || ''} onChange={handleRentalDetailsChange} className={selectStyle}>
-                                                <option value="">Nenhum</option>
-                                                {companyIndexes.map(idx => <option key={idx.id} value={idx.id}>{idx.name}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </fieldset>
-                            )}
                             
                             {formData.status === 'À Venda' && (
                                 <fieldset className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">

@@ -158,7 +158,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ companies, setCo
 
     const handleDeleteUser = (id: string) => {
         if(id === currentUser.id) {
-            alert("Você не pode excluir sua própria conta.");
+            // FIX: Corrected typo in alert message.
+            alert("Você não pode excluir sua própria conta.");
             return;
         }
         if (window.confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')) {

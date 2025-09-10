@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import type { InvoiceItem, InvoiceData, Contact, Transaction, Company, Property, DanfeData, CostCenter, Category, AdjustmentIndex, Project } from '../types';
+import type { InvoiceItem, InvoiceData, Contact, Transaction, Company, Property, DanfeData, CostCenter, Category, AdjustmentIndex, Project, Contract } from '../types';
 import { MOCK_BANKS, MOCK_BANK_ACCOUNTS } from '../constants';
 import { BoletoPreviewModal } from './BoletoPreviewModal';
 import { DanfePreviewModal } from './DanfePreviewModal';
@@ -225,9 +225,10 @@ interface InvoiceGeneratorProps {
     costCenters: CostCenter[];
     categories: Category[];
     adjustmentIndexes: AdjustmentIndex[];
+    contracts: Contract[];
 }
 
-export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose, contacts, setContacts, receivables, setReceivables, selectedCompany, companies, properties, projects, initialData, costCenters, categories, adjustmentIndexes }) => {
+export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onClose, contacts, setContacts, receivables, setReceivables, selectedCompany, companies, properties, projects, initialData, costCenters, categories, adjustmentIndexes, contracts }) => {
     const [submission, setSubmission] = useState<{ data: InvoiceData, installments?: number, nfGenerated: boolean } | null>(null);
     const [customer, setCustomer] = useState('');
     const [dueDate, setDueDate] = useState('');
@@ -399,9 +400,10 @@ export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onCl
      useEffect(() => {
         if (propertyId && !editingId) {
             const selectedProperty = properties.find(p => p.id === propertyId);
-            if (selectedProperty) {
+            const contract = contracts.find(c => c.id === selectedProperty?.contractId);
+            if (selectedProperty && contract) {
                 let newDescription = '';
-                let newPrice = (selectedProperty.rentalDetails?.rentAmount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                let newPrice = (contract.rentAmount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
                 const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
                 const monthName = monthNames[parseInt(referenceMonth, 10)];
@@ -409,10 +411,10 @@ export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onCl
                 switch (chargeType) {
                     case 'rent':
                         newDescription = `Aluguel Mensal referente a ${monthName} de ${referenceYear} para o imóvel "${selectedProperty.name}"`;
-                        if (selectedProperty.rentalDetails?.paymentDay) {
+                        if (contract.paymentDay) {
                             const year = parseInt(referenceYear, 10);
                             const month = parseInt(referenceMonth, 10); // 0-indexed
-                            const day = selectedProperty.rentalDetails.paymentDay;
+                            const day = contract.paymentDay;
                             const newDueDate = new Date(year, month, day);
                             setDueDate(newDueDate.toISOString().split('T')[0]);
                         }
@@ -441,7 +443,7 @@ export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onCl
         } else if (!propertyId && !editingId) {
              setIsRentalCharge(false);
         }
-    }, [propertyId, chargeType, referenceMonth, referenceYear, properties, editingId]);
+    }, [propertyId, chargeType, referenceMonth, referenceYear, properties, contracts, editingId]);
     
     // Auto-fill cost center when project is selected
     useEffect(() => {

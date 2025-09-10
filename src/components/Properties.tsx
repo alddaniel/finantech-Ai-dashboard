@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardContent } from './ui/Card';
 import { Badge } from './ui/Badge';
 import { PropertyModal } from './PropertyModal';
-import type { Property, Contact, Transaction, AdjustmentIndex, ToastMessage } from '../types';
+import type { Property, Contact, Transaction, AdjustmentIndex, ToastMessage, Contract } from '../types';
 import { generateAndAdjustRentReceivables, parseDate } from '../services/apiService';
 import { IconDisplay } from './ui/IconComponents';
 
@@ -19,6 +19,7 @@ interface PropertiesProps {
     addToast: (toast: Omit<ToastMessage, 'id'>) => void;
     customAvatars: string[];
     setCustomAvatars: React.Dispatch<React.SetStateAction<string[]>>;
+    contracts: Contract[];
 }
 
 const formatCurrency = (value: number) => {
@@ -117,7 +118,7 @@ const PropertyCard: React.FC<{
     );
 };
 
-export const Properties: React.FC<PropertiesProps> = ({ properties, setProperties, contacts, payables, setPayables, receivables, setReceivables, selectedCompany, adjustmentIndexes, addToast, customAvatars, setCustomAvatars }) => {
+export const Properties: React.FC<PropertiesProps> = ({ properties, setProperties, contacts, payables, setPayables, receivables, setReceivables, selectedCompany, adjustmentIndexes, addToast, customAvatars, setCustomAvatars, contracts }) => {
     const [isModalOpen, setModalOpen] = useState(false);
     const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
 
@@ -138,24 +139,12 @@ export const Properties: React.FC<PropertiesProps> = ({ properties, setPropertie
             if (isNew) return [...prev, finalProperty];
             return prev.map(p => p.id === finalProperty.id ? finalProperty : p);
         });
-
-        // Use the centralized utility function to generate/update rent receivables
-        const { receivablesToKeep, newReceivables } = generateAndAdjustRentReceivables(finalProperty, adjustmentIndexes, receivables);
-        setReceivables([...receivablesToKeep, ...newReceivables]);
         
         addToast({
             type: 'success',
             title: 'Imóvel Salvo!',
             description: `Os dados do imóvel "${finalProperty.name}" foram salvos com sucesso.`
         });
-
-        if (newReceivables.length > 0) {
-            addToast({
-                type: 'info',
-                title: 'Aluguéis Gerados',
-                description: `${newReceivables.length} parcelas de aluguel foram geradas/atualizadas em Contas a Receber.`
-            });
-        }
     };
     
     return (
@@ -175,7 +164,8 @@ export const Properties: React.FC<PropertiesProps> = ({ properties, setPropertie
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {companyProperties.map(prop => {
                         const owner = contacts.find(c => c.id === prop.ownerId);
-                        const tenant = prop.rentalDetails ? contacts.find(c => c.id === prop.rentalDetails?.tenantId) : undefined;
+                        const contract = contracts.find(c => c.id === prop.contractId);
+                        const tenant = contract ? contacts.find(c => c.id === contract.tenantId) : undefined;
                         
                         const today = new Date();
                         const currentMonth = today.getMonth();
@@ -239,7 +229,6 @@ export const Properties: React.FC<PropertiesProps> = ({ properties, setPropertie
                 propertyToEdit={propertyToEdit}
                 contacts={contacts}
                 selectedCompany={selectedCompany}
-                adjustmentIndexes={adjustmentIndexes}
                 customAvatars={customAvatars}
                 setCustomAvatars={setCustomAvatars}
             />

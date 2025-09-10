@@ -1,9 +1,9 @@
-export type View = 'dashboard' | 'payable' | 'receipts' | 'cash_management' | 'reports' | 'ai_advisor' | 'fiscal_module' | 'crm' | 'integrations' | 'user_management' | 'contacts' | 'help' | 'generated_invoices' | 'accountant_panel' | 'bank_accounts' | 'bank_reconciliation' | 'recurrences' | 'payable_recurrences' | 'payment_schedule' | 'receivable_schedule' | 'cash_flow_records' | 'properties' | 'schema_generator' | 'cost_centers' | 'company_profile' | 'plan_subscription' | 'settings' | 'indexes' | 'categories' | 'projects' | 'proposals';
+export type View = 'dashboard' | 'payable' | 'receipts' | 'cash_management' | 'reports' | 'ai_advisor' | 'fiscal_module' | 'crm' | 'integrations' | 'user_management' | 'contacts' | 'help' | 'generated_invoices' | 'accountant_panel' | 'bank_accounts' | 'bank_reconciliation' | 'recurrences' | 'payable_recurrences' | 'payment_schedule' | 'receivable_schedule' | 'cash_flow_records' | 'properties' | 'schema_generator' | 'cost_centers' | 'company_profile' | 'plan_subscription' | 'settings' | 'indexes' | 'categories' | 'projects' | 'proposals' | 'contracts';
 
 export type Role = 'Admin' | 'Manager' | 'Analyst' | 'Contador';
 
 // --- New Permission System Types ---
-export type ModuleKey = 'dashboard' | 'payable' | 'receipts' | 'contacts' | 'bank_accounts' | 'properties' | 'reports' | 'user_management' | 'crm' | 'fiscal_module' | 'integrations' | 'ai_advisor' | 'projects';
+export type ModuleKey = 'dashboard' | 'payable' | 'receipts' | 'contacts' | 'bank_accounts' | 'properties' | 'reports' | 'user_management' | 'crm' | 'fiscal_module' | 'integrations' | 'ai_advisor' | 'projects' | 'contracts';
 export type PermissionAction = 'view' | 'edit' | 'delete';
 export type UserPermissions = Partial<Record<ModuleKey, Partial<Record<PermissionAction, boolean>>>>;
 // --- End New Permission System Types ---
@@ -213,16 +213,6 @@ export interface AccountantRequest {
   priority?: 'High' | 'Medium' | 'Low';
 }
 
-// Types for Properties Module
-export interface RentalDetails {
-    tenantId: string;
-    rentAmount: number;
-    contractStart: string;
-    contractEnd: string;
-    paymentDay: number;
-    adjustmentIndexId?: string;
-}
-
 export interface SaleDetails {
     price: number;
 }
@@ -234,7 +224,7 @@ export interface Property {
     type: 'Apartamento' | 'Casa' | 'Terreno' | 'Comercial';
     status: 'Disponível' | 'Alugado' | 'Vendido' | 'À Venda';
     ownerId: string; // Contact ID of the owner
-    rentalDetails?: RentalDetails;
+    contractId?: string; // ID of the linked Contract
     saleDetails?: SaleDetails;
     company: string;
     iptuAmount?: number;
@@ -242,6 +232,21 @@ export interface Property {
     iptuDueDate?: number; // Dia do mês
     condoDueDate?: number; // Dia do mês
     icon?: string;
+}
+
+// Contract Management Module
+export interface Contract {
+    id: string;
+    propertyId: string;
+    tenantId: string;
+    rentAmount: number;
+    startDate: string; // YYYY-MM-DD
+    endDate: string; // YYYY-MM-DD
+    paymentDay: number;
+    adjustmentIndexId: string;
+    company: string;
+    status: 'Ativo' | 'Encerrado' | 'Rascunho';
+    description: string; 
 }
 
 export interface CostCenter {
