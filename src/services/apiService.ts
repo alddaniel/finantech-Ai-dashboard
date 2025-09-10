@@ -1,4 +1,3 @@
-
 import type { Company, User, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, InvoiceItem, Property, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, DashboardSettings } from '../types';
 import { MOCK_COMPANIES, MOCK_USERS, MOCK_CONTACTS, MOCK_PAYABLES, MOCK_RECEIVABLES, MOCK_ACCOUNTANT_REQUESTS, MOCK_BANK_ACCOUNTS, MOCK_BANK_TRANSACTIONS, MOCK_PROPERTIES, MOCK_NOTIFICATIONS, MOCK_SYSTEM_TRANSACTIONS, MOCK_COST_CENTERS_DATA, MOCK_CATEGORIES_DATA, MOCK_ADJUSTMENT_INDEXES_DATA, MOCK_PROJECTS, MOCK_PROPOSALS } from '../constants';
 
@@ -323,7 +322,6 @@ export interface ApiResponse {
     errorMessage?: string;
 }
 
-// FIX: Added missing utility function `parseFormattedCurrency` to resolve a reference error.
 const parseFormattedCurrency = (value: string): number => {
     if (typeof value !== 'string' || !value) return 0;
     const cleanedValue = value.replace(/R\$\s?/, '').replace(/\./g, '');
