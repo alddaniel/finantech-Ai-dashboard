@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import type { View, Company, User, Role, Notification } from '../types';
 import { VIEWS } from '../constants';
@@ -14,13 +12,14 @@ interface SidebarProps {
   company?: Company;
   currentUser: User;
   onLogout: () => void;
-  className?: string;
   isAccountantModuleEnabled: boolean;
   onOpenInvoiceModal: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   notifications: Notification[];
   setIsNotificationsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isMobileSidebarOpen: boolean;
+  setIsMobileSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 type SubMenuType = 'main' | 'pagamentos' | 'recebimentos' | 'projetos';
@@ -65,13 +64,18 @@ const NavItem: React.FC<{
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
     activeView, setActiveView, selectedCompany, setSelectedCompany, companies, 
-    company, currentUser, onLogout, className, isAccountantModuleEnabled, 
+    company, currentUser, onLogout, isAccountantModuleEnabled, 
     onOpenInvoiceModal, isFullscreen, onToggleFullscreen,
-    notifications, setIsNotificationsOpen
+    notifications, setIsNotificationsOpen, isMobileSidebarOpen, setIsMobileSidebarOpen
 }) => {
   const [activeSubMenu, setActiveSubMenu] = useState<SubMenuType>('main');
 
   const unreadNotificationsCount = notifications.filter(n => !n.isRead && n.company === selectedCompany).length;
+
+  const handleNavigation = (action: () => void) => {
+    action();
+    setIsMobileSidebarOpen(false);
+  }
 
   const recebimentosSubItems: Array<{ label: string; view?: View; action?: () => void; activeChecks: View[]; icon: React.ReactNode; }> = [
       { label: 'Lançar/Baixar Receita', view: VIEWS.RECEIPTS, activeChecks: [VIEWS.RECEIPTS], icon: <MoneyInIcon /> },
@@ -161,10 +165,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               label={item.label}
               icon={item.icon}
               isActive={item.view ? activeView === item.view : false}
-              onClick={() => {
+              onClick={() => handleNavigation(() => {
                   if(item.view) setActiveView(item.view);
                   if(item.action) item.action();
-              }}
+              })}
             />
           ))}
         </ul>
@@ -173,7 +177,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }
 
   return (
-    <aside className={`relative w-72 flex-shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-4 flex flex-col border-r border-slate-900/5 dark:border-white/10 z-20 overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/30 ${className || ''}`}>
+    <aside className={`fixed inset-y-0 left-0 z-30 w-72 flex-shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-4 flex flex-col border-r border-slate-900/5 dark:border-white/10 overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/30 transform transition-transform duration-300 ease-in-out ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:shadow-none`}>
       <div className="flex items-center gap-3 px-2 mb-8">
         <div className="bg-indigo-600 p-2.5 rounded-lg">
           <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -191,21 +195,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
               label="Dashboard"
               icon={<DashboardIcon />}
               isActive={activeView === VIEWS.DASHBOARD}
-              onClick={() => setActiveView(VIEWS.DASHBOARD)}
+              onClick={() => handleNavigation(() => setActiveView(VIEWS.DASHBOARD))}
             />
              <NavItem
                 key={VIEWS.BANK_RECONCILIATION}
                 label="Conciliação Bancária"
                 icon={<ReconciliationIcon />}
                 isActive={activeView === VIEWS.BANK_RECONCILIATION}
-                onClick={() => setActiveView(VIEWS.BANK_RECONCILIATION)}
+                onClick={() => handleNavigation(() => setActiveView(VIEWS.BANK_RECONCILIATION))}
              />
              <NavItem
                 key={VIEWS.CONTACTS}
                 label="Contatos"
                 icon={<AddressBookIcon />}
                 isActive={activeView === VIEWS.CONTACTS}
-                onClick={() => setActiveView(VIEWS.CONTACTS)}
+                onClick={() => handleNavigation(() => setActiveView(VIEWS.CONTACTS))}
              />
              <div className="px-2.5 py-3">
                  <div className="border-t border-slate-200 dark:border-slate-800"></div>
@@ -239,7 +243,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               label="Extrato de Caixa"
               icon={<CashFlowRecordsIcon />}
               isActive={activeView === VIEWS.CASH_FLOW_RECORDS}
-              onClick={() => setActiveView(VIEWS.CASH_FLOW_RECORDS)}
+              onClick={() => handleNavigation(() => setActiveView(VIEWS.CASH_FLOW_RECORDS))}
             />
             <div className="px-2.5 py-3">
                  <div className="border-t border-slate-200 dark:border-slate-800"></div>
@@ -248,11 +252,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               if (item.module === 'accountant' && !isAccountantModuleEnabled) return null;
               if (item.module === 'properties' && !company?.enabledModules.includes('properties')) return null;
               if (item.module === 'fiscal' && !company?.enabledModules.includes('fiscal')) return null;
-              if (item.view === VIEWS.INTEGRATIONS && !company?.enabledModules.includes('integrations')) {
-                // Special case for Integrations: always show if the module is enabled,
-                // but for other plans it's accessed via Settings, so we hide it from main menu.
-                // Correction: The user wants it always visible. So we remove the conditional rendering.
-              }
+              if (item.view === VIEWS.INTEGRATIONS && !company?.enabledModules.includes('integrations')) return null;
               if (item.module === 'ai_advisor' && !company?.enabledModules.includes('ai_advisor')) return null;
               if (item.roles && !item.roles.includes(currentUser.role)) return null;
               
@@ -263,7 +263,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   view={item.view}
                   icon={item.icon}
                   isActive={activeView === item.view}
-                  onClick={() => setActiveView(item.view)}
+                  onClick={() => handleNavigation(() => setActiveView(item.view))}
                 />
               );
             })}
@@ -277,14 +277,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 label="Configurações"
                 icon={<SettingsIcon />}
                 isActive={settingsRelatedViews.includes(activeView)}
-                onClick={() => setActiveView(VIEWS.SETTINGS)}
+                onClick={() => handleNavigation(() => setActiveView(VIEWS.SETTINGS))}
             />
             <NavItem
                 key={VIEWS.HELP}
                 label="Ajuda"
                 icon={<HelpIcon />}
                 isActive={activeView === VIEWS.HELP}
-                onClick={() => setActiveView(VIEWS.HELP)}
+                onClick={() => handleNavigation(() => setActiveView(VIEWS.HELP))}
             />
           </ul>
         </div>
