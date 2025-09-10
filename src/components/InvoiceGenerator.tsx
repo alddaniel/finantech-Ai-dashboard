@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { InvoiceItem, InvoiceData, Contact, Transaction, Company, Property, DanfeData, CostCenter, Category, AdjustmentIndex, Project } from '../types';
 import { MOCK_BANKS, MOCK_BANK_ACCOUNTS } from '../constants';
@@ -834,25 +833,25 @@ export const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ isOpen, onCl
                                         <input type="text" id="paymentMethod" value={receivableToEdit.paymentMethod || 'Não registrado'} disabled className={`${inputStyle} mt-1`} />
                                      </div>
                                 )}
-                                <div>
-                                    <label htmlFor="costCenter" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Centro de Custo</label>
-                                    <select id="costCenter" value={costCenter} onChange={e => setCostCenter(e.target.value)} className={`${selectStyle} mt-1`} required disabled={!!projectId}>
-                                        {companyCostCenters.length > 0 ? (
-                                            companyCostCenters.map(cc => <option key={cc.id} value={cc.name}>{cc.name}</option>)
-                                        ) : (
-                                            <option value="" disabled>Nenhum centro de custo</option>
-                                        )}
-                                    </select>
-                                </div>
-                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
-                                     <div>
+                                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="md:col-span-1">
+                                        <label htmlFor="costCenter" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Centro de Custo</label>
+                                        <select id="costCenter" value={costCenter} onChange={e => setCostCenter(e.target.value)} className={`${selectStyle} mt-1`} required disabled={!!projectId}>
+                                            {companyCostCenters.length > 0 ? (
+                                                companyCostCenters.map(cc => <option key={cc.id} value={cc.name}>{cc.name}</option>)
+                                            ) : (
+                                                <option value="" disabled>Nenhum centro de custo</option>
+                                            )}
+                                        </select>
+                                    </div>
+                                    <div className="md:col-span-1">
                                         <label htmlFor="propertyId" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Vincular a Imóvel (Opcional)</label>
                                         <select id="propertyId" value={propertyId} onChange={e => setPropertyId(e.target.value)} className={`${selectStyle} mt-1`}>
                                             <option value="">Nenhum</option>
                                             {companyProperties.map(prop => <option key={prop.id} value={prop.id}>{prop.name}</option>)}
                                         </select>
                                     </div>
-                                    <div>
+                                    <div className="md:col-span-1">
                                         <label htmlFor="projectId" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Vincular a Projeto (Opcional)</label>
                                         <select id="projectId" value={projectId} onChange={e => setProjectId(e.target.value)} className={`${selectStyle} mt-1`}>
                                             <option value="">Nenhum</option>
