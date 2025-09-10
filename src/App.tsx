@@ -172,18 +172,18 @@ export default function App() {
   useEffect(() => { if (!isLoading && costCenters.length) apiService.saveCostCenters(costCenters); }, [costCenters, isLoading]);
   useEffect(() => { if (!isLoading && categories.length) apiService.saveCategories(categories); }, [categories, isLoading]);
   useEffect(() => { if (!isLoading && adjustmentIndexes.length) apiService.saveAdjustmentIndexes(adjustmentIndexes); }, [adjustmentIndexes, isLoading]);
-  useEffect(() => { if (!isLoading && customAvatars.length > 0) apiService.saveCustomAvatars(customAvatars); }, [customAvatars, isLoading]);
+  useEffect(() => { if (!isLoading) apiService.saveCustomAvatars(customAvatars); }, [customAvatars, isLoading]);
   useEffect(() => { if (!isLoading) apiService.saveIsAuthenticated(isAuthenticated); }, [isAuthenticated, isLoading]);
   useEffect(() => { if (!isLoading && selectedCompany) apiService.saveSelectedCompany(selectedCompany); }, [selectedCompany, isLoading]);
-  useEffect(() => { if (!isLoading && payables.length) apiService.savePayables(payables); }, [payables, isLoading]);
-  useEffect(() => { if (!isLoading && receivables.length) apiService.saveReceivables(receivables); }, [receivables, isLoading]);
-  useEffect(() => { if (!isLoading && currentUser) apiService.saveCurrentUser(currentUser); }, [currentUser, isLoading]);
+  useEffect(() => { if (!isLoading) apiService.savePayables(payables); }, [payables, isLoading]);
+  useEffect(() => { if (!isLoading) apiService.saveReceivables(receivables); }, [receivables, isLoading]);
+  useEffect(() => { if (!isLoading) apiService.saveCurrentUser(currentUser); }, [currentUser, isLoading]);
   useEffect(() => { if (!isLoading) apiService.saveIsAccountantModuleEnabled(isAccountantModuleEnabled); }, [isAccountantModuleEnabled, isLoading]);
-  useEffect(() => { if (!isLoading && accountantRequests.length) apiService.saveAccountantRequests(accountantRequests); }, [accountantRequests, isLoading]);
-  useEffect(() => { if (!isLoading && bankAccounts.length) apiService.saveBankAccounts(bankAccounts); }, [bankAccounts, isLoading]);
-  useEffect(() => { if (!isLoading && bankTransactions.length) apiService.saveBankTransactions(bankTransactions); }, [bankTransactions, isLoading]);
-  useEffect(() => { if (!isLoading && systemTransactions.length) apiService.saveSystemTransactions(systemTransactions); }, [systemTransactions, isLoading]);
-  useEffect(() => { if (!isLoading && notifications.length) apiService.saveNotifications(notifications); }, [notifications, isLoading]);
+  useEffect(() => { if (!isLoading) apiService.saveAccountantRequests(accountantRequests); }, [accountantRequests, isLoading]);
+  useEffect(() => { if (!isLoading) apiService.saveBankAccounts(bankAccounts); }, [bankAccounts, isLoading]);
+  useEffect(() => { if (!isLoading) apiService.saveBankTransactions(bankTransactions); }, [bankTransactions, isLoading]);
+  useEffect(() => { if (!isLoading) apiService.saveSystemTransactions(systemTransactions); }, [systemTransactions, isLoading]);
+  useEffect(() => { if (!isLoading) apiService.saveNotifications(notifications); }, [notifications, isLoading]);
 
   
   // When user logs in or out, adjust the selected company
@@ -703,7 +703,7 @@ export default function App() {
   );
 
   return (
-    <div className="flex min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+    <div className="relative md:flex min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
         <Sidebar 
           activeView={activeView} 
           setActiveView={setActiveView} 

@@ -1,3 +1,4 @@
+
 import type { Company, User, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, InvoiceItem, Property, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal, DashboardSettings } from '../types';
 import { MOCK_COMPANIES, MOCK_USERS, MOCK_CONTACTS, MOCK_PAYABLES, MOCK_RECEIVABLES, MOCK_ACCOUNTANT_REQUESTS, MOCK_BANK_ACCOUNTS, MOCK_BANK_TRANSACTIONS, MOCK_PROPERTIES, MOCK_NOTIFICATIONS, MOCK_SYSTEM_TRANSACTIONS, MOCK_COST_CENTERS_DATA, MOCK_CATEGORIES_DATA, MOCK_ADJUSTMENT_INDEXES_DATA, MOCK_PROJECTS, MOCK_PROPOSALS } from '../constants';
 
@@ -133,27 +134,27 @@ export const getDashboardSettings = (): Promise<DashboardSettings> => apiGet('fi
 export const saveDashboardSettings = (settings: DashboardSettings): Promise<void> => apiSet('finantech_dashboard_settings', settings);
 
 // --- Initial Data Loader ---
-// FIX: Added 'isAccountantModuleEnabled' and 'accountantRequests' to the data fetching and return object.
 export const fetchAllInitialData = async () => {
     const [
         companies, users, contacts, properties, projects, proposals,
         costCenters, categories, adjustmentIndexes, customAvatars,
         payables, receivables, bankAccounts, bankTransactions,
-        systemTransactions, notifications, isAccountantModuleEnabled, accountantRequests
+        systemTransactions, notifications, isAccountantModuleEnabled, accountantRequests,
+        dashboardSettings
     ] = await Promise.all([
         getCompanies(), getUsers(), getContacts(), getProperties(), getProjects(), getProposals(),
         getCostCenters(), getCategories(), getAdjustmentIndexes(), getCustomAvatars(),
         getPayables(), getReceivables(), getBankAccounts(), getBankTransactions(),
-        getSystemTransactions(), getNotifications(),
-        getIsAccountantModuleEnabled(),
-        getAccountantRequests(),
+        getSystemTransactions(), getNotifications(), getIsAccountantModuleEnabled(),
+        getAccountantRequests(), getDashboardSettings()
     ]);
 
     return {
         companies, users, contacts, properties, projects, proposals,
         costCenters, categories, adjustmentIndexes, customAvatars,
         payables, receivables, bankAccounts, bankTransactions,
-        systemTransactions, notifications, isAccountantModuleEnabled, accountantRequests
+        systemTransactions, notifications, isAccountantModuleEnabled, accountantRequests,
+        dashboardSettings
     };
 };
 
@@ -161,13 +162,6 @@ export const fetchAllInitialData = async () => {
 // ====================================================================================
 // UTILITY FUNCTIONS (Unchanged)
 // ====================================================================================
-
-const parseFormattedCurrency = (value: string): number => {
-    if (typeof value !== 'string' || !value) return 0;
-    const cleanedValue = value.replace(/R\$\s?/, '').replace(/\./g, '');
-    const numericString = cleanedValue.replace(',', '.');
-    return parseFloat(numericString) || 0;
-};
 
 export const parseDate = (dateStr: string): Date => {
     let date;
@@ -329,10 +323,18 @@ export interface ApiResponse {
     errorMessage?: string;
 }
 
+// FIX: Added missing utility function `parseFormattedCurrency` to resolve a reference error.
+const parseFormattedCurrency = (value: string): number => {
+    if (typeof value !== 'string' || !value) return 0;
+    const cleanedValue = value.replace(/R\$\s?/, '').replace(/\./g, '');
+    const numericString = cleanedValue.replace(',', '.');
+    return parseFloat(numericString) || 0;
+};
+
 const generateMockNFeXml = (payload: ApiPayload, providerId: string, cfop: string): string => {
     // ... (implementation is unchanged)
     const itemsXml = payload.items.map((item, index) => {
-        const price = parseFormattedCurrency(item.price);
+        const price = typeof item.price === 'string' ? parseFormattedCurrency(item.price) : item.price;
         const total = price * item.quantity;
         return `
         <det nItem="${index + 1}">
