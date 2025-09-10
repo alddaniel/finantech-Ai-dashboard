@@ -138,19 +138,19 @@ export const fetchAllInitialData = async () => {
         companies, users, contacts, properties, projects, proposals,
         costCenters, categories, adjustmentIndexes, customAvatars,
         payables, receivables, bankAccounts, bankTransactions,
-        systemTransactions, notifications, isAccountantModuleEnabled
+        systemTransactions, notifications
     ] = await Promise.all([
         getCompanies(), getUsers(), getContacts(), getProperties(), getProjects(), getProposals(),
         getCostCenters(), getCategories(), getAdjustmentIndexes(), getCustomAvatars(),
         getPayables(), getReceivables(), getBankAccounts(), getBankTransactions(),
-        getSystemTransactions(), getNotifications(), getIsAccountantModuleEnabled()
+        getSystemTransactions(), getNotifications()
     ]);
 
     return {
         companies, users, contacts, properties, projects, proposals,
         costCenters, categories, adjustmentIndexes, customAvatars,
         payables, receivables, bankAccounts, bankTransactions,
-        systemTransactions, notifications, isAccountantModuleEnabled
+        systemTransactions, notifications
     };
 };
 
@@ -158,6 +158,14 @@ export const fetchAllInitialData = async () => {
 // ====================================================================================
 // UTILITY FUNCTIONS (Unchanged)
 // ====================================================================================
+
+// FIX: Add missing 'parseFormattedCurrency' utility function.
+const parseFormattedCurrency = (value: string): number => {
+    if (typeof value !== 'string' || !value) return 0;
+    const cleanedValue = value.replace(/R\$\s?/, '').replace(/\./g, '');
+    const numericString = cleanedValue.replace(',', '.');
+    return parseFloat(numericString) || 0;
+};
 
 export const parseDate = (dateStr: string): Date => {
     let date;
@@ -321,7 +329,24 @@ export interface ApiResponse {
 
 const generateMockNFeXml = (payload: ApiPayload, providerId: string, cfop: string): string => {
     // ... (implementation is unchanged)
-    return `<?xml version="1.0" encoding="UTF-8"?><NFe>...</NFe>`; // Abridged for brevity
+    const itemsXml = payload.items.map((item, index) => {
+        const price = parseFormattedCurrency(item.price);
+        const total = price * item.quantity;
+        return `
+        <det nItem="${index + 1}">
+            <prod>
+                <cProd>PROD-${item.id}</cProd>
+                <xProd>${item.description}</xProd>
+                <NCM>22221100</NCM>
+                <CFOP>${cfop}</CFOP>
+                <uCom>UN</uCom>
+                <qCom>${item.quantity.toFixed(4)}</qCom>
+                <vUnCom>${price.toFixed(2)}</vUnCom>
+                <vProd>${total.toFixed(2)}</vProd>
+            </prod>
+        </det>`;
+    }).join('');
+    return `<?xml version="1.0" encoding="UTF-8"?><NFe><infNFe Id="NFe${providerId}"><ide><nNF>123</nNF><serie>1</serie><dhEmi>${new Date().toISOString()}</dhEmi></ide><emit><xNome>${payload.issuer.name}</xNome></emit><dest><xNome>${payload.customer.name}</xNome></dest>${itemsXml}<total><ICMSTot><vNF>${payload.total.toFixed(2)}</vNF></ICMSTot></total></infNFe></NFe>`;
 };
 
 export const emitirNFe = (payload: ApiPayload): Promise<ApiResponse> => {

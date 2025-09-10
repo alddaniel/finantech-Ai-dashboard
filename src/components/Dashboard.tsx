@@ -7,7 +7,6 @@ import * as apiService from '../services/apiService';
 import type { View, Transaction, AccountantRequest, User, BankAccount, BankTransaction, DashboardSettings } from '../types';
 import { VIEWS, MOCK_CASH_FLOW_DATA } from '../constants';
 import { getDashboardInsight } from '../services/geminiService';
-// FIX: Add Spinner import for loading state
 import { Spinner } from './ui/Spinner';
 
 const formatCurrency = (value: number) => {
@@ -130,16 +129,13 @@ const EmptyDashboard: React.FC<{ selectedCompany: string; onOpenExpenseModal: ()
 
 export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCompany, payables, receivables, accountantRequests, setAccountantRequests, currentUser, isAccountantModuleEnabled, bankAccounts, bankTransactions, onOpenInvoiceModal, onOpenConfirmPaymentModal, onOpenQRCodeModal }) => {
     
-    // FIX: Initialize with null to handle async loading from apiService.
     const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings | null>(null);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     
-    // FIX: Load settings asynchronously in useEffect.
     useEffect(() => {
         apiService.getDashboardSettings().then(setDashboardSettings);
     }, []);
     
-    // FIX: Remove problematic useEffect for saving. Saving is now handled explicitly.
     const handleSaveSettings = (newSettings: DashboardSettings) => {
       setDashboardSettings(newSettings);
       apiService.saveDashboardSettings(newSettings);
@@ -166,7 +162,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
     }, [filteredPayables, filteredReceivables]);
 
     useEffect(() => {
-        // FIX: Only fetch insight once settings are loaded.
         if (dashboardSettings) {
             fetchInsight();
         }
@@ -186,7 +181,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
       return balance;
     };
 
-    // FIX: Add loading state while settings are being fetched.
     if (!dashboardSettings) {
         return (
             <div className="flex h-full w-full items-center justify-center">

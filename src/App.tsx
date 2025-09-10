@@ -131,7 +131,7 @@ export default function App() {
         setBankTransactions(data.bankTransactions);
         setSystemTransactions(data.systemTransactions);
         setNotifications(data.notifications);
-        setIsAccountantModuleEnabled(data.isAccountantModuleEnabled);
+        setIsAccountantModuleEnabled(await apiService.getIsAccountantModuleEnabled());
 
         const storedUser = apiService.getCurrentUser(data.users);
         if (storedUser) {
@@ -232,14 +232,16 @@ export default function App() {
     setNotifications(prev => [newNotification, ...prev]);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await apiService.saveIsAuthenticated(false);
+    await apiService.saveCurrentUser(null);
     setIsAuthenticated(false);
     setCurrentUser(null);
   };
   
-  const handleSuperAdminLogout = () => {
+  const handleSuperAdminLogout = async () => {
       setIsSuperAdminView(false);
-      setIsAuthenticated(false);
+      await handleLogout();
   };
 
   const handleLoginSuccess = (user: User, company: string) => {
@@ -247,6 +249,9 @@ export default function App() {
     setCurrentUser(user);
     setSelectedCompany(company);
     setIsAuthenticated(true);
+    apiService.saveCurrentUser(user);
+    apiService.saveSelectedCompany(company);
+    apiService.saveIsAuthenticated(true);
   };
   
   const handleSuperAdminLoginSuccess = (user: User) => {
@@ -254,6 +259,8 @@ export default function App() {
       setCurrentUser(user);
       setIsAuthenticated(true);
       setIsSuperAdminView(true);
+      apiService.saveCurrentUser(user);
+      apiService.saveIsAuthenticated(true);
   };
   
   const handleOpenInvoiceModal = useCallback((data?: { customer: string; amount: number; } | { receivableToEdit: Transaction } | null) => {
@@ -425,7 +432,7 @@ export default function App() {
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-slate-100 dark:bg-slate-900">
-        <Spinner />
+        <Spinner className="h-12 w-12"/>
       </div>
     );
   }
