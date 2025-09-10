@@ -42,12 +42,12 @@ const KPICard: React.FC<{title: string, value: string, helpText?: string}> = ({ 
 
 
 interface CashManagementProps {
-    selectedCompany: string;
-    payables: Transaction[];
-    receivables: Transaction[];
+    selectedCompany?: string;
+    payables?: Transaction[];
+    receivables?: Transaction[];
 }
 
-export const CashManagement: React.FC<CashManagementProps> = ({ selectedCompany, payables, receivables }) => {
+export const CashManagement: React.FC<CashManagementProps> = ({ selectedCompany, payables = [], receivables = [] }) => {
     
     const [viewingMonth, setViewingMonth] = useState<{key: string; label: string;} | null>(null);
 
@@ -229,7 +229,7 @@ export const CashManagement: React.FC<CashManagementProps> = ({ selectedCompany,
                     monthLabel={viewingMonth.label}
                     payables={payables}
                     receivables={receivables}
-                    selectedCompany={selectedCompany}
+                    selectedCompany={selectedCompany || ''}
                     onClose={() => setViewingMonth(null)}
                 />
             )}

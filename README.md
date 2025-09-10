@@ -1,42 +1,54 @@
-# FinanTech AI - Pacote de Execução Local
+# FinanTech AI - Pacote de Produção
 
-Este pacote permite que você execute a aplicação FinanTech AI em sua máquina local de forma simples e rápida, sem a necessidade de configurações complexas.
+Este pacote foi estruturado como uma aplicação de produção real usando Vite.js, a ferramenta de build moderna para desenvolvimento web.
 
 ## Pré-requisitos
 
-Antes de começar, você precisa ter o **Node.js** instalado em seu computador. O Node.js inclui o `npm` (Node Package Manager), que é necessário para executar a aplicação.
+Antes de começar, você precisa ter o **Node.js** instalado em seu computador. O Node.js inclui o `npm` (Node Package Manager), que é necessário para instalar as dependências e executar a aplicação.
 
 - **Para baixar e instalar o Node.js:** [https://nodejs.org/](https://nodejs.org/)
   *(Recomendamos a versão LTS, que é mais estável).*
 
-Para verificar se você já tem o Node.js instalado, abra o terminal e digite `node -v`. Se um número de versão aparecer, você está pronto.
+## Configuração da Chave de API
 
-## Como "Instalar" e Executar
+Para que as funcionalidades de Inteligência Artificial com Gemini funcionem, você precisa configurar sua chave de API.
 
-Siga os passos abaixo no diretório onde você extraiu este arquivo `.zip`.
+1.  Crie um arquivo na raiz do projeto chamado `.env.local`.
+2.  Dentro deste arquivo, adicione a seguinte linha, substituindo `SUA_CHAVE_API_AQUI` pela sua chave real:
 
-### Passo 1: Instalar as dependências
+```
+VITE_GEMINI_API_KEY=SUA_CHAVE_API_AQUI
+```
+**Importante:** O arquivo `.env.local` já está incluído no `.gitignore`, então sua chave de API não será enviada para o controle de versão.
 
-Este passo só precisa ser executado **uma única vez**. Ele irá baixar e instalar um pequeno servidor web local necessário para rodar a aplicação.
+## Como Instalar e Executar
 
-Abra o seu terminal (Prompt de Comando no Windows, ou Terminal no macOS/Linux) na pasta do projeto e execute o seguinte comando:
+Siga os passos abaixo no terminal, dentro da pasta do projeto.
+
+### Passo 1: Instalar as Dependências
+
+Este passo só precisa ser executado **uma única vez**. Ele irá baixar e instalar todas as bibliotecas que a aplicação precisa para funcionar.
 
 ```bash
 npm install
 ```
 
-Aguarde a finalização do processo. Você verá uma pasta chamada `node_modules` ser criada.
+### Passo 2: Rodar em Modo de Desenvolvimento
 
-### Passo 2: Iniciar a Aplicação
-
-Sempre que quiser usar o sistema, execute o comando abaixo no terminal, na mesma pasta do projeto:
+Para rodar a aplicação na sua máquina local com atualizações automáticas enquanto você edita o código, use o comando:
 
 ```bash
-npm start
+npm run dev
 ```
 
-Este comando irá iniciar o servidor local e, automaticamente, abrirá a aplicação FinanTech AI no seu navegador padrão. O endereço será algo como `http://127.0.0.1:8080`.
+Este comando iniciará um servidor de desenvolvimento e informará o endereço para acessá-lo no navegador (geralmente `http://localhost:5173`).
 
----
+### Passo 3: Gerar a Versão de Produção (Build)
 
-É isso! A aplicação estará rodando localmente na sua máquina. Quando terminar de usar, você pode simplesmente fechar a aba do navegador e fechar a janela do terminal (pressionando `Ctrl + C` no terminal e depois confirmando, se necessário).
+Quando você for implantar a aplicação (por exemplo, na Vercel), você precisará gerar uma versão otimizada. O comando para isso é:
+
+```bash
+npm run build
+```
+
+Isso criará uma pasta `dist` com todos os arquivos estáticos prontos para serem publicados. A Vercel executará este comando automaticamente.

@@ -1,6 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Transaction, CashFlowData, DebtorCustomer, BankTransaction, SystemTransaction, Company } from '../types';
 
+// FIX: Per guideline, API key must come from process.env.API_KEY.
+// The vite.config.ts handles defining this variable.
 if (!process.env.API_KEY) {
     console.warn("API_KEY environment variable not set. AI features will not work.");
 }
@@ -14,7 +16,7 @@ const generateFinancialSummary = (
 ): string => {
     const totalReceitas = cashFlow.reduce((acc, item) => acc + item.receitas, 0);
     const totalDespesas = cashFlow.reduce((acc, item) => acc + item.despesas, 0);
-    const saldoFinal = cashFlow[cashFlow.length - 1].saldo;
+    const saldoFinal = cashFlow.length > 0 ? cashFlow[cashFlow.length - 1].saldo : 0;
 
     const pendingReceivables = receivables.filter(t => t.status === 'Pendente').reduce((acc, t) => acc + t.amount, 0);
     const pendingPayables = payables.filter(t => t.status === 'Pendente').reduce((acc, t) => acc + t.amount, 0);
@@ -39,6 +41,7 @@ export const getFinancialAnalysis = async (
     payables: Transaction[]
 ): Promise<string> => {
     try {
+        // FIX: Use process.env.API_KEY and update error message.
         if (!process.env.API_KEY) {
             return "Chave de API não configurada. Por favor, configure a variável de ambiente API_KEY.";
         }
@@ -70,6 +73,7 @@ export const getFinancialAnalysis = async (
 
 export const getCostCuttingSuggestions = async (payables: Transaction[]): Promise<string> => {
     try {
+        // FIX: Use process.env.API_KEY
         if (!process.env.API_KEY) {
             return "Chave de API não configurada.";
         }
@@ -101,6 +105,7 @@ export const getTaxRegimeComparison = async (
     monthlyRevenue: number,
     businessActivity: string
 ): Promise<string> => {
+    // FIX: Use process.env.API_KEY
     if (!process.env.API_KEY) {
         return "Chave de API não configurada.";
     }
@@ -142,6 +147,7 @@ export const getTaxRegimeComparison = async (
 
 export const getSmartCollectionStrategy = async (debtor: DebtorCustomer): Promise<string> => {
     try {
+        // FIX: Use process.env.API_KEY
         if (!process.env.API_KEY) {
             return "Chave de API não configurada.";
         }
@@ -186,6 +192,7 @@ export const reconcileTransactionsWithAI = async (
     bankTxs: BankTransaction[],
     systemTxs: SystemTransaction[]
 ): Promise<{ bankTxId: string; systemTxId: string; reason: string }[]> => {
+    // FIX: Use process.env.API_KEY
     if (!process.env.API_KEY) {
         throw new Error("Chave de API não configurada.");
     }
@@ -248,6 +255,7 @@ export const getSchemaModification = async (
     userPrompt: string,
     dialect: 'postgres' | 'mysql'
 ): Promise<string> => {
+    // FIX: Use process.env.API_KEY
     if (!process.env.API_KEY) {
         throw new Error("Chave de API não configurada.");
     }
@@ -293,6 +301,7 @@ export const getDashboardInsight = async (
     payables: Transaction[],
     receivables: Transaction[]
 ): Promise<string> => {
+    // FIX: Use process.env.API_KEY
     if (!process.env.API_KEY) {
         return "💡 A funcionalidade de insights está desativada. Configure sua chave de API.";
     }

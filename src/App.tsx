@@ -354,7 +354,6 @@ export default function App() {
   const handleConfirmPayment = async (transactionId: string, amount: number, paymentDate: string, paymentMethod: string) => {
     let wasUpdated = false;
 
-    // FIX: Use 'as const' to preserve the literal type of 'Pago'
     const newPayables = payables.map(t => {
         if (t.id === transactionId) {
             wasUpdated = true;
@@ -368,7 +367,6 @@ export default function App() {
         await apiService.savePayables(newPayables);
         addToast({ type: 'success', title: 'Pagamento Realizado!', description: 'A despesa foi marcada como paga.' });
     } else {
-        // FIX: Use 'as const' to preserve the literal type of 'Pago'
         const newReceivables = receivables.map(t => {
             if (t.id === transactionId) {
                 wasUpdated = true;
@@ -450,9 +448,253 @@ export default function App() {
   }
   
   const renderActiveView = () => {
-    // ... (rest of the renderActiveView function is unchanged, only data sources are now from state)
-    // No changes needed inside this function, it already uses state variables.
-    return <div>...</div>; // Placeholder for brevity
+    switch(activeView) {
+      case VIEWS.DASHBOARD: return <Dashboard 
+        setActiveView={setActiveView} 
+        selectedCompany={selectedCompany} 
+        payables={payables} 
+        receivables={receivables} 
+        accountantRequests={accountantRequests} 
+        setAccountantRequests={setAccountantRequests}
+        currentUser={currentUser!}
+        isAccountantModuleEnabled={isAccountantModuleEnabled}
+        bankAccounts={bankAccounts}
+        bankTransactions={bankTransactions}
+        onOpenInvoiceModal={handleOpenInvoiceModal}
+        onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal}
+        onOpenQRCodeModal={handleOpenQRCodeModal}
+      />;
+      case VIEWS.PAYABLE: return <AccountsPayable 
+        selectedCompany={selectedCompany} 
+        payables={payables}
+        setPayables={setPayables}
+        contacts={contacts}
+        setContacts={setContacts}
+        properties={properties}
+        onOpenExpenseModal={handleOpenExpenseModal} 
+        onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal} 
+        bankAccounts={bankAccounts}
+        addToast={addToast}
+      />;
+      case VIEWS.RECEIPTS: return <Receipts 
+        selectedCompany={selectedCompany} 
+        receivables={receivables} 
+        setReceivables={setReceivables} 
+        onOpenInvoiceModal={handleOpenInvoiceModal}
+        onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal}
+        contacts={contacts}
+        properties={properties}
+        bankAccounts={bankAccounts}
+        onOpenQRCodeModal={handleOpenQRCodeModal}
+        addToast={addToast}
+      />;
+      case VIEWS.REPORTS: return <Reports
+          selectedCompany={selectedCompany}
+          payables={payables}
+          setPayables={setPayables}
+          receivables={receivables}
+          setReceivables={setReceivables}
+          contacts={contacts}
+          setContacts={setContacts}
+          properties={properties}
+          onOpenExpenseModal={handleOpenExpenseModal}
+          onOpenConfirmPaymentModal={handleOpenConfirmPaymentModal}
+          onOpenInvoiceModal={handleOpenInvoiceModal}
+          bankAccounts={bankAccounts}
+          projects={projects}
+          setProjects={setProjects}
+          onOpenProjectModal={handleOpenProjectModal}
+          categories={categories}
+          onOpenQRCodeModal={handleOpenQRCodeModal}
+          addToast={addToast}
+        />;
+      case VIEWS.AI_ADVISOR: return <AIFinancialAdvisor payables={payables} receivables={receivables} selectedCompany={selectedCompany} />;
+      case VIEWS.FISCAL_MODULE: return <FiscalModule company={currentCompany} />;
+      case VIEWS.CRM: return <FinancialCRM 
+        selectedCompany={selectedCompany} 
+        onGenerateInvoice={(debtor) => handleOpenInvoiceModal({ customer: debtor.name, amount: debtor.totalDebt })}
+        receivables={receivables}
+        contacts={contacts}
+      />;
+      case VIEWS.CONTACTS: return <Contacts 
+          contacts={contacts} 
+          setContacts={setContacts} 
+          selectedCompany={selectedCompany} 
+          company={currentCompany}
+          customAvatars={customAvatars}
+          setCustomAvatars={setCustomAvatars}
+          payables={payables}
+          receivables={receivables}
+          addToast={addToast}
+        />;
+      case VIEWS.USER_MANAGEMENT: return <UserManagement 
+        companies={companies} 
+        setCompanies={setCompanies} 
+        users={users} 
+        setUsers={setUsers} 
+        auditLogs={auditLogs}
+        isAccountantModuleEnabled={isAccountantModuleEnabled} 
+        selectedCompany={selectedCompany}
+        currentUser={currentUser!}
+        setActiveView={setActiveView}
+        addToast={addToast}
+      />;
+      case VIEWS.GENERATED_INVOICES: return <GeneratedInvoices 
+        selectedCompany={selectedCompany} 
+        receivables={receivables}
+        setReceivables={setReceivables}
+        onOpenInvoiceModal={handleOpenInvoiceModal}
+        addToast={addToast}
+      />;
+       case VIEWS.ACCOUNTANT_PANEL: return <AccountantPanel 
+          users={users} 
+          companies={companies} 
+          accountantRequests={accountantRequests}
+          setAccountantRequests={setAccountantRequests}
+          currentUser={currentUser!}
+        />;
+      case VIEWS.BANK_ACCOUNTS: return <BankAccounts 
+          bankAccounts={bankAccounts} 
+          setBankAccounts={setBankAccounts} 
+          selectedCompany={selectedCompany}
+          bankTransactions={bankTransactions}
+          setActiveView={setActiveView}
+          addToast={addToast}
+        />;
+      case VIEWS.BANK_RECONCILIATION: return <BankReconciliation 
+          bankTransactions={bankTransactions}
+          systemTransactions={systemTransactions}
+          setSystemTransactions={setSystemTransactions}
+          bankAccounts={bankAccounts}
+          selectedCompany={selectedCompany}
+        />;
+      case VIEWS.RECURRENCES: return <Recurrences 
+          receivables={receivables} 
+          selectedCompany={selectedCompany}
+          setReceivables={setReceivables}
+          addToast={addToast}
+        />;
+      case VIEWS.PAYABLE_RECURRENCES: return <PayableRecurrences 
+        payables={payables}
+        selectedCompany={selectedCompany}
+        setPayables={setPayables}
+        addToast={addToast}
+      />;
+      case VIEWS.PAYMENT_SCHEDULE: return <PaymentSchedule 
+          payables={payables}
+          setPayables={setPayables}
+          selectedCompany={selectedCompany}
+          setActiveView={setActiveView}
+          contacts={contacts}
+          onOpenExpenseModal={handleOpenExpenseModal}
+          bankAccounts={bankAccounts}
+        />;
+      case VIEWS.RECEIVABLE_SCHEDULE: return <ReceivableSchedule 
+          receivables={receivables}
+          setReceivables={setReceivables}
+          selectedCompany={selectedCompany}
+          setActiveView={setActiveView}
+          contacts={contacts}
+          onOpenInvoiceModal={handleOpenInvoiceModal}
+          bankAccounts={bankAccounts}
+          onOpenQRCodeModal={handleOpenQRCodeModal}
+        />;
+      case VIEWS.CASH_FLOW_RECORDS: return <CashFlowRecords 
+          payables={payables} 
+          receivables={receivables} 
+          selectedCompany={selectedCompany}
+        />;
+      case VIEWS.PROPERTIES: return <Properties
+        properties={properties}
+        setProperties={setProperties}
+        contacts={contacts}
+        payables={payables}
+        setPayables={setPayables}
+        receivables={receivables}
+        setReceivables={setReceivables}
+        selectedCompany={selectedCompany}
+        adjustmentIndexes={adjustmentIndexes}
+        addToast={addToast}
+        customAvatars={customAvatars}
+        setCustomAvatars={setCustomAvatars}
+       />;
+       case VIEWS.PROJECTS: return <Projects
+        projects={projects}
+        setProjects={setProjects}
+        contacts={contacts}
+        payables={payables}
+        receivables={receivables}
+        selectedCompany={selectedCompany}
+        onOpenProjectModal={handleOpenProjectModal}
+        addToast={addToast}
+        />;
+       case VIEWS.PROPOSALS: return <Proposals
+        proposals={proposals}
+        setProposals={setProposals}
+        contacts={contacts}
+        selectedCompany={selectedCompany}
+        onOpenProposalModal={handleOpenProposalModal}
+        onOpenProjectModal={handleOpenProjectModal}
+        addToast={addToast}
+        />;
+      case VIEWS.SCHEMA_GENERATOR: return <SchemaGenerator />;
+      case VIEWS.COST_CENTERS: return <CostCenters 
+        costCenters={costCenters} 
+        setCostCenters={setCostCenters} 
+        selectedCompany={selectedCompany} 
+        setActiveView={setActiveView}
+        payables={payables}
+        receivables={receivables}
+        properties={properties}
+        addToast={addToast}
+      />;
+      case VIEWS.COMPANY_PROFILE: return <CompanyProfile 
+        company={currentCompany} 
+        companies={companies}
+        setCompanies={setCompanies}
+        currentUser={currentUser!}
+        setActiveView={setActiveView}
+      />;
+      case VIEWS.PLAN_SUBSCRIPTION: return <PlanSubscription 
+        company={currentCompany}
+        setActiveView={setActiveView}
+      />;
+      case VIEWS.SETTINGS: return <Settings 
+          setActiveView={setActiveView}
+          currentUser={currentUser!}
+          properties={properties}
+          receivables={receivables}
+          setReceivables={setReceivables}
+          adjustmentIndexes={adjustmentIndexes}
+          setAdjustmentIndexes={setAdjustmentIndexes}
+          addToast={addToast}
+        />;
+      case VIEWS.CATEGORIES: return <Categories 
+          categories={categories}
+          setCategories={setCategories}
+          selectedCompany={selectedCompany}
+          setActiveView={setActiveView}
+          addToast={addToast}
+        />;
+      case VIEWS.INDEXES: return <Indexes
+        adjustmentIndexes={adjustmentIndexes}
+        setAdjustmentIndexes={setAdjustmentIndexes}
+        selectedCompany={selectedCompany}
+        setActiveView={setActiveView}
+        properties={properties}
+        receivables={receivables}
+        setReceivables={setReceivables}
+        addToast={addToast}
+      />;
+      case VIEWS.INTEGRATIONS: return <Integrations
+        isAccountantModuleEnabled={isAccountantModuleEnabled}
+        setIsAccountantModuleEnabled={setIsAccountantModuleEnabled}
+        setActiveView={setActiveView}
+        company={currentCompany}
+       />;
+      case VIEWS.HELP: return <Help />;
+      default: return <div>View not found</div>
+    }
   }
 
   return (
