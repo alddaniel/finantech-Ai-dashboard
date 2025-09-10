@@ -129,13 +129,16 @@ const EmptyDashboard: React.FC<{ selectedCompany: string; onOpenExpenseModal: ()
 
 export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCompany, payables, receivables, accountantRequests, setAccountantRequests, currentUser, isAccountantModuleEnabled, bankAccounts, bankTransactions, onOpenInvoiceModal, onOpenConfirmPaymentModal, onOpenQRCodeModal }) => {
     
+    // FIX: Initialize settings as null and load asynchronously.
     const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings | null>(null);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     
+    // FIX: Load settings asynchronously.
     useEffect(() => {
         apiService.getDashboardSettings().then(setDashboardSettings);
     }, []);
     
+    // FIX: Update save function to handle async operation.
     const handleSaveSettings = (newSettings: DashboardSettings) => {
       setDashboardSettings(newSettings);
       apiService.saveDashboardSettings(newSettings);
@@ -162,6 +165,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
     }, [filteredPayables, filteredReceivables]);
 
     useEffect(() => {
+        // FIX: Only fetch insight if settings have been loaded.
         if (dashboardSettings) {
             fetchInsight();
         }
@@ -181,6 +185,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
       return balance;
     };
 
+    // FIX: Show a loading state while settings are being fetched.
     if (!dashboardSettings) {
         return (
             <div className="flex h-full w-full items-center justify-center">
@@ -188,6 +193,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
             </div>
         );
     }
+
 
     return (
         <div className="space-y-8">

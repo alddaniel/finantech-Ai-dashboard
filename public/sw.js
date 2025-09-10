@@ -1,12 +1,13 @@
-const CACHE_NAME = 'finantech-ai-cache-v1';
+const CACHE_NAME = 'finantech-ai-cache-v2';
 // Add all the files that should be cached for offline use.
 // At a minimum, this is the HTML, CSS, and JS files that make up the app shell.
 const urlsToCache = [
   '/',
   '/index.html',
-  '/manifest.json'
-  // Vite will generate JS/CSS files with hashes, so we can't hardcode them here.
-  // The fetch handler will cache them on the fly.
+  '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
+  '/icons/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -17,6 +18,7 @@ self.addEventListener('install', (event) => {
         console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
+      .then(() => self.skipWaiting()) // Force the new service worker to activate
   );
 });
 
@@ -32,7 +34,7 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // Take control of all open clients
   );
 });
 

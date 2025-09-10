@@ -159,7 +159,6 @@ export const fetchAllInitialData = async () => {
 // UTILITY FUNCTIONS (Unchanged)
 // ====================================================================================
 
-// FIX: Add missing 'parseFormattedCurrency' utility function.
 const parseFormattedCurrency = (value: string): number => {
     if (typeof value !== 'string' || !value) return 0;
     const cleanedValue = value.replace(/R\$\s?/, '').replace(/\./g, '');

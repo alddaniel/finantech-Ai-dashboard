@@ -54,7 +54,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, on
                         disabled={isConfirming}
                         className="w-full sm:w-auto bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors flex items-center justify-center disabled:bg-red-400"
                     >
-                        {isConfirming ? <Spinner className="w-5 h-5" /> : 'Excluir'}
+                        {isConfirming ? <Spinner className="w-5 h-5 text-white" /> : 'Excluir'}
                     </button>
                 </div>
             </div>

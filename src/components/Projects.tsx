@@ -102,14 +102,12 @@ const ProjectCard: React.FC<{
                 <div>
                     <h4 className="font-semibold text-sm text-gray-800 dark:text-gray-200 mb-2">Próximas Etapas</h4>
                     <ul className="space-y-2">
-{/* FIX: Corrected status string to "Concluido" to match type definition. */}
                         {project.stages.filter(s => s.status !== 'Concluído').slice(0, 2).map(stage => (
                             <li key={stage.id} className="flex justify-between items-center text-sm">
                                 <span className="text-gray-600 dark:text-gray-300">{stage.name}</span>
                                 <span className="font-medium text-gray-500 dark:text-gray-400">{formatDate(stage.dueDate)}</span>
                             </li>
                         ))}
-{/* FIX: Corrected status string to "Concluido" to match type definition. */}
                          {project.stages.filter(s => s.status !== 'Concluído').length === 0 && (
                             <li className="text-sm text-gray-500 italic">Todas as etapas concluídas.</li>
                         )}

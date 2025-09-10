@@ -42,16 +42,30 @@ import { Settings } from './components/Settings';
 import { Categories } from './components/Categories';
 import { Indexes } from './components/Indexes';
 import { QRCodeModal } from './components/QRCodeModal';
-import { Spinner } from './components/ui/Spinner';
 import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal } from './types';
 import { VIEWS, MOCK_AUDIT_LOGS } from './constants';
 import * as apiService from './services/apiService';
+import { Spinner } from './components/ui/Spinner';
+
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
 
 
 export default function App() {
+  // FIX: Add loading state to manage async data fetching.
   const [isLoading, setIsLoading] = useState(true);
+
+  // FIX: Initialize with synchronous getter, as it doesn't return a promise.
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => apiService.getIsAuthenticated());
   
+  // FIX: Initialize states with default empty values instead of async calls.
+  // Data will be fetched in a useEffect hook.
   const [companies, setCompanies] = useState<Company[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   
@@ -75,110 +89,148 @@ export default function App() {
 
   const [activeView, setActiveView] = useState<View>(VIEWS.DASHBOARD);
   
+  // State for Invoice Modal
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [invoiceInitialData, setInvoiceInitialData] = useState<{ customer: string; amount: number; } | { receivableToEdit: Transaction } | null>(null);
 
+  // State for Expense Modal
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState<Transaction | null>(null);
   
+  // State for Project Modal
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   const [proposalForProject, setProposalForProject] = useState<Proposal | null>(null);
 
+  // State for Proposal Modal
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const [proposalToEdit, setProposalToEdit] = useState<Proposal | null>(null);
 
+  // State for QR Code Modal
   const [isQRCodeModalOpen, setIsQRCodeModalOpen] = useState(false);
   const [transactionForQRCode, setTransactionForQRCode] = useState<Transaction | null>(null);
 
+  // FIX: Initialize dependent states with default empty/null values.
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<string>('');
   
+  // Add-on Modules State
   const [isAccountantModuleEnabled, setIsAccountantModuleEnabled] = useState<boolean>(false);
   const [accountantRequests, setAccountantRequests] = useState<AccountantRequest[]>([]);
 
+  // Fullscreen management state
   const [isDesiredFullscreen, setIsDesiredFullscreen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
   
+  // Payment Confirmation Modal State
   const [isConfirmPaymentModalOpen, setIsConfirmPaymentModalOpen] = useState(false);
   const [transactionToConfirm, setTransactionToConfirm] = useState<Transaction | null>(null);
   
+  // Toast notifications state (for temporary messages)
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  // Unified Notification Center state (for persistent alerts)
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
+  
+  // State to manage pre-login view (regular login or admin panel)
   const [isSuperAdminView, setIsSuperAdminView] = useState<boolean>(false);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // Initial Data Load
+  // PWA Install Prompt State
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await apiService.fetchAllInitialData();
-        setCompanies(data.companies);
-        setUsers(data.users);
-        setContacts(data.contacts);
-        setProperties(data.properties);
-        setProjects(data.projects);
-        setProposals(data.proposals);
-        setCostCenters(data.costCenters);
-        setCategories(data.categories);
-        setAdjustmentIndexes(data.adjustmentIndexes);
-        setCustomAvatars(data.customAvatars);
-        setPayables(data.payables);
-        setReceivables(data.receivables);
-        setBankAccounts(data.bankAccounts);
-        setBankTransactions(data.bankTransactions);
-        setSystemTransactions(data.systemTransactions);
-        setNotifications(data.notifications);
-        setIsAccountantModuleEnabled(await apiService.getIsAccountantModuleEnabled());
-
-        const storedUser = apiService.getCurrentUser(data.users);
-        if (storedUser) {
-          setCurrentUser(storedUser);
-          setSelectedCompany(apiService.getSelectedCompany(data.companies));
-        }
-
-      } catch (error) {
-        console.error("Failed to load initial data", error);
-        addToast({type: 'warning', title: 'Erro de Carregamento', description: 'Não foi possível carregar os dados.'});
-      } finally {
-        setIsLoading(false);
-      }
+    const handler = (e: Event) => {
+        e.preventDefault();
+        setInstallPrompt(e as BeforeInstallPromptEvent);
     };
-    
-    if (isAuthenticated) {
-        loadData();
-    } else {
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    installPrompt.userChoice.then((choice) => {
+      if (choice.outcome === 'accepted') {
+        addToast({ type: 'success', title: 'App Instalado!', description: 'O FinanTechAI foi adicionado à sua tela inicial.' });
+      }
+      setInstallPrompt(null);
+    });
+  };
+  
+  // FIX: Fetch initial data asynchronously after component mounts.
+  useEffect(() => {
+    const loadInitialData = async () => {
+        setIsLoading(true);
+        if (isAuthenticated) {
+            const [
+                data,
+                accModuleEnabled,
+                accRequests,
+            ] = await Promise.all([
+                apiService.fetchAllInitialData(),
+                apiService.getIsAccountantModuleEnabled(),
+                apiService.getAccountantRequests(),
+            ]);
+
+            setCompanies(data.companies);
+            setUsers(data.users);
+            setContacts(data.contacts);
+            setProperties(data.properties);
+            setProjects(data.projects);
+            setProposals(data.proposals);
+            setCostCenters(data.costCenters);
+            setCategories(data.categories);
+            setAdjustmentIndexes(data.adjustmentIndexes);
+            setCustomAvatars(data.customAvatars);
+            setPayables(data.payables);
+            setReceivables(data.receivables);
+            setBankAccounts(data.bankAccounts);
+            setBankTransactions(data.bankTransactions);
+            setSystemTransactions(data.systemTransactions);
+            setNotifications(data.notifications);
+
+            setIsAccountantModuleEnabled(accModuleEnabled);
+            setAccountantRequests(accRequests);
+
+            // Set states that depend on the fetched data
+            const initialUser = apiService.getCurrentUser(data.users);
+            setCurrentUser(initialUser);
+            setSelectedCompany(apiService.getSelectedCompany(data.companies));
+        }
         setIsLoading(false);
-    }
+    };
+
+    loadInitialData();
   }, [isAuthenticated]);
 
 
-  // Persist key states whenever they change
-  useEffect(() => { if (!isLoading) apiService.saveCompanies(companies); }, [companies, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveUsers(users); }, [users, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveContacts(contacts); }, [contacts, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveProperties(properties); }, [properties, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveProjects(projects); }, [projects, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveProposals(proposals); }, [proposals, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveCostCenters(costCenters); }, [costCenters, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveCategories(categories); }, [categories, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveAdjustmentIndexes(adjustmentIndexes); }, [adjustmentIndexes, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveCustomAvatars(customAvatars); }, [customAvatars, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveIsAuthenticated(isAuthenticated); }, [isAuthenticated, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveSelectedCompany(selectedCompany); }, [selectedCompany, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.savePayables(payables); }, [payables, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveReceivables(receivables); }, [receivables, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveCurrentUser(currentUser); }, [currentUser, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveIsAccountantModuleEnabled(isAccountantModuleEnabled); }, [isAccountantModuleEnabled, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveAccountantRequests(accountantRequests); }, [accountantRequests, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveBankAccounts(bankAccounts); }, [bankAccounts, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveBankTransactions(bankTransactions); }, [bankTransactions, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveSystemTransactions(systemTransactions); }, [systemTransactions, isLoading]);
-  useEffect(() => { if (!isLoading) apiService.saveNotifications(notifications); }, [notifications, isLoading]);
+  // Systematically persist all key states to our abstracted service layer.
+  useEffect(() => { if (companies.length) apiService.saveCompanies(companies); }, [companies]);
+  useEffect(() => { if (users.length) apiService.saveUsers(users); }, [users]);
+  useEffect(() => { if (contacts.length) apiService.saveContacts(contacts); }, [contacts]);
+  useEffect(() => { if (properties.length) apiService.saveProperties(properties); }, [properties]);
+  useEffect(() => { if (projects.length) apiService.saveProjects(projects); }, [projects]);
+  useEffect(() => { if (proposals.length) apiService.saveProposals(proposals); }, [proposals]);
+  useEffect(() => { if (costCenters.length) apiService.saveCostCenters(costCenters); }, [costCenters]);
+  useEffect(() => { if (categories.length) apiService.saveCategories(categories); }, [categories]);
+  useEffect(() => { if (adjustmentIndexes.length) apiService.saveAdjustmentIndexes(adjustmentIndexes); }, [adjustmentIndexes]);
+  useEffect(() => { if (customAvatars.length) apiService.saveCustomAvatars(customAvatars); }, [customAvatars]);
+  useEffect(() => { apiService.saveIsAuthenticated(isAuthenticated); }, [isAuthenticated]);
+  useEffect(() => { if (selectedCompany) apiService.saveSelectedCompany(selectedCompany); }, [selectedCompany]);
+  useEffect(() => { if (payables.length) apiService.savePayables(payables); }, [payables]);
+  useEffect(() => { if (receivables.length) apiService.saveReceivables(receivables); }, [receivables]);
+  useEffect(() => { if (currentUser) apiService.saveCurrentUser(currentUser); }, [currentUser]);
+  useEffect(() => { apiService.saveIsAccountantModuleEnabled(isAccountantModuleEnabled); }, [isAccountantModuleEnabled]);
+  useEffect(() => { if (accountantRequests.length) apiService.saveAccountantRequests(accountantRequests); }, [accountantRequests]);
+  useEffect(() => { if (bankAccounts.length) apiService.saveBankAccounts(bankAccounts); }, [bankAccounts]);
+  useEffect(() => { if (bankTransactions.length) apiService.saveBankTransactions(bankTransactions); }, [bankTransactions]);
+  useEffect(() => { if (systemTransactions.length) apiService.saveSystemTransactions(systemTransactions); }, [systemTransactions]);
+  useEffect(() => { if (notifications.length) apiService.saveNotifications(notifications); }, [notifications]);
 
   
+  // When user logs in or out, adjust the selected company
   useEffect(() => {
     if (currentUser) {
         if (!currentUser.accessibleCompanies.includes(selectedCompany)) {
@@ -188,9 +240,11 @@ export default function App() {
     }
   }, [currentUser, selectedCompany]);
 
+  // Fullscreen state synchronization
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
+      // If the user manually exits fullscreen (e.g., with ESC key), update our desired state
       if (!document.fullscreenElement) {
         setIsDesiredFullscreen(false);
       }
@@ -200,6 +254,7 @@ export default function App() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // Re-enter fullscreen automatically after file dialog closes
   useEffect(() => {
     const handleFocus = () => {
       if (isDesiredFullscreen && !document.fullscreenElement) {
@@ -232,37 +287,29 @@ export default function App() {
     setNotifications(prev => [newNotification, ...prev]);
   }, []);
 
-  const handleLogout = async () => {
-    await apiService.saveIsAuthenticated(false);
-    await apiService.saveCurrentUser(null);
+  const handleLogout = () => {
     setIsAuthenticated(false);
     setCurrentUser(null);
   };
   
-  const handleSuperAdminLogout = async () => {
+  const handleSuperAdminLogout = () => {
       setIsSuperAdminView(false);
-      await handleLogout();
+      setIsAuthenticated(false);
   };
 
   const handleLoginSuccess = (user: User, company: string) => {
-    setIsLoading(true);
     setCurrentUser(user);
     setSelectedCompany(company);
     setIsAuthenticated(true);
-    apiService.saveCurrentUser(user);
-    apiService.saveSelectedCompany(company);
-    apiService.saveIsAuthenticated(true);
   };
   
   const handleSuperAdminLoginSuccess = (user: User) => {
-      setIsLoading(true);
       setCurrentUser(user);
       setIsAuthenticated(true);
       setIsSuperAdminView(true);
-      apiService.saveCurrentUser(user);
-      apiService.saveIsAuthenticated(true);
   };
   
+  // --- Modal Openers ---
   const handleOpenInvoiceModal = useCallback((data?: { customer: string; amount: number; } | { receivableToEdit: Transaction } | null) => {
     setInvoiceInitialData(data || null);
     setIsInvoiceModalOpen(true);
@@ -294,34 +341,31 @@ export default function App() {
       setIsQRCodeModalOpen(true);
   }, []);
 
-  const handleSaveExpense = async (expenseData: Transaction) => {
-    let updatedPayables;
+  // --- Core Save/Update Logic ---
+  const handleSaveExpense = (expenseData: Transaction) => {
     if (expenseToEdit) {
-      updatedPayables = payables.map(p => p.id === expenseData.id ? expenseData : p);
+      setPayables(payables.map(p => p.id === expenseData.id ? expenseData : p));
       addToast({ type: 'success', title: 'Sucesso!', description: 'Despesa atualizada com sucesso.' });
     } else {
-      updatedPayables = [...payables, { ...expenseData, id: `p${Date.now()}` }];
-      addToast({ type: 'success', title: 'Sucesso!', description: 'Nova despesa adicionada.' });
+      setPayables([...payables, { ...expenseData, id: `p${Date.now()}` }]);
+       addToast({ type: 'success', title: 'Sucesso!', description: 'Nova despesa adicionada.' });
     }
-    setPayables(updatedPayables);
-    await apiService.savePayables(updatedPayables);
     setIsExpenseModalOpen(false);
   };
   
-  const handleSaveMultipleExpenses = async (expenses: Omit<Transaction, 'id'>[]) => {
+  const handleSaveMultipleExpenses = (expenses: Omit<Transaction, 'id'>[]) => {
       const newPayables = expenses.map((exp, index) => ({
         ...exp,
         id: `p${Date.now() + index}`
       }));
-      const updatedPayables = [...payables, ...newPayables];
-      setPayables(updatedPayables);
-      await apiService.savePayables(updatedPayables);
+      setPayables(prev => [...prev, ...newPayables]);
   };
 
-  const handleSaveProject = async (projectData: Project, generateInvoice: boolean) => {
+  const handleSaveProject = (projectData: Project, generateInvoice: boolean) => {
       const isNew = !projectToEdit;
       const finalProject = isNew ? { ...projectData, id: `proj${Date.now()}` } : projectData;
 
+      // Automatically create a new cost center if it doesn't exist
       const costCenterExists = costCenters.some(cc => cc.name === finalProject.costCenterName && cc.company === finalProject.company);
       if (!costCenterExists && finalProject.costCenterName) {
           const newCostCenter: CostCenter = {
@@ -330,9 +374,7 @@ export default function App() {
               description: `Centro de custo para o projeto ${finalProject.name}`,
               company: finalProject.company,
           };
-          const updatedCostCenters = [...costCenters, newCostCenter];
-          setCostCenters(updatedCostCenters);
-          await apiService.saveCostCenters(updatedCostCenters);
+          setCostCenters(prev => [...prev, newCostCenter]);
           addToast({
               type: 'info',
               title: 'Centro de Custo Criado',
@@ -340,10 +382,11 @@ export default function App() {
           });
       }
 
-      const updatedProjects = isNew ? [...projects, finalProject] : projects.map(p => p.id === finalProject.id ? finalProject : p);
-      setProjects(updatedProjects);
-      await apiService.saveProjects(updatedProjects);
-      
+      setProjects(prev => {
+          if (isNew) return [...prev, finalProject];
+          return prev.map(p => p.id === finalProject.id ? finalProject : p);
+      });
+
       if (isNew && generateInvoice) {
            const totalBudget = finalProject.budget.reduce((sum, item) => sum + item.cost, 0);
            const contact = contacts.find(c => c.id === finalProject.clientId);
@@ -359,84 +402,81 @@ export default function App() {
         });
   };
 
-  const handleConfirmPayment = async (transactionId: string, amount: number, paymentDate: string, paymentMethod: string) => {
-    let wasUpdated = false;
+  const handleConfirmPayment = (transactionId: string, amount: number, paymentDate: string, paymentMethod: string) => {
+    const onConfirm = (setter: React.Dispatch<React.SetStateAction<Transaction[]>>) => {
+      setter(prev => prev.map(t =>
+        t.id === transactionId
+          ? { ...t, status: 'Pago', amount, paymentDate, paymentMethod }
+          : t
+      ));
+    };
 
-    const newPayables = payables.map(t => {
-        if (t.id === transactionId) {
-            wasUpdated = true;
-            return { ...t, status: 'Pago' as const, amount, paymentDate, paymentMethod };
-        }
-        return t;
-    });
-
-    if(wasUpdated) {
-        setPayables(newPayables);
-        await apiService.savePayables(newPayables);
-        addToast({ type: 'success', title: 'Pagamento Realizado!', description: 'A despesa foi marcada como paga.' });
-    } else {
-        const newReceivables = receivables.map(t => {
-            if (t.id === transactionId) {
-                wasUpdated = true;
-                return { ...t, status: 'Pago' as const, amount, paymentDate, paymentMethod };
-            }
-            return t;
-        });
-        if(wasUpdated) {
-            setReceivables(newReceivables);
-            await apiService.saveReceivables(newReceivables);
-            addToast({ type: 'success', title: 'Recebimento Realizado!', description: 'A receita foi marcada como recebida.' });
-        }
+    if (payables.some(p => p.id === transactionId)) {
+      onConfirm(setPayables);
+      addToast({ type: 'success', title: 'Pagamento Realizado!', description: 'A despesa foi marcada como paga.' });
+    } else if (receivables.some(r => r.id === transactionId)) {
+      onConfirm(setReceivables);
+      addToast({ type: 'success', title: 'Recebimento Realizado!', description: 'A receita foi marcada como recebida.' });
     }
     setIsConfirmPaymentModalOpen(false);
   };
   
-  const handleSaveProposal = async (proposalData: Proposal) => {
-        let updatedProposals;
+  const handleSaveProposal = (proposalData: Proposal) => {
         if (proposalToEdit) {
-            updatedProposals = proposals.map(p => p.id === proposalToEdit.id ? { ...proposalToEdit, ...proposalData } : p);
+            setProposals(proposals.map(p => p.id === proposalToEdit.id ? { ...proposalToEdit, ...proposalData } : p));
         } else {
             const newProposal = {
                 ...proposalData,
                 id: `prop-${Date.now()}`,
                 createdAt: new Date().toISOString(),
             };
-            updatedProposals = [...proposals, newProposal];
+            setProposals(prev => [...prev, newProposal]);
         }
-        setProposals(updatedProposals);
-        await apiService.saveProposals(updatedProposals);
     };
   
   const currentCompany = useMemo(() => companies.find(c => c.name === selectedCompany), [companies, selectedCompany]);
 
   const handleNotificationClick = (notification: Notification) => {
-    const { type } = notification;
+    const { type, entityId } = notification;
     
     switch(type) {
-        case 'overdue_payable': setActiveView(VIEWS.PAYABLE); break;
-        case 'overdue_receivable': setActiveView(VIEWS.RECEIPTS); break;
-        case 'accountant_request': setActiveView(VIEWS.ACCOUNTANT_PANEL); break;
-        case 'payment_due_today':
-            setActiveView(payables.some(p => p.id === notification.entityId) ? VIEWS.PAYMENT_SCHEDULE : VIEWS.RECEIVABLE_SCHEDULE);
+        case 'overdue_payable':
+            setActiveView(VIEWS.PAYABLE);
             break;
-        default: break;
+        case 'overdue_receivable':
+            setActiveView(VIEWS.RECEIPTS);
+            break;
+        case 'accountant_request':
+            setActiveView(VIEWS.ACCOUNTANT_PANEL);
+            break;
+        case 'payment_due_today':
+            const payable = payables.find(p => p.id === entityId);
+            if(payable) {
+                setActiveView(VIEWS.PAYMENT_SCHEDULE);
+            } else {
+                setActiveView(VIEWS.RECEIVABLE_SCHEDULE);
+            }
+            break;
+        default:
+            break;
     }
     
-    const newNotifications = notifications.map(n => n.id === notification.id ? {...n, isRead: true} : n);
-    setNotifications(newNotifications);
-    apiService.saveNotifications(newNotifications);
+    // Mark as read and close
+    setNotifications(prev => prev.map(n => n.id === notification.id ? {...n, isRead: true} : n));
     setIsNotificationsOpen(false);
   }
-
-  // --- Render Logic ---
+  
+  // FIX: Show a loading spinner while initial data is being fetched.
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-slate-100 dark:bg-slate-900">
-        <Spinner className="h-12 w-12"/>
-      </div>
+        <div className="flex h-screen w-full items-center justify-center bg-slate-100 dark:bg-slate-900">
+            <Spinner className="h-12 w-12" />
+        </div>
     );
   }
 
+
+  // Render Logic
   if (!isAuthenticated) {
     return <Login users={users} onLoginSuccess={handleLoginSuccess} onSuperAdminLoginSuccess={handleSuperAdminLoginSuccess} />;
   }
@@ -722,32 +762,10 @@ export default function App() {
           onToggleFullscreen={() => setIsDesiredFullscreen(prev => !prev)}
           notifications={notifications}
           setIsNotificationsOpen={setIsNotificationsOpen}
-          isMobileSidebarOpen={isMobileSidebarOpen}
-          setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+          showInstallButton={!!installPrompt}
+          onInstallClick={handleInstallClick}
         />
-        {isMobileSidebarOpen && (
-            <div 
-                className="fixed inset-0 bg-black/50 z-20 lg:hidden"
-                onClick={() => setIsMobileSidebarOpen(false)}
-                aria-hidden="true"
-            ></div>
-        )}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-            <div className="lg:hidden flex items-center justify-between mb-4">
-                 <button
-                    onClick={() => setIsMobileSidebarOpen(true)}
-                    className="p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
-                    aria-label="Abrir menu"
-                >
-                    <MenuIcon />
-                </button>
-                 <div className="flex items-center gap-2">
-                    <div className="bg-indigo-600 p-1.5 rounded-md">
-                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 12h2v6H8v-6zm3-3h2v9h-2V9zm3-4h2v13h-2V5z"/></svg>
-                    </div>
-                    <h1 className="text-lg font-bold text-gray-800 dark:text-white tracking-tighter">FinanTech AI</h1>
-                </div>
-            </div>
+        <main className="flex-1 overflow-y-auto p-8">
             {renderActiveView()}
         </main>
         {isInvoiceModalOpen && <InvoiceGenerator
@@ -817,16 +835,8 @@ export default function App() {
         {isNotificationsOpen && <NotificationCenter 
             notifications={notifications.filter(n => n.company === selectedCompany)}
             onClose={() => setIsNotificationsOpen(false)}
-            onMarkAsRead={(id) => {
-                const newNotifs = notifications.map(n => n.id === id ? {...n, isRead: true} : n);
-                setNotifications(newNotifs);
-                apiService.saveNotifications(newNotifs);
-            }}
-            onMarkAllAsRead={() => {
-                const newNotifs = notifications.map(n => ({...n, isRead: true}));
-                setNotifications(newNotifs);
-                apiService.saveNotifications(newNotifs);
-            }}
+            onMarkAsRead={(id) => setNotifications(prev => prev.map(n => n.id === id ? {...n, isRead: true} : n))}
+            onMarkAllAsRead={() => setNotifications(prev => prev.map(n => ({...n, isRead: true})))}
             onNotificationClick={handleNotificationClick}
         />}
 
@@ -840,5 +850,3 @@ export default function App() {
     </div>
   )
 }
-
-const MenuIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>;

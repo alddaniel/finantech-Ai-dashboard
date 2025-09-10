@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { View, Company, User, Role, Notification } from '../types';
 import { VIEWS } from '../constants';
@@ -12,14 +13,15 @@ interface SidebarProps {
   company?: Company;
   currentUser: User;
   onLogout: () => void;
+  className?: string;
   isAccountantModuleEnabled: boolean;
   onOpenInvoiceModal: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   notifications: Notification[];
   setIsNotificationsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  isMobileSidebarOpen: boolean;
-  setIsMobileSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  showInstallButton: boolean;
+  onInstallClick: () => void;
 }
 
 type SubMenuType = 'main' | 'pagamentos' | 'recebimentos' | 'projetos';
@@ -64,18 +66,13 @@ const NavItem: React.FC<{
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
     activeView, setActiveView, selectedCompany, setSelectedCompany, companies, 
-    company, currentUser, onLogout, isAccountantModuleEnabled, 
+    company, currentUser, onLogout, className, isAccountantModuleEnabled, 
     onOpenInvoiceModal, isFullscreen, onToggleFullscreen,
-    notifications, setIsNotificationsOpen, isMobileSidebarOpen, setIsMobileSidebarOpen
+    notifications, setIsNotificationsOpen, showInstallButton, onInstallClick
 }) => {
   const [activeSubMenu, setActiveSubMenu] = useState<SubMenuType>('main');
 
   const unreadNotificationsCount = notifications.filter(n => !n.isRead && n.company === selectedCompany).length;
-
-  const handleNavigation = (action: () => void) => {
-    action();
-    setIsMobileSidebarOpen(false);
-  }
 
   const recebimentosSubItems: Array<{ label: string; view?: View; action?: () => void; activeChecks: View[]; icon: React.ReactNode; }> = [
       { label: 'Lançar/Baixar Receita', view: VIEWS.RECEIPTS, activeChecks: [VIEWS.RECEIPTS], icon: <MoneyInIcon /> },
@@ -165,10 +162,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               label={item.label}
               icon={item.icon}
               isActive={item.view ? activeView === item.view : false}
-              onClick={() => handleNavigation(() => {
+              onClick={() => {
                   if(item.view) setActiveView(item.view);
                   if(item.action) item.action();
-              })}
+              }}
             />
           ))}
         </ul>
@@ -177,7 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }
 
   return (
-    <aside className={`fixed inset-y-0 left-0 z-30 w-72 flex-shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-4 flex flex-col border-r border-slate-900/5 dark:border-white/10 overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/30 transform transition-transform duration-300 ease-in-out ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:shadow-none`}>
+    <aside className={`relative w-72 flex-shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-4 flex flex-col border-r border-slate-900/5 dark:border-white/10 z-20 overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/30 ${className || ''}`}>
       <div className="flex items-center gap-3 px-2 mb-8">
         <div className="bg-indigo-600 p-2.5 rounded-lg">
           <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -195,21 +192,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
               label="Dashboard"
               icon={<DashboardIcon />}
               isActive={activeView === VIEWS.DASHBOARD}
-              onClick={() => handleNavigation(() => setActiveView(VIEWS.DASHBOARD))}
+              onClick={() => setActiveView(VIEWS.DASHBOARD)}
             />
              <NavItem
                 key={VIEWS.BANK_RECONCILIATION}
                 label="Conciliação Bancária"
                 icon={<ReconciliationIcon />}
                 isActive={activeView === VIEWS.BANK_RECONCILIATION}
-                onClick={() => handleNavigation(() => setActiveView(VIEWS.BANK_RECONCILIATION))}
+                onClick={() => setActiveView(VIEWS.BANK_RECONCILIATION)}
              />
              <NavItem
                 key={VIEWS.CONTACTS}
                 label="Contatos"
                 icon={<AddressBookIcon />}
                 isActive={activeView === VIEWS.CONTACTS}
-                onClick={() => handleNavigation(() => setActiveView(VIEWS.CONTACTS))}
+                onClick={() => setActiveView(VIEWS.CONTACTS)}
              />
              <div className="px-2.5 py-3">
                  <div className="border-t border-slate-200 dark:border-slate-800"></div>
@@ -243,7 +240,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               label="Extrato de Caixa"
               icon={<CashFlowRecordsIcon />}
               isActive={activeView === VIEWS.CASH_FLOW_RECORDS}
-              onClick={() => handleNavigation(() => setActiveView(VIEWS.CASH_FLOW_RECORDS))}
+              onClick={() => setActiveView(VIEWS.CASH_FLOW_RECORDS)}
             />
             <div className="px-2.5 py-3">
                  <div className="border-t border-slate-200 dark:border-slate-800"></div>
@@ -263,7 +260,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   view={item.view}
                   icon={item.icon}
                   isActive={activeView === item.view}
-                  onClick={() => handleNavigation(() => setActiveView(item.view))}
+                  onClick={() => setActiveView(item.view)}
                 />
               );
             })}
@@ -277,14 +274,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 label="Configurações"
                 icon={<SettingsIcon />}
                 isActive={settingsRelatedViews.includes(activeView)}
-                onClick={() => handleNavigation(() => setActiveView(VIEWS.SETTINGS))}
+                onClick={() => setActiveView(VIEWS.SETTINGS)}
             />
             <NavItem
                 key={VIEWS.HELP}
                 label="Ajuda"
                 icon={<HelpIcon />}
                 isActive={activeView === VIEWS.HELP}
-                onClick={() => handleNavigation(() => setActiveView(VIEWS.HELP))}
+                onClick={() => setActiveView(VIEWS.HELP)}
             />
           </ul>
         </div>
@@ -295,6 +292,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </nav>
       <div className="mt-auto pt-4 space-y-4">
+        {showInstallButton && (
+            <div className="px-2.5">
+                <button
+                    onClick={onInstallClick}
+                    className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white font-semibold px-4 py-2.5 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors"
+                >
+                    <DownloadIcon />
+                    Instalar Aplicativo
+                </button>
+            </div>
+        )}
         <div>
           <label htmlFor="company-select" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 px-1">Empresa Ativa</label>
             <select
@@ -350,6 +358,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
 // SVG Icons
 const iconSize = "w-6 h-6";
+const DownloadIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>;
 const DashboardIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>;
 const PayableIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>;
 const ReceivableIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>;
