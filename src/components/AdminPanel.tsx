@@ -274,7 +274,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ companies, setCompanies,
 
     const handleDeleteUser = (id: string) => {
          if (id === currentUser.id) {
-            alert("Você не pode excluir sua própria conta de Super Administrador.");
+// FIX: Corrected typo "не" to "não" in the alert message.
+            alert("Você não pode excluir sua própria conta de Super Administrador.");
             return;
         }
          if (window.confirm('Tem certeza que deseja excluir este usuário do sistema? Esta ação não pode ser desfeita.')) {
@@ -316,13 +317,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ companies, setCompanies,
                         Gerencie as empresas, usuários e ferramentas avançadas da plataforma FinanTech AI.
                     </p>
 
-                    <div className="border-b border-gray-200 dark:border-gray-700">
-                        <nav className="-mb-px flex flex-wrap" aria-label="Tabs">
-                            <TabButton label="Empresas" active={activeTab === 'companies'} onClick={() => setActiveTab('companies')} icon={<CompanyIcon />}/>
-                            <TabButton label="Usuários / Admins" active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={<UsersIcon />} />
-                            <TabButton label="Gerador de Schema" active={activeTab === 'schema'} onClick={() => setActiveTab('schema')} icon={<SchemaGeneratorIcon />} />
-                            <TabButton label="Consultor IA" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} icon={<AIIcon />} />
-                        </nav>
+                    <div className="border-b border-gray-200 dark:border-gray-700 flex flex-wrap">
+                        <TabButton label="Empresas" active={activeTab === 'companies'} onClick={() => setActiveTab('companies')} icon={<CompanyIcon />}/>
+                        <TabButton label="Usuários / Admins" active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={<UsersIcon />} />
+                        <TabButton label="Gerador de Schema" active={activeTab === 'schema'} onClick={() => setActiveTab('schema')} icon={<SchemaGeneratorIcon />} />
+                        <TabButton label="Consultor IA" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} icon={<AIIcon />} />
                     </div>
 
                     {activeTab === 'companies' && (
@@ -374,5 +373,5 @@ const PlusIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor
 const ChevronLeftIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>;
 const CompanyIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m-1 4h1m5-4h1m-1 4h1m-1-8h1m-5 8h.01M12 3h.01M12 7h.01M12 11h.01M12 15h.01" /></svg>;
 const UsersIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.122-1.28-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.122-1.28.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
-const SchemaGeneratorIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>;
+const SchemaGeneratorIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21 3.582 4-8 4s-8-1.79-8-4"></path></svg>;
 const AIIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>;
