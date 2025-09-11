@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Header';
 import { Dashboard } from './components/Dashboard';
 import { AccountsPayable } from './components/AccountsPayable';
 import { Receipts } from './components/Receipts';
@@ -43,7 +44,7 @@ import { Categories } from './components/Categories';
 import { Indexes } from './components/Indexes';
 import { QRCodeModal } from './components/QRCodeModal';
 import type { View, Company, User, AuditLog, Contact, Transaction, AccountantRequest, BankAccount, BankTransaction, DebtorCustomer, Property, ToastMessage, Notification, SystemTransaction, CostCenter, Category, AdjustmentIndex, Project, Proposal } from './types';
-import { VIEWS, MOCK_AUDIT_LOGS, MOCK_PROPOSALS } from './constants';
+import { VIEWS, MOCK_AUDIT_LOGS } from './constants';
 import * as apiService from './services/apiService';
 
 
@@ -102,7 +103,9 @@ export default function App() {
   const [isAccountantModuleEnabled, setIsAccountantModuleEnabled] = useState<boolean>(() => apiService.getIsAccountantModuleEnabled());
   const [accountantRequests, setAccountantRequests] = useState<AccountantRequest[]>(() => apiService.getAccountantRequests());
 
-  // Fullscreen management state
+  // UI State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile sidebar toggle
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => apiService.getIsSidebarCollapsed()); // Desktop sidebar toggle
   const [isDesiredFullscreen, setIsDesiredFullscreen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
   
@@ -142,7 +145,7 @@ export default function App() {
   useEffect(() => { apiService.saveBankTransactions(bankTransactions); }, [bankTransactions]);
   useEffect(() => { apiService.saveSystemTransactions(systemTransactions); }, [systemTransactions]);
   useEffect(() => { apiService.saveNotifications(notifications); }, [notifications]);
-
+  useEffect(() => { apiService.saveIsSidebarCollapsed(isSidebarCollapsed); }, [isSidebarCollapsed]);
   
   // When user logs in or out, adjust the selected company
   useEffect(() => {
@@ -650,7 +653,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
         <Sidebar 
           activeView={activeView} 
           setActiveView={setActiveView} 
@@ -661,15 +664,33 @@ export default function App() {
           currentUser={currentUser!}
           onLogout={handleLogout}
           isAccountantModuleEnabled={isAccountantModuleEnabled}
-          onOpenInvoiceModal={handleOpenInvoiceModal}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={() => setIsDesiredFullscreen(prev => !prev)}
-          notifications={notifications}
-          setIsNotificationsOpen={setIsNotificationsOpen}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+          isMobileOpen={isSidebarOpen}
+          setIsMobileOpen={setIsSidebarOpen}
         />
-        <main className="flex-1 overflow-y-auto p-8">
-            {renderActiveView()}
-        </main>
+{/* FIX: Corrected sidebar width from pl-64 to pl-72 to match component styles. */}
+        <div className={`transition-all duration-300 ${!isSidebarCollapsed ? 'md:pl-72' : 'md:pl-20'}`}>
+            <Header 
+                activeView={activeView}
+                currentUser={currentUser!}
+                onLogout={handleLogout}
+                isFullscreen={isFullscreen}
+                onToggleFullscreen={() => setIsDesiredFullscreen(prev => !prev)}
+                notifications={notifications}
+                setIsNotificationsOpen={setIsNotificationsOpen}
+                onOpenInvoiceModal={handleOpenInvoiceModal}
+                onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+                selectedCompany={selectedCompany}
+                setSelectedCompany={setSelectedCompany}
+                accessibleCompanies={companies.filter(c => currentUser!.accessibleCompanies.includes(c.name))}
+            />
+            <main className="p-4 sm:p-6 lg:p-8">
+                <div className="mx-auto max-w-7xl">
+                    {renderActiveView()}
+                </div>
+            </main>
+        </div>
         {isInvoiceModalOpen && <InvoiceGenerator
           isOpen={isInvoiceModalOpen}
           onClose={() => setIsInvoiceModalOpen(false)}

@@ -271,7 +271,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ companies, setCompanies,
 
     const handleDeleteUser = (id: string) => {
          if (id === currentUser.id) {
-            // FIX: Corrected typo "не" to "não" in the alert message.
             alert("Você não pode excluir sua própria conta de Super Administrador.");
             return;
         }

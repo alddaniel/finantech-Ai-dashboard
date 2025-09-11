@@ -74,7 +74,7 @@ const PaginationControls: React.FC<{
     const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
     return (
-        <div className="flex items-center justify-between mt-4 px-6 pb-4 text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex flex-col sm:flex-row items-center justify-between mt-4 px-6 pb-4 text-sm text-gray-600 dark:text-gray-400 gap-4">
             <div className="flex items-center gap-2">
                 <span>Itens por página:</span>
                 <select 
@@ -210,7 +210,6 @@ export const CashFlowRecords: React.FC<CashFlowRecordsProps> = ({ payables, rece
 
         const groupKey = groupingType === 'type' ? 'type' : 'costCenter';
 
-        // When grouping, we group the entire filtered list, not just the paginated slice
         return paidTransactions.reduce((acc, tx) => {
             let key = (tx[groupKey] || 'Não categorizado') as string;
             if(groupKey === 'type') {
@@ -290,14 +289,11 @@ export const CashFlowRecords: React.FC<CashFlowRecordsProps> = ({ payables, rece
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Registros do Fluxo de Caixa (Realizado)</h1>
-                     <p className="text-lg text-gray-600 dark:text-gray-400">
-                        Histórico de todas as movimentações financeiras efetivamente pagas para a empresa <span className="font-semibold text-indigo-500">{selectedCompany}</span>.
-                    </p>
-                </div>
-                <div className="flex items-center gap-4">
+            <div className="flex flex-wrap justify-between items-center gap-4">
+                <p className="text-lg text-gray-600 dark:text-gray-400">
+                    Histórico de todas as movimentações financeiras efetivamente pagas.
+                </p>
+                <div className="flex items-center gap-4 flex-wrap">
                     <button 
                         onClick={handleExportCsv}
                         className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 text-sm"

@@ -7,6 +7,7 @@ import * as apiService from '../services/apiService';
 import type { View, Transaction, AccountantRequest, User, BankAccount, BankTransaction, DashboardSettings } from '../types';
 import { VIEWS, MOCK_CASH_FLOW_DATA } from '../constants';
 import { getDashboardInsight } from '../services/geminiService';
+import { Spinner } from './ui/Spinner';
 
 const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -128,7 +129,7 @@ const EmptyDashboard: React.FC<{ selectedCompany: string; onOpenExpenseModal: ()
 
 export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCompany, payables, receivables, accountantRequests, setAccountantRequests, currentUser, isAccountantModuleEnabled, bankAccounts, bankTransactions, onOpenInvoiceModal, onOpenConfirmPaymentModal, onOpenQRCodeModal }) => {
     
-    const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>(() => apiService.getDashboardSettings());
+    const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>(apiService.getDashboardSettings());
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     
     useEffect(() => {
@@ -156,8 +157,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
     }, [filteredPayables, filteredReceivables]);
 
     useEffect(() => {
-        fetchInsight();
-    }, [fetchInsight, selectedCompany]);
+        if (dashboardSettings?.aiInsight) {
+            fetchInsight();
+        }
+    }, [fetchInsight, selectedCompany, dashboardSettings]);
 
     const totalReceitas = filteredReceivables.filter(t => t.status === 'Pago').reduce((sum, t) => sum + t.amount, 0);
     const totalDespesas = filteredPayables.filter(t => t.status === 'Pago').reduce((sum, t) => sum + t.amount, 0);
@@ -175,8 +178,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard: <span className="text-indigo-500">{selectedCompany}</span></h1>
+            <div className="flex justify-end items-center">
                  <button onClick={() => setIsSettingsModalOpen(true)} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                     <SettingsIcon />
                     Personalizar
@@ -283,7 +285,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveView, selectedCom
 
 const AIInsightCard: React.FC<{ isLoading: boolean; insightText: string; onRefresh: () => void; }> = ({ isLoading, insightText, onRefresh }) => {
     const AIIcon = () => <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>;
-    const RefreshIcon: React.FC<{className?: string}> = ({className}) => <svg className={`w-5 h-5 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h5M20 20v-5h-5M4 4l16 16"></path></svg>;
+    const RefreshIcon: React.FC<{className?: string}> = ({className}) => <svg className={`w-5 h-5 ${className}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.18-3.182m0-11.664a8.25 8.25 0 00-11.664 0L2.985 7.982" /></svg>;
 
     return (
         <Card>
@@ -304,7 +306,9 @@ const AIInsightCard: React.FC<{ isLoading: boolean; insightText: string; onRefre
                 </div>
                 <div className="mt-4 pl-4 border-l-4 border-indigo-500 min-h-[4rem] flex items-center">
                     {isLoading ? (
-                        <p className="text-gray-500 dark:text-gray-400 italic">Analisando dados para gerar um insight...</p>
+                        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 italic">
+                            <Spinner /> Analisando dados para gerar um insight...
+                        </div>
                     ) : (
                         <p className="text-gray-700 dark:text-gray-300 font-medium">{insightText}</p>
                     )}

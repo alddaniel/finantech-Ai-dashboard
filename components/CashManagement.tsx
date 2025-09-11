@@ -1,5 +1,3 @@
-
-
 import React, { useMemo, useState } from 'react';
 import { Card, CardHeader, CardContent } from './ui/Card';
 import { CashFlowChart } from './CashFlowChart';
@@ -44,12 +42,12 @@ const KPICard: React.FC<{title: string, value: string, helpText?: string}> = ({ 
 
 
 interface CashManagementProps {
-    selectedCompany: string;
-    payables: Transaction[];
-    receivables: Transaction[];
+    selectedCompany?: string;
+    payables?: Transaction[];
+    receivables?: Transaction[];
 }
 
-export const CashManagement: React.FC<CashManagementProps> = ({ selectedCompany, payables, receivables }) => {
+export const CashManagement: React.FC<CashManagementProps> = ({ selectedCompany, payables = [], receivables = [] }) => {
     
     const [viewingMonth, setViewingMonth] = useState<{key: string; label: string;} | null>(null);
 
@@ -156,7 +154,6 @@ export const CashManagement: React.FC<CashManagementProps> = ({ selectedCompany,
     return (
         <>
             <div className="space-y-8">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gestão de Caixa</h1>
                 <p className="text-lg text-gray-600 dark:text-gray-400">
                     Acompanhe o fluxo de entradas e saídas realizadas para ter uma visão clara da sua saúde financeira.
                 </p>
@@ -231,7 +228,7 @@ export const CashManagement: React.FC<CashManagementProps> = ({ selectedCompany,
                     monthLabel={viewingMonth.label}
                     payables={payables}
                     receivables={receivables}
-                    selectedCompany={selectedCompany}
+                    selectedCompany={selectedCompany || ''}
                     onClose={() => setViewingMonth(null)}
                 />
             )}
