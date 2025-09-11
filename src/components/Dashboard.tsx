@@ -7,7 +7,7 @@ import * as apiService from '../services/apiService';
 import type { View, Transaction, AccountantRequest, User, BankAccount, BankTransaction, DashboardSettings } from '../types';
 import { VIEWS, MOCK_CASH_FLOW_DATA } from '../constants';
 import { getDashboardInsight } from '../services/geminiService';
-import { Spinner } from './ui/Spinner';
+import { Spinner } from './ui/Spinner.tsx';
 
 const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

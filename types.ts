@@ -1,7 +1,8 @@
 
 
 
-export type View = 'dashboard' | 'payable' | 'receipts' | 'cash_management' | 'reports' | 'ai_advisor' | 'fiscal_module' | 'crm' | 'integrations' | 'user_management' | 'contacts' | 'help' | 'generated_invoices' | 'accountant_panel' | 'bank_accounts' | 'bank_reconciliation' | 'recurrences' | 'payable_recurrences' | 'payment_schedule' | 'receivable_schedule' | 'cash_flow_records' | 'properties' | 'schema_generator' | 'cost_centers' | 'company_profile' | 'plan_subscription' | 'settings' | 'indexes' | 'categories' | 'projects' | 'proposals';
+
+export type View = 'dashboard' | 'payable' | 'receipts' | 'cash_management' | 'reports' | 'ai_advisor' | 'fiscal_module' | 'crm' | 'integrations' | 'user_management' | 'contacts' | 'help' | 'generated_invoices' | 'accountant_panel' | 'bank_accounts' | 'bank_reconciliation' | 'recurrences' | 'payable_recurrences' | 'payment_schedule' | 'receivable_schedule' | 'cash_flow_records' | 'properties' | 'schema_generator' | 'cost_centers' | 'company_profile' | 'plan_subscription' | 'settings' | 'indexes' | 'categories' | 'projects' | 'proposals' | 'price_quotations';
 
 export type Role = 'Admin' | 'Manager' | 'Analyst' | 'Contador';
 
@@ -303,7 +304,6 @@ export interface ProjectStage {
     id: string;
     name: string;
     dueDate: string;
-// FIX: Corrected typo from "Concluido" to "Concluído" for consistency.
     status: 'Pendente' | 'Aprovado Cliente' | 'Aprovado Órgão Público' | 'Concluído';
     deliverables?: {
         fileName: string;

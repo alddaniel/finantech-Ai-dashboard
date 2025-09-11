@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertTriangleIcon } from './ui/IconComponents';
-import { Spinner } from './ui/Spinner';
+import { Spinner } from './ui/Spinner.tsx';
 
 interface ConfirmationModalProps {
     isOpen: boolean;

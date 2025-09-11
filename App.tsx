@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -105,6 +106,7 @@ export default function App() {
 
   // UI State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile sidebar toggle
+  // FIX: Corrected call to apiService, which now has the 'getIsSidebarCollapsed' function.
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => apiService.getIsSidebarCollapsed()); // Desktop sidebar toggle
   const [isDesiredFullscreen, setIsDesiredFullscreen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
@@ -145,6 +147,7 @@ export default function App() {
   useEffect(() => { apiService.saveBankTransactions(bankTransactions); }, [bankTransactions]);
   useEffect(() => { apiService.saveSystemTransactions(systemTransactions); }, [systemTransactions]);
   useEffect(() => { apiService.saveNotifications(notifications); }, [notifications]);
+  // FIX: Corrected call to apiService, which now has the 'saveIsSidebarCollapsed' function.
   useEffect(() => { apiService.saveIsSidebarCollapsed(isSidebarCollapsed); }, [isSidebarCollapsed]);
   
   // When user logs in or out, adjust the selected company
@@ -669,7 +672,6 @@ export default function App() {
           isMobileOpen={isSidebarOpen}
           setIsMobileOpen={setIsSidebarOpen}
         />
-{/* FIX: Corrected sidebar width from pl-64 to pl-72 to match component styles. */}
         <div className={`transition-all duration-300 ${!isSidebarCollapsed ? 'md:pl-72' : 'md:pl-20'}`}>
             <Header 
                 activeView={activeView}

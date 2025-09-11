@@ -39,6 +39,7 @@ const viewTitles: Record<View, string> = {
     [VIEWS.PROPERTIES]: 'Gestão de Imóveis',
     [VIEWS.PROJECTS]: 'Gestão de Projetos',
     [VIEWS.PROPOSALS]: 'Funil de Propostas',
+    [VIEWS.PRICE_QUOTATIONS]: 'Cotações de Preços',
     [VIEWS.SETTINGS]: 'Configurações',
     [VIEWS.HELP]: 'Central de Ajuda',
     [VIEWS.COMPANY_PROFILE]: 'Perfil da Empresa',
