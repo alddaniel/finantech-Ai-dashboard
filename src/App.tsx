@@ -519,12 +519,8 @@ export default function App() {
           isAccountantModuleEnabled={isAccountantModuleEnabled}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
-          // FIX: Pass missing props to Sidebar
-          onOpenInvoiceModal={handleOpenInvoiceModal}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={() => setIsDesiredFullscreen(prev => !prev)}
-          notifications={notifications}
-          setIsNotificationsOpen={setIsNotificationsOpen}
+          isMobileOpen={isSidebarOpen}
+          setIsMobileOpen={setIsSidebarOpen}
         />
         <div className="flex flex-col flex-1 overflow-hidden">
             <Header 

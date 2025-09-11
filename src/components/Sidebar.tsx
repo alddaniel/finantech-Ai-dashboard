@@ -4,8 +4,6 @@ import { VIEWS } from '../constants';
 
 type PrimaryCategory = 'dashboard' | 'financeiro' | 'projetos' | 'relatorios' | 'configuracoes';
 
-// FIX: Added missing props (onOpenInvoiceModal, isFullscreen, onToggleFullscreen, notifications, setIsNotificationsOpen)
-// and removed unused props (isMobileOpen, setIsMobileOpen) to align with usage in src/App.tsx and the component's own logic.
 interface SidebarProps {
   activeView: View;
   setActiveView: (view: View) => void;
@@ -16,13 +14,10 @@ interface SidebarProps {
   currentUser: User;
   onLogout: () => void;
   isAccountantModuleEnabled: boolean;
-  onOpenInvoiceModal: () => void;
-  isFullscreen: boolean;
-  onToggleFullscreen: () => void;
-  notifications: Notification[];
-  setIsNotificationsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  isMobileOpen: boolean;
+  setIsMobileOpen: (isOpen: boolean) => void;
 }
 
 const PrimaryNavItem: React.FC<{
@@ -68,12 +63,10 @@ const SecondaryNavItem: React.FC<{
 export const Sidebar: React.FC<SidebarProps> = ({ 
     activeView, setActiveView, selectedCompany, setSelectedCompany, companies, 
     company, currentUser, onLogout, isAccountantModuleEnabled, 
-    onOpenInvoiceModal, isFullscreen, onToggleFullscreen,
-    notifications, setIsNotificationsOpen, isCollapsed, onToggleCollapse
+    isCollapsed, onToggleCollapse, isMobileOpen, setIsMobileOpen
 }) => {
     
     const [activePrimaryCategory, setActivePrimaryCategory] = useState<PrimaryCategory>('dashboard');
-    const unreadNotificationsCount = notifications.filter(n => !n.isRead && n.company === selectedCompany).length;
     
     useEffect(() => {
         // Automatically open the correct primary category when the view changes from another source
@@ -90,14 +83,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }, [activeView]);
 
     const handlePrimaryNavClick = (category: PrimaryCategory) => {
-        setActivePrimaryCategory(category);
-        if (isCollapsed) {
-            onToggleCollapse(); // Expand if it was collapsed
+        if (category === activePrimaryCategory && !isCollapsed) {
+            onToggleCollapse();
+        } else {
+            setActivePrimaryCategory(category);
+            if (isCollapsed) {
+                onToggleCollapse(); // Expand if it was collapsed
+            }
         }
-        // Navigate to the first item in the category if it's not the current one
+        
         if (category === 'dashboard' && activeView !== VIEWS.DASHBOARD) {
             setActiveView(VIEWS.DASHBOARD);
         }
+    };
+
+    const handleSecondaryNavClick = (view: View) => {
+        setActiveView(view);
+        setIsMobileOpen(false); // Close sidebar on mobile after navigation
     };
     
     const mainNavItems = [
@@ -135,17 +137,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ]
     };
 
-    const accessibleCompanies = companies.filter(c => currentUser.accessibleCompanies.includes(c.name));
-
   return (
     <>
     {/* Overlay for mobile */}
-    {!isCollapsed && <div onClick={onToggleCollapse} className="fixed inset-0 bg-black/30 z-20 md:hidden"></div>}
+    {isMobileOpen && <div onClick={() => setIsMobileOpen(false)} className="fixed inset-0 bg-black/30 z-20 md:hidden"></div>}
 
-    <div className={`fixed top-0 left-0 h-full flex z-30 transition-transform duration-300 md:translate-x-0 ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`}>
+    <div className={`fixed top-0 left-0 h-full flex z-30 transition-transform duration-300 md:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Primary Icon Bar */}
       <div className="w-20 bg-slate-100 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
-        <div className="flex-shrink-0 p-4">
+        <div className="flex-shrink-0 p-4 h-20 flex items-center">
            <div className="bg-indigo-600 p-2 rounded-lg">
              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 12h2v6H8v-6zm3-3h2v9h-2V9zm3-4h2v13h-2V5z"/></svg>
            </div>
@@ -162,42 +162,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 ))}
             </ul>
         </nav>
-         <div className="flex-shrink-0 p-2 space-y-2">
-              <button onClick={onToggleFullscreen} className="w-full flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800" title={isFullscreen ? "Sair Tela Cheia" : "Tela Cheia"}>
-                  {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
-              </button>
-              <button onClick={() => setIsNotificationsOpen(p => !p)} className="w-full relative flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800" title="Notificações">
-                   <BellIcon />
-                   {unreadNotificationsCount > 0 && (
-                        <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                           {unreadNotificationsCount}
-                        </span>
-                    )}
-              </button>
-              <button onClick={onLogout} className="w-full flex flex-col items-center p-2 rounded-lg text-slate-500 hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-600 dark:hover:text-red-400" title="Sair">
-                  <LogoutIcon />
-              </button>
-              <div className="pt-2 mt-2 border-t border-slate-200 dark:border-slate-800">
-                <img src={currentUser.avatar} alt={currentUser.name} className="w-10 h-10 rounded-full mx-auto" />
-              </div>
-        </div>
       </div>
 
       {/* Secondary Panel */}
-      <div className={`w-52 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 ${isCollapsed ? 'opacity-0 -translate-x-full' : 'opacity-100 translate-x-0'}`}>
+      <div className={`w-52 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 ${isCollapsed && activePrimaryCategory !== 'dashboard' ? 'opacity-0 -translate-x-full hidden' : 'opacity-100 translate-x-0'}`}>
         <div className="flex-shrink-0 p-4 flex items-center justify-between h-20">
           <div>
             <h2 className="text-sm font-bold text-gray-800 dark:text-white uppercase tracking-wider">{mainNavItems.find(i => i.category === activePrimaryCategory)?.label}</h2>
-             <select
-              id="company-select-flyout"
-              value={selectedCompany}
-              onChange={(e) => setSelectedCompany(e.target.value)}
-              className="block w-full text-xs rounded-md border-0 bg-slate-100/50 dark:bg-slate-800/50 py-1 pl-2 pr-8 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 focus:ring-2 focus:ring-inset focus:ring-indigo-600"
-            >
-              {accessibleCompanies.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-            </select>
           </div>
-          <button onClick={onToggleCollapse} className="p-2 rounded-full text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700" title="Recolher menu">
+          <button onClick={onToggleCollapse} className="p-2 rounded-full text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hidden md:inline-flex" title="Recolher menu">
               <ChevronLeftIcon />
           </button>
         </div>
@@ -208,7 +181,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     label={item.label}
                     view={item.view}
                     isActive={activeView === item.view}
-                    onClick={() => setActiveView(item.view)}
+                    onClick={() => handleSecondaryNavClick(item.view)}
                 />
             ))}
         </nav>

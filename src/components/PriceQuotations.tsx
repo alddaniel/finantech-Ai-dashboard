@@ -100,7 +100,9 @@ export const PriceQuotations: React.FC<PriceQuotationsProps> = ({ quotations, se
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Cotações de Preços</h1>
+                <p className="text-lg text-gray-600 dark:text-gray-400">
+                    Gerencie suas cotações de preços com fornecedores.
+                </p>
                 <button
                     onClick={() => onOpenQuotationModal(null)}
                     className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2 self-start md:self-center"

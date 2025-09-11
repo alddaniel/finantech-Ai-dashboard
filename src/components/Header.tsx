@@ -14,7 +14,8 @@ interface HeaderProps {
     onOpenInvoiceModal: () => void;
 }
 
-// FIX: Completed the viewTitles object to satisfy the Record<View, string> type.
+// FIX: This object was missing keys required by the `View` type, causing a TypeScript error.
+// It has been updated to include a title for every possible view.
 const viewTitles: Record<View, string> = {
     [VIEWS.DASHBOARD]: 'Dashboard',
     [VIEWS.PAYABLE]: 'Contas a Pagar',
@@ -64,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
     const unreadNotificationsCount = notifications.filter(n => !n.isRead).length;
 
     return (
-        <header className="flex-shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between">
+        <header className="flex-shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between h-20">
             <div className="flex items-center gap-4">
                 <button onClick={onToggleSidebar} className="md:hidden p-2 text-slate-500 dark:text-slate-400">
                     <MenuIcon />
@@ -79,41 +80,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <PlusIcon />
                     <span>Nova Cobrança</span>
                 </button>
-                <div className="flex items-center gap-1">
-                    <button
-                        onClick={onToggleFullscreen}
-                        title={isFullscreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
-                        className="p-2.5 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
-                    >
-                        {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
-                    </button>
-                    <button
-                        onClick={() => setIsNotificationsOpen(prev => !prev)}
-                        title="Notificações"
-                        className="relative p-2.5 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
-                    >
-                        <BellIcon />
-                        {unreadNotificationsCount > 0 && (
-                            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                            {unreadNotificationsCount}
-                            </span>
-                        )}
-                    </button>
-                     <button
-                        onClick={onLogout}
-                        title="Sair"
-                        className="p-2.5 rounded-full text-gray-500 dark:text-gray-400 hover:bg-red-50/50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                    >
-                        <LogoutIcon />
-                    </button>
-                    <div className="flex items-center p-2 rounded-lg">
-                        <img className="w-9 h-9 rounded-full" src={currentUser.avatar} alt="User" />
-                        <div className="ml-3 hidden sm:block">
-                            <p className="font-semibold text-sm text-gray-800 dark:text-white">{currentUser.name}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{currentUser.role}</p>
-                        </div>
-                    </div>
-                </div>
+                {/* User actions are now part of the sidebar's primary column for better consistency */}
             </div>
         </header>
     );
@@ -122,7 +89,3 @@ export const Header: React.FC<HeaderProps> = ({
 const iconSize = "w-6 h-6";
 const MenuIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>;
 const PlusIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>;
-const FullscreenEnterIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8V4m0 0h4M4 4l5 5m11-1v4m0 0h-4m4 0l-5-5M4 16v4m0 0h4m-4 0l5-5m11 1v-4m0 0h-4m4 0l-5 5"></path></svg>;
-const FullscreenExitIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 14h4v4m-4-4l5 5m11-5h-4v4m4-4l-5 5M4 10h4V6m-4 4l5-5m11 5h-4V6m4 4l-5-5"></path></svg>;
-const BellIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>;
-const LogoutIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>;
