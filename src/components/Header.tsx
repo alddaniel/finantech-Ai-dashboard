@@ -1,5 +1,5 @@
 import React from 'react';
-import type { View, User, Notification } from '../types';
+import type { View, User, Notification, Company } from '../types';
 import { VIEWS } from '../constants';
 
 interface HeaderProps {
@@ -12,10 +12,12 @@ interface HeaderProps {
     notifications: Notification[];
     setIsNotificationsOpen: React.Dispatch<React.SetStateAction<boolean>>;
     onOpenInvoiceModal: () => void;
+    selectedCompany: string;
+    setSelectedCompany: (company: string) => void;
+    accessibleCompanies: Company[];
 }
 
-// FIX: This object was missing keys required by the `View` type, causing a TypeScript error.
-// It has been updated to include a title for every possible view.
+// FIX: Added all missing keys from the 'View' type to ensure type safety.
 const viewTitles: Record<View, string> = {
     [VIEWS.DASHBOARD]: 'Dashboard',
     [VIEWS.PAYABLE]: 'Contas a Pagar',
@@ -60,7 +62,10 @@ export const Header: React.FC<HeaderProps> = ({
     onToggleFullscreen,
     notifications,
     setIsNotificationsOpen,
-    onOpenInvoiceModal
+    onOpenInvoiceModal,
+    selectedCompany,
+    setSelectedCompany,
+    accessibleCompanies
 }) => {
     const unreadNotificationsCount = notifications.filter(n => !n.isRead).length;
 
@@ -73,14 +78,50 @@ export const Header: React.FC<HeaderProps> = ({
                 <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{viewTitles[activeView] || 'Dashboard'}</h1>
             </div>
             <div className="flex items-center gap-2 md:gap-4">
+                 <div className="hidden md:block">
+                    <select
+                      id="company-select-header"
+                      value={selectedCompany}
+                      onChange={(e) => setSelectedCompany(e.target.value)}
+                      className="block w-full max-w-xs rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2.5 pl-3 pr-10 text-slate-900 dark:text-slate-50 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
+                    >
+                      {accessibleCompanies.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                    </select>
+                </div>
+
                 <button
-                    onClick={onOpenInvoiceModal}
-                    className="hidden sm:flex items-center gap-2 bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors text-sm"
+                    onClick={onToggleFullscreen}
+                    title={isFullscreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
+                    className="p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
                 >
-                    <PlusIcon />
-                    <span>Nova Cobrança</span>
+                    {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
                 </button>
-                {/* User actions are now part of the sidebar's primary column for better consistency */}
+                 <button
+                    onClick={() => setIsNotificationsOpen(prev => !prev)}
+                    title="Notificações"
+                    className="relative p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                >
+                    <BellIcon />
+                    {unreadNotificationsCount > 0 && (
+                        <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                           {unreadNotificationsCount}
+                        </span>
+                    )}
+                </button>
+                <div className="flex items-center p-2 rounded-lg hover:bg-gray-100/50 dark:hover:bg-slate-800/50">
+                    <img className="w-8 h-8 rounded-full" src={currentUser.avatar} alt="User" />
+                    <div className="ml-3 hidden md:block">
+                        <p className="font-semibold text-sm text-gray-800 dark:text-white">{currentUser.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{currentUser.role}</p>
+                    </div>
+                </div>
+                <button
+                    onClick={onLogout}
+                    title="Sair"
+                    className="p-2.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-red-50/50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                >
+                    <LogoutIcon />
+                </button>
             </div>
         </header>
     );
@@ -88,4 +129,7 @@ export const Header: React.FC<HeaderProps> = ({
 
 const iconSize = "w-6 h-6";
 const MenuIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>;
-const PlusIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>;
+const FullscreenEnterIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8V4m0 0h4M4 4l5 5m11-1v4m0 0h-4m4 0l-5-5M4 16v4m0 0h4m-4 0l5-5m11 1v-4m0 0h-4m4 0l-5 5"></path></svg>;
+const FullscreenExitIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 14h4v4m-4-4l5 5m11-5h-4v4m4-4l-5 5M4 10h4V6m-4 4l5-5m11 5h-4V6m4 4l-5-5"></path></svg>;
+const BellIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>;
+const LogoutIcon = () => <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>;

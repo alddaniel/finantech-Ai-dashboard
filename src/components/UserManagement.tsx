@@ -148,6 +148,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ companies, setCo
         } else {
             setUsers([...users, { ...userData, id: `user${Date.now()}` }]);
         }
+        // FIX: Add toast notification
         addToast({
             type: 'success',
             title: userToEdit ? 'Usuário Atualizado!' : 'Usuário Adicionado!',
@@ -164,6 +165,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ companies, setCo
         if (window.confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')) {
             const userToDelete = users.find(u => u.id === id);
             setUsers(prev => prev.filter(u => u.id !== id));
+            // FIX: Add toast notification
             if (userToDelete) {
                 addToast({
                     type: 'success',

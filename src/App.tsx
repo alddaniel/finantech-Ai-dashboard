@@ -506,7 +506,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+    <div className="h-screen bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200">
         <Sidebar 
           activeView={activeView} 
           setActiveView={setActiveView} 
@@ -522,7 +522,7 @@ export default function App() {
           isMobileOpen={isSidebarOpen}
           setIsMobileOpen={setIsSidebarOpen}
         />
-        <div className={`flex flex-col flex-1 overflow-hidden transition-all duration-300 ${!isSidebarCollapsed ? 'md:ml-72' : 'md:ml-20'}`}>
+        <div className={`flex flex-col h-screen transition-all duration-300 ${!isSidebarCollapsed ? 'md:ml-72' : 'md:ml-20'}`}>
             <Header 
                 activeView={activeView}
                 currentUser={currentUser!}
@@ -533,6 +533,9 @@ export default function App() {
                 setIsNotificationsOpen={setIsNotificationsOpen}
                 onOpenInvoiceModal={handleOpenInvoiceModal}
                 onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+                selectedCompany={selectedCompany}
+                setSelectedCompany={setSelectedCompany}
+                accessibleCompanies={companies.filter(c => currentUser!.accessibleCompanies.includes(c.name))}
             />
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 <div className="mx-auto max-w-7xl">
