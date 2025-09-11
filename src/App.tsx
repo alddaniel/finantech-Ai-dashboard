@@ -522,7 +522,7 @@ export default function App() {
           isMobileOpen={isSidebarOpen}
           setIsMobileOpen={setIsSidebarOpen}
         />
-        <div className="flex flex-col flex-1 overflow-hidden">
+        <div className={`flex flex-col flex-1 overflow-hidden transition-all duration-300 ${!isSidebarCollapsed ? 'md:ml-72' : 'md:ml-20'}`}>
             <Header 
                 activeView={activeView}
                 currentUser={currentUser!}
@@ -534,7 +534,7 @@ export default function App() {
                 onOpenInvoiceModal={handleOpenInvoiceModal}
                 onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
             />
-            <main className={`flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 transition-all duration-300 md:pl-20 ${!isSidebarCollapsed ? 'md:translate-x-52' : ''}`}>
+            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 <div className="mx-auto max-w-7xl">
                     {renderActiveView()}
                 </div>

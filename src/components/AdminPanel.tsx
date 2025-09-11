@@ -214,7 +214,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ companies, setCompanies,
         } else {
             setCompanies(prevCompanies => [...prevCompanies, { ...companyData, id: `comp${Date.now()}` }]);
         }
-        // FIX: Add toast notification on save
         addToast({
             type: 'success',
             title: companyToEdit ? 'Empresa Atualizada!' : 'Empresa Adicionada!',
@@ -243,7 +242,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ companies, setCompanies,
                     return user;
                 })
             );
-            // FIX: Add toast notification on delete
             addToast({
                 type: 'success',
                 title: 'Empresa Excluída!',
@@ -264,7 +262,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ companies, setCompanies,
         } else {
             setUsers(prevUsers => [...prevUsers, { ...userData, id: `user${Date.now()}` }]);
         }
-        // FIX: Add toast notification on save
         addToast({
             type: 'success',
             title: userToEdit ? 'Usuário Atualizado!' : 'Usuário Adicionado!',
@@ -274,14 +271,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ companies, setCompanies,
 
     const handleDeleteUser = (id: string) => {
          if (id === currentUser.id) {
-// FIX: Corrected typo "не" to "não" in the alert message.
+            // FIX: Corrected typo "не" to "não" in the alert message.
             alert("Você não pode excluir sua própria conta de Super Administrador.");
             return;
         }
          if (window.confirm('Tem certeza que deseja excluir este usuário do sistema? Esta ação não pode ser desfeita.')) {
             const userToDelete = users.find(u => u.id === id);
             setUsers(prev => prev.filter(u => u.id !== id));
-            // FIX: Add toast notification on delete
             if (userToDelete) {
                 addToast({
                     type: 'success',

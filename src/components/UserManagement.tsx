@@ -148,7 +148,6 @@ export const UserManagement: React.FC<UserManagementProps> = ({ companies, setCo
         } else {
             setUsers([...users, { ...userData, id: `user${Date.now()}` }]);
         }
-        // FIX: Add toast notification
         addToast({
             type: 'success',
             title: userToEdit ? 'Usuário Atualizado!' : 'Usuário Adicionado!',
@@ -158,14 +157,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({ companies, setCo
 
     const handleDeleteUser = (id: string) => {
         if(id === currentUser.id) {
-// FIX: Corrected typo "не" to "não" in the alert message.
+            // FIX: Corrected typo "не" to "não" in the alert message.
             alert("Você não pode excluir sua própria conta.");
             return;
         }
         if (window.confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')) {
             const userToDelete = users.find(u => u.id === id);
             setUsers(prev => prev.filter(u => u.id !== id));
-            // FIX: Add toast notification
             if (userToDelete) {
                 addToast({
                     type: 'success',
